@@ -1,0 +1,197 @@
+# CNSS2021夏令营游记
+
+
+## 写在前面
+
+​	第一次玩CTF属于是，萌新吓傻了。（更新中）
+
+## Web
+
+### 	0x01第一次冒险
+
+​		按照网页提示操作，最后结合提示在cookie中得到一个字符串，使用base64解密得到flag
+
+### 	0x02更简单的计算题
+
+​		算出来发现提交不了？F12修改输入框的长度限制和提交按钮的disable状态，提交得到flag
+
+### 	0x03卖菜刀
+
+​		依照题目，使用工具中国菜刀，在网站根目录可以找到flag文件。
+
+## Reverse
+
+### 	0x01 Hello Reverse
+
+​		使用ida反编译后即可看到flag
+
+### 	0x02 Where Are U
+
+​		使用ida反编译后到处找找就有了
+
+### 	0x03 吸/吸嘉嘉
+
+​		反编译后发现程序将flag的每一位字母按位非(~)后与code数组比对。找到code数组，将每一位按位非之后就可以得到答案了。
+
+​		我是手算的，我可能是弱智。
+
+### 	0x05 没想好名字的题目
+
+​		反编译之后先把变量名改成人能看的，然后发现三个for套for分别在判断行、列、方块是否有重复数字。结合程序名称发现是数独。分析程序前半部分，发现数独的形成模式是将flag[]的数字填入a[]中值为0的部分中。找到a的初始值，做数独即可得到flag。
+
+## Pwn
+
+### 0x01 让我康康你的Nc
+
+​	安装netcat，按题目方式连接之后cat flag即可得到结果。
+
+## Crypto
+
+~~最有意思的难道不是crypto吗~~
+
+### 龙王的代码I
+
+​	看程序发现flag就是1000000之内素数的平方和。随便写个线性筛就可以得到答案了。
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+const int MAXN = 10000050;
+int notp[MAXN], cntp, p[MAXN], n, m;
+long long ans;
+int main() {
+	n = 1000000; notp[1] = 1;
+	for(int i = 2; i <= n; ++i) {
+		if(!notp[i]) p[++cntp] = i;
+		for(int j = 1; 1ll*i*p[j] <= n && j <= cntp; ++j) {
+			notp[i*p[j]] = 1;
+			if(i % p[j] == 0) break;
+		}
+	}
+	for(int i = 2; i <= n; ++i)
+        ans += (1 - notp[i]) * i * i;
+    printf("%lld\n" ans);
+}
+```
+
+### eeeeeezrsa
+
+​	通过RSA解码方式直接求得即可。
+
+### 龙王的代码II
+
+​	阅读代码发现即求：
+
+
+$$
+x\ ≡\ a1\ (mod\ p1)$$
+$$x\ ≡\ a2\ (mod\ p2)$$
+$$x\ ≡\ a3\ (mod\ p3)$$
+$$x\ ≡\ a4\ (mod\ p4)
+$$
+
+
+方程组中x的值。敲一遍扩展中国剩余定理板子即可得到结果。
+
+### Feistal
+
+​	阅读代码，发现经过一次single操作后：
+$$
+L+R$$
+$$↓$$
+$$R+L\ xor\ R\ xor\ k
+$$
+​	而xor（异或）运算具有以下性质：
+$$
+a\ xor\ a = 0$$
+$$a\ xor\ 0 = a$$
+$$a\ xor\ b = b\ xor\ a
+$$
+​	程序为single操作执行256次的结果。那么我们先假设没有xor k操作来看看：
+$$
+L+R$$
+$$↓$$
+$$R+L\ xor\ R$$
+$$↓$$
+$$L\ xor\ R+L\ xor\ R\ xor\ R$$
+$$=L\ xor\ R+L$$
+$$↓$$
+$$L+L\ xor\ R\ xor\ L$$
+$$=L+R
+$$
+​	发现经过3次single操作后，回去了，神奇吧。由256 mod 3 = 1得如果没有每次xor k操作的话得到的序列将是L xor R + R（注意到最后有一个swap操作）
+
+​	考虑中间k值带来的影响。由于xor操作具有可交换性，所以左右各异或上一堆随机东西就相当于异或上这些东西的异或和。即最后的序列是：
+$$
+L\ xor\ R\ xor\ key1+R\ xor\ key2
+$$
+通过fake_flag和其加密结果求得key1，key2之后反向操作得到flag。
+
+### 龙王的代码III
+
+即求：
+$$
+x^2≡a(mod\ p)
+$$
+二次剩余模板，打完就行了。
+
+```python
+import random
+
+n = 7705321458598879497
+p = 12979492918818656033
+
+w = 0
+def MUL(ax, ay, bx, by):
+	return (ax * bx % p + ay * by % p * w % p) % p, (ax * by % p + ay * bx % p) % p
+
+def power(x, y, b):
+	ax, ay = 1, 0
+	while b != 0:
+		if b % 2 == 1: ax, ay = MUL(ax, ay, x, y)
+		x, y = MUL(x, y, x, y)
+		b //= 2
+	return ax % p
+
+while 1 == 1:
+	a = random.randint(0, p)
+	w = ((a * a % p - n) % p + p) % p
+	if pow(w, (p-1)//2, p) == p-1: break
+print(p - power(a, 1, (p+1)//2))
+```
+
+这个数超过了C++能存的范围了（除非写高精），所以被迫写了python。
+
+### Caesar?!?
+
+本专题最水的题目，你只需要把encrypto反着写一遍就有结果了。程序我都没保存。
+
+## Misc
+
+### Misc的文件
+
+下载解压，看到文件start.exe。记事本打开，前面写着PK。所以这是一个压缩包，改后缀名为zip打开。解压后发现两个文件，都用记事本打开。发现一个里面是一串字符，另一个文件头是PK。把文件头是PK的后缀名改为zip解压发现需要密码，输入刚刚获得的字符，解压获得flag。
+
+### No Password
+
+总之我当时把Hello.png后缀名改成7z就成功了，但再试一遍发现不行了，怎么回事呢。
+
+### 爱要大声说出来
+
+按照大小写转换成一串二进制数。已知开头是cnss，搜索自己的DNA得到c和n的ASCII码的二进制，前几位刚刚好是c和n的二进制ASCII，字符间用0隔开。长度固定分隔一下翻译回来得到flag。
+
+### baaby task
+
+下载，记事本打开。
+
+### another bb
+
+下载，看不出啥端倪。根据文件类型PNG推测是LSB隐写。Stegsolve打开查看RGB的第0位得到答案。
+
+### Casio3超爱Emoji
+
+百度搜索：emoji加密
+
+## 我就会到这里了，我好菜啊。
+
+
