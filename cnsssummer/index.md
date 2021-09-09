@@ -171,7 +171,7 @@ def cum(name):
 
 ​		使用upx去壳，然后是一个走迷宫小游戏。在内存里找到迷宫，直接走就可以了。
 
-### 0x0？ 黑客帝国
+### 0x0?  黑客帝国
 
 ​		反编译发现输入30个数，然后if了三十个方程。把方程搞出来跑一遍高斯消元得到flag。
 
@@ -180,6 +180,81 @@ def cum(name):
 ### 0xFF（番外）Maze
 
 ​	连接服务器之后得到一个随机的迷宫，跑一遍深度优先搜索得到结果。
+
+```python
+from pwn import *
+import time
+import sys
+sys.setrecursionlimit(114514)
+p = remote("120.25.225.38", 32121)
+st = p.recvline(keepends = False)
+st = p.recvline(keepends = True)
+n = 20
+m = 22
+a = []
+fx = (0, 1, 0, -1)
+fy = (1, 0, -1, 0)
+op = ('d', 's', 'a', 'w')
+tpp = 0
+flag = 0
+opts = []
+vis = []
+mx = 0
+
+def dfs(x, y):
+	if flag == 1:
+		return
+	if x == n-1 and y == m-1:
+		print("done")
+		ans = ""
+		for i in range(tpp):
+			ans += opts[i]
+		p.sendline(ans.encode())
+		p.sendline("d".encode())
+		for i in range(tpp):
+			print(p.recv())
+		print(p.recv())
+		flag = 1
+		return
+	vis[x][y] = 1
+	for i in range(0, 4):
+		dx = x + fx[i]
+		dy = y + fy[i]
+		if dx >= 0 and dx < n and dy >= 0 and dy < m:
+			if vis[dx][dy] == 0 and a[dx][dy] == 0:
+				if tpp == mx:
+					opts.append(op[i])
+					tpp = tpp + 1
+					mx = mx + 1
+				else:
+					opts[tpp] = op[i]
+					tpp = tpp + 1
+				dfs(dx, dy)
+				tpp = tpp - 1
+		if flag == 1:
+			return
+	vis[x][y] = 0
+
+for i in range(0, n):
+	a.append([])
+	vis.append([])
+	st = p.recvline(keepends = True)
+	dat = st.decode()
+	for j in range(0, m):
+		if dat[j] == '#':
+			a[i].append(1)
+		else:
+			a[i].append(0)
+		vis[i].append(0)
+
+st = p.recvline(keepends = True)
+st = p.recvline(keepends = True)
+st = p.recvline(keepends = True)
+
+dfs(0, 0)
+```
+
+
 
 ### 0x01 让我康康你的Nc
 
@@ -326,6 +401,55 @@ print(p - power(a, 1, (p+1)//2))
 ### Caesar?!?
 
 本专题最水的题目，你只需要把encrypto反着写一遍就有结果了。程序我都没保存。
+
+### PRNG
+
+这是一个线性同余生成器攻击。
+
+首先，如果我们找到几个X，使得X = 0 (mod n) 但 X ≠ 0
+
+此时，也就找到了几个X是n的倍数。那么这些X的最大公因数就有很大可能等于n，不是吗？
+
+回到题目，我们相当于得到了几个同余方程：
+$$
+s_1 ≡ s_0×a+b\ (mod \ n)
+$$
+
+$$
+s_2 ≡ s_1×a+b\ (mod \ n)
+$$
+
+$$
+s_3 ≡ s_2×a+b\ (mod \ n)
+$$
+
+此时我们引入一个数列$T_n=S_{n+1}-S_n$
+
+$$ T_0≡S_1-S_0\ (mod\ n) $$
+
+$$ T_1≡S_2-S_1≡(S_1×a+b)-(S_0×a+b)≡a×(S_1-S_0)≡a×T_0\ (mod\ n) $$
+
+$$ T_2≡S_3-S_2≡(S_2×a+b)-(S_1×a+b)≡a×(S_2-S_1)≡a×T_1\ (mod\ n) $$
+
+$$ T_4≡S_4-S_3≡(S_3×a+b)-(S_2×a+b)≡a×(S_3-S_2)≡a×T_2\ (mod\ n) $$
+
+这时候，神奇的事情发生了：
+
+$$T_2T_0-T_1^2≡(a×a×T_0×T_0)-(a×T_0×a×T_0)≡0(mod\ n)$$
+
+如此构造，就可以求出一些$X\ mod\ n=0$，从而求出$n$（事实上，可能要多试几次）
+
+有了$n$，还有$a$、$b$，咋办捏。
+
+$$ s_2 ≡ s_1×a+b\ (mod \ n) $$
+$$
+s_3 ≡ s_2×a+b\ (mod \ n)
+$$
+$$ s_3-s_2=s_2×a-s_1×a=a×(s_2-s_1) (mod\ n)$$
+
+$$ a=(s_3-s_2)/(s_2-s_1) (mod\ n)$$
+
+好耶。然后$b$随便解一下这题就结束了。
 
 ## Misc
 

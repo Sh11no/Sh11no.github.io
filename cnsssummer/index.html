@@ -45,7 +45,7 @@ Web 0x01 第一次冒险 ​	按照网页提示操作，最后结合提示在coo
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "http:\/\/sh11no.github.io\/cnsssummer\/"
-        },"genre": "posts","wordcount":  667 ,
+        },"genre": "posts","wordcount":  1057 ,
         "url": "http:\/\/sh11no.github.io\/cnsssummer\/","datePublished": "2021-08-20T13:36:08+08:00","dateModified": "2021-08-20T13:36:08+08:00","publisher": {
             "@type": "Organization",
             "name": ""},"author": {
@@ -122,8 +122,8 @@ Web 0x01 第一次冒险 ​	按照网页提示操作，最后结合提示在coo
             <div class="toc-content" id="toc-content-auto"></div>
         </div><article class="page single"><h1 class="single-title animated flipInX">CNSS2021夏令营游记</h1><div class="post-meta">
             <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2021-08-20">2021-08-20</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 667 字&nbsp;
-                <i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 4 分钟&nbsp;</div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2021-08-20">2021-08-20</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 1057 字&nbsp;
+                <i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 5 分钟&nbsp;</div>
         </div><div class="details toc" id="toc-static"  kept="true">
                 <div class="details-summary toc-title">
                     <span>目录</span>
@@ -150,7 +150,7 @@ Web 0x01 第一次冒险 ​	按照网页提示操作，最后结合提示在coo
         <li><a href="#0x04-抽奖得flag">0x04 抽奖得flag</a></li>
         <li><a href="#0x05-没想好名字的题目">0x05 没想好名字的题目</a></li>
         <li><a href="#0x0-攻壳机动队">0x0? 攻壳机动队</a></li>
-        <li><a href="#0x0-黑客帝国">0x0？ 黑客帝国</a></li>
+        <li><a href="#0x0--黑客帝国">0x0?  黑客帝国</a></li>
       </ul>
     </li>
     <li><a href="#pwn">Pwn</a>
@@ -168,6 +168,7 @@ Web 0x01 第一次冒险 ​	按照网页提示操作，最后结合提示在coo
         <li><a href="#feistal">Feistal</a></li>
         <li><a href="#龙王的代码iii">龙王的代码III</a></li>
         <li><a href="#caesar">Caesar?!?</a></li>
+        <li><a href="#prng">PRNG</a></li>
       </ul>
     </li>
     <li><a href="#misc">Misc</a>
@@ -354,12 +355,158 @@ Web 0x01 第一次冒险 ​	按照网页提示操作，最后结合提示在coo
 <p>​		反编译之后先把变量名改成人能看的，然后发现三个for套for分别在判断行、列、方块是否有重复数字。结合程序名称发现是数独。分析程序前半部分，发现数独的形成模式是将flag[]的数字填入a[]中值为0的部分中。找到a的初始值，做数独即可得到flag。</p>
 <h3 id="0x0-攻壳机动队">0x0? 攻壳机动队</h3>
 <p>​		使用upx去壳，然后是一个走迷宫小游戏。在内存里找到迷宫，直接走就可以了。</p>
-<h3 id="0x0-黑客帝国">0x0？ 黑客帝国</h3>
+<h3 id="0x0--黑客帝国">0x0?  黑客帝国</h3>
 <p>​		反编译发现输入30个数，然后if了三十个方程。把方程搞出来跑一遍高斯消元得到flag。</p>
 <h2 id="pwn">Pwn</h2>
 <h3 id="0xff番外maze">0xFF（番外）Maze</h3>
 <p>​	连接服务器之后得到一个随机的迷宫，跑一遍深度优先搜索得到结果。</p>
-<h3 id="0x01-让我康康你的nc">0x01 让我康康你的Nc</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">setrecursionlimit</span><span class="p">(</span><span class="mi">114514</span><span class="p">)</span>
+<span class="n">p</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="s2">&#34;120.25.225.38&#34;</span><span class="p">,</span> <span class="mi">32121</span><span class="p">)</span>
+<span class="n">st</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">(</span><span class="n">keepends</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+<span class="n">st</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">(</span><span class="n">keepends</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+<span class="n">n</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="n">m</span> <span class="o">=</span> <span class="mi">22</span>
+<span class="n">a</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">fx</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">fy</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">op</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+<span class="n">tpp</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">flag</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">opts</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">vis</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">mx</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="k">def</span> <span class="nf">dfs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+	<span class="k">if</span> <span class="n">flag</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+		<span class="k">return</span>
+	<span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="n">n</span><span class="o">-</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">y</span> <span class="o">==</span> <span class="n">m</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+		<span class="nb">print</span><span class="p">(</span><span class="s2">&#34;done&#34;</span><span class="p">)</span>
+		<span class="n">ans</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span>
+		<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">tpp</span><span class="p">):</span>
+			<span class="n">ans</span> <span class="o">+=</span> <span class="n">opts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+		<span class="n">p</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">ans</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
+		<span class="n">p</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="s2">&#34;d&#34;</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
+		<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">tpp</span><span class="p">):</span>
+			<span class="nb">print</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">recv</span><span class="p">())</span>
+		<span class="nb">print</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">recv</span><span class="p">())</span>
+		<span class="n">flag</span> <span class="o">=</span> <span class="mi">1</span>
+		<span class="k">return</span>
+	<span class="n">vis</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="n">y</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+	<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">):</span>
+		<span class="n">dx</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">fx</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+		<span class="n">dy</span> <span class="o">=</span> <span class="n">y</span> <span class="o">+</span> <span class="n">fy</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+		<span class="k">if</span> <span class="n">dx</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">dx</span> <span class="o">&lt;</span> <span class="n">n</span> <span class="ow">and</span> <span class="n">dy</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">dy</span> <span class="o">&lt;</span> <span class="n">m</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">vis</span><span class="p">[</span><span class="n">dx</span><span class="p">][</span><span class="n">dy</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">a</span><span class="p">[</span><span class="n">dx</span><span class="p">][</span><span class="n">dy</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+				<span class="k">if</span> <span class="n">tpp</span> <span class="o">==</span> <span class="n">mx</span><span class="p">:</span>
+					<span class="n">opts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">op</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+					<span class="n">tpp</span> <span class="o">=</span> <span class="n">tpp</span> <span class="o">+</span> <span class="mi">1</span>
+					<span class="n">mx</span> <span class="o">=</span> <span class="n">mx</span> <span class="o">+</span> <span class="mi">1</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="n">opts</span><span class="p">[</span><span class="n">tpp</span><span class="p">]</span> <span class="o">=</span> <span class="n">op</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+					<span class="n">tpp</span> <span class="o">=</span> <span class="n">tpp</span> <span class="o">+</span> <span class="mi">1</span>
+				<span class="n">dfs</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">)</span>
+				<span class="n">tpp</span> <span class="o">=</span> <span class="n">tpp</span> <span class="o">-</span> <span class="mi">1</span>
+		<span class="k">if</span> <span class="n">flag</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+			<span class="k">return</span>
+	<span class="n">vis</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="n">y</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+	<span class="n">a</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+	<span class="n">vis</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+	<span class="n">st</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">(</span><span class="n">keepends</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+	<span class="n">dat</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+	<span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">m</span><span class="p">):</span>
+		<span class="k">if</span> <span class="n">dat</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;#&#39;</span><span class="p">:</span>
+			<span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+		<span class="n">vis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="n">st</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">(</span><span class="n">keepends</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+<span class="n">st</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">(</span><span class="n">keepends</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+<span class="n">st</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">(</span><span class="n">keepends</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+
+<span class="n">dfs</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</code></pre></td></tr></table>
+</div>
+</div><h3 id="0x01-让我康康你的nc">0x01 让我康康你的Nc</h3>
 <p>​	安装netcat，按题目方式连接之后cat flag即可得到结果。</p>
 <h3 id="0x02-网安的第一口饭">0x02 网安的第一口饭</h3>
 <p>​	简单栈溢出。反编译看到有一个here(void)调用了system(&quot;/bin/sh&rdquo;)，也就是说只要调用该程序便能获得类似shell的东西，可以直接cat flag。</p>
@@ -537,6 +684,36 @@ $$
 </div><p>这个数超过了C++能存的范围了（除非写高精），所以被迫写了python。</p>
 <h3 id="caesar">Caesar?!?</h3>
 <p>本专题最水的题目，你只需要把encrypto反着写一遍就有结果了。程序我都没保存。</p>
+<h3 id="prng">PRNG</h3>
+<p>这是一个线性同余生成器攻击。</p>
+<p>首先，如果我们找到几个X，使得X = 0 (mod n) 但 X ≠ 0</p>
+<p>此时，也就找到了几个X是n的倍数。那么这些X的最大公因数就有很大可能等于n，不是吗？</p>
+<p>回到题目，我们相当于得到了几个同余方程：
+$$
+s_1 ≡ s_0×a+b\ (mod \ n)
+$$</p>
+<p>$$
+s_2 ≡ s_1×a+b\ (mod \ n)
+$$</p>
+<p>$$
+s_3 ≡ s_2×a+b\ (mod \ n)
+$$</p>
+<p>此时我们引入一个数列$T_n=S_{n+1}-S_n$</p>
+<p>$$ T_0≡S_1-S_0\ (mod\ n) $$</p>
+<p>$$ T_1≡S_2-S_1≡(S_1×a+b)-(S_0×a+b)≡a×(S_1-S_0)≡a×T_0\ (mod\ n) $$</p>
+<p>$$ T_2≡S_3-S_2≡(S_2×a+b)-(S_1×a+b)≡a×(S_2-S_1)≡a×T_1\ (mod\ n) $$</p>
+<p>$$ T_4≡S_4-S_3≡(S_3×a+b)-(S_2×a+b)≡a×(S_3-S_2)≡a×T_2\ (mod\ n) $$</p>
+<p>这时候，神奇的事情发生了：</p>
+<p>$$T_2T_0-T_1^2≡(a×a×T_0×T_0)-(a×T_0×a×T_0)≡0(mod\ n)$$</p>
+<p>如此构造，就可以求出一些$X\ mod\ n=0$，从而求出$n$（事实上，可能要多试几次）</p>
+<p>有了$n$，还有$a$、$b$，咋办捏。</p>
+<p>$$ s_2 ≡ s_1×a+b\ (mod \ n) $$
+$$
+s_3 ≡ s_2×a+b\ (mod \ n)
+$$
+$$ s_3-s_2=s_2×a-s_1×a=a×(s_2-s_1) (mod\ n)$$</p>
+<p>$$ a=(s_3-s_2)/(s_2-s_1) (mod\ n)$$</p>
+<p>好耶。然后$b$随便解一下这题就结束了。</p>
 <h2 id="misc">Misc</h2>
 <h3 id="misc的文件">Misc的文件</h3>
 <p>下载解压，看到文件start.exe。记事本打开，前面写着PK。所以这是一个压缩包，改后缀名为zip打开。解压后发现两个文件，都用记事本打开。发现一个里面是一串字符，另一个文件头是PK。把文件头是PK的后缀名改为zip解压发现需要密码，输入刚刚获得的字符，解压获得flag。</p>
