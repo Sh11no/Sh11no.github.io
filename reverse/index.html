@@ -61,7 +61,7 @@
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "http:\/\/sh11no.github.io\/reverse\/"
-        },"genre": "posts","wordcount":  100 ,
+        },"genre": "posts","wordcount":  173 ,
         "url": "http:\/\/sh11no.github.io\/reverse\/","datePublished": "2021-09-15T19:33:35+08:00","dateModified": "2021-09-15T19:33:35+08:00","publisher": {
             "@type": "Organization",
             "name": ""},"author": {
@@ -138,7 +138,7 @@
             <div class="toc-content" id="toc-content-auto"></div>
         </div><article class="page single"><h1 class="single-title animated flipInX">Reverse学习笔记</h1><div class="post-meta">
             <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2021-09-15">2021-09-15</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 100 字&nbsp;
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2021-09-15">2021-09-15</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 173 字&nbsp;
                 <i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 1 分钟&nbsp;</div>
         </div><div class="details toc" id="toc-static"  kept="true">
                 <div class="details-summary toc-title">
@@ -176,6 +176,19 @@
             <li><a href="#2标准调用约定">2.标准调用约定</a></li>
             <li><a href="#3x86-fastcall约定">3.x86 fastcall约定</a></li>
             <li><a href="#4c调用约定">4.C++调用约定</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="#数据结构的识别">数据结构的识别</a>
+      <ul>
+        <li><a href="#1-数组">1. 数组</a>
+          <ul>
+            <li><a href="#1全局分配的数组">1.全局分配的数组</a>
+              <ul>
+                <li><a href="#2栈分配的数组">2.栈分配的数组</a></li>
+              </ul>
+            </li>
           </ul>
         </li>
       </ul>
@@ -244,6 +257,48 @@
 <p>​	C++类中的非静态成员函数函数需要使用<code>this</code>指针，指向用于调用函数的对象。</p>
 <p>​	<code>Microsoft Visual C++</code>提供<code>thiscall</code>调用约定，将<code>this</code>传入ECX寄存器中， 并要求非静态成员函数清除栈中的参数</p>
 <p>​	<code>GNU G++</code>编译器将<code>this</code>看成是非静态成员函数的第一个隐藏参数，其他方便与<code>cdecl</code>调用约定相同。</p>
+<h2 id="数据结构的识别">数据结构的识别</h2>
+<h3 id="1-数组">1. 数组</h3>
+<h4 id="1全局分配的数组">1.全局分配的数组</h4>
+<p>例如：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="kt">int</span> <span class="n">global_array</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+	<span class="kt">int</span> <span class="n">idx</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+	<span class="n">global_array</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+	<span class="n">global_array</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+	<span class="n">global_array</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">30</span><span class="p">;</span>
+	<span class="n">global_array</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="mi">40</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>在IDA中，我们将可以看到（部分）：</p>
+<blockquote>
+<p>.text:00401000 idx				= dword ptr - 4</p>
+<p>&hellip;&hellip;&hellip;</p>
+<p>.text:0040100B						mov	dword_40B720, 10①</p>
+<p>.text:00401015						mov	dword_40B724, 20②</p>
+<p>.text:0040101F						mov	dword_40B728, 30③</p>
+<p>.text:00401029						mov	eax, [ebp+idx]</p>
+<p>.text:0040102C						mov	dword_40B720[eax*4], 40④</p>
+<p>&hellip;&hellip;&hellip;.</p>
+</blockquote>
+<p>从①②③看，这个程序似乎使用了4个全局变量，但④对偏移量的计算（<code>eax*4</code>）暗示了全局数组的存在，变量名与①处相同。当函数中使用固定索引(0， 1， 2)的时候，数组元素将以全局变量的形式存在，不提供任何数组存在的证据。但通过对④的观察，我们可以知道数组的基址(<code>dword_40B720</code>，即数组开头的地址)和数组每个元素的大小（<code>eax*4</code>代表每个数组元素占位4）</p>
+<h5 id="2栈分配的数组">2.栈分配的数组</h5>
+<p>To be c0t1nued&hellip;.</p>
 </div><div class="post-footer" id="post-footer">
     <div class="post-info">
         <div class="post-info-line">
