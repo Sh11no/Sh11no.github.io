@@ -760,7 +760,7 @@ for i in range(1000):
     print(int(s))
     flag ^= int(s)
 
-print("Flag is cnss{%d}" % flag)
+print(flag)
 ```
 
 虽然显示是python，但这是Sagemath代码。
