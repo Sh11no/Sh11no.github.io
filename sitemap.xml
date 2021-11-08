@@ -2,10 +2,12 @@
     xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
     xmlns:xhtml="http://www.w3.org/1999/xhtml"
     ><url>
-            <loc>http://sh11no.github.io/posts/</loc><lastmod>2021-09-15T19:33:35&#43;08:00</lastmod><changefreq>weekly</changefreq><priority>1</priority></url><url>
-            <loc>http://sh11no.github.io/reverse/</loc><lastmod>2021-09-15T19:33:35&#43;08:00</lastmod><changefreq>weekly</changefreq><priority>1</priority></url><url>
-            <loc>http://sh11no.github.io/</loc><lastmod>2021-09-15T19:33:35&#43;08:00</lastmod><changefreq>weekly</changefreq><priority>1</priority></url><url>
-            <loc>http://sh11no.github.io/cnsssummer/</loc><lastmod>2021-08-20T13:36:08&#43;08:00</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url><url>
-            <loc>http://sh11no.github.io/helloworld/</loc><lastmod>2021-08-20T12:11:56&#43;08:00</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url><url>
-            <loc>http://sh11no.github.io/categories/</loc><changefreq>weekly</changefreq><priority>0.5</priority></url><url>
-            <loc>http://sh11no.github.io/tags/</loc><changefreq>weekly</changefreq><priority>0.5</priority></url></urlset>
+            <loc>http://sh1no.icu/go/</loc><lastmod>2021-10-18T22:34:34&#43;08:00</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url><url>
+            <loc>http://sh1no.icu/posts/</loc><lastmod>2021-10-18T22:34:34&#43;08:00</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url><url>
+            <loc>http://sh1no.icu/</loc><lastmod>2021-10-18T22:34:34&#43;08:00</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url><url>
+            <loc>http://sh1no.icu/cnssrecruit/</loc><lastmod>2021-10-07T17:20:49&#43;08:00</lastmod><changefreq>weekly</changefreq><priority>0.6</priority></url><url>
+            <loc>http://sh1no.icu/reverse/</loc><lastmod>2021-09-15T19:33:35&#43;08:00</lastmod><changefreq>weekly</changefreq><priority>0.5</priority></url><url>
+            <loc>http://sh1no.icu/cnsssummer/</loc><lastmod>2021-08-20T13:36:08&#43;08:00</lastmod><changefreq>weekly</changefreq><priority>0.5</priority></url><url>
+            <loc>http://sh1no.icu/helloworld/</loc><lastmod>2021-08-20T12:11:56&#43;08:00</lastmod><changefreq>weekly</changefreq><priority>0.5</priority></url><url>
+            <loc>http://sh1no.icu/categories/</loc><changefreq>weekly</changefreq><priority>0.5</priority></url><url>
+            <loc>http://sh1no.icu/tags/</loc><changefreq>weekly</changefreq><priority>0.5</priority></url></urlset>
