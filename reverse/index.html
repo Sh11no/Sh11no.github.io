@@ -24,12 +24,12 @@
 栈帧相关 1、栈帧是什么？ ​	栈帧是在程序的运行时栈中分配的内存块，专门用于特定的函数调用。当函数被调用时，可能因为函数需要传参或是局部变量的使用而需要用到内存。编译器通过栈帧使得对函数参数和局部变量进行分配的过程对程序员透明。
 2、函数调用的详细步骤 1. 函数调用方将调用函数所需要的任何参数放入调用约定指定的位置。 2. 调用方将控制权转交给被调用的函数。 3. 如有必要，被调用的函数会配置一个栈指针，并保存调用方希望保持不变的任何寄存器值。 4. 被调用的函数为局部变量分配空间。 5. 被调用的函数执行其操作。 6. 被调用的函数完成操作，为局部变量保存的栈空间被全部释放。 7. 将3.中保存的寄存器值恢复至原样。 8. 被调用的函数将控制权还给调用方。根据调用指令，可能清除程序栈中的一个或多个参数。 9. 调用方获得控制权，并对栈进行调整，以将程序栈指针恢复到1.之前的值。  3、调用约定相关 ​	调用约定指定调用方放置函数所需参数的具体位置。调用约定可能要求将参数放置在寄存器、程序栈或寄存器和栈中。同时，在传递参数时，程序栈还需要决定被调用函数完成它的操作后，谁负责删除这些参数。" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="http://sh1no.icu/reverse/" /><meta property="og:image" content="http://sh1no.icu/logo.png"/><meta property="article:section" content="posts" />
+<meta property="og:url" content="http://sh11no.github.io/reverse/" /><meta property="og:image" content="http://sh11no.github.io/logo.png"/><meta property="article:section" content="posts" />
 <meta property="article:published_time" content="2021-09-15T19:33:35+08:00" />
 <meta property="article:modified_time" content="2021-09-15T19:33:35+08:00" />
 
 <meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:image" content="http://sh1no.icu/logo.png"/>
+<meta name="twitter:image" content="http://sh11no.github.io/logo.png"/>
 
 <meta name="twitter:title" content="Reverse学习笔记"/>
 <meta name="twitter:description" content="反汇编工作原理 1、基本反汇编算法  区分指令与数据，确认文件中包含代码和代码入口点的位置。 读取指令起始地址的值，查表将二进制操作码与汇编语言助记符对应起来。 格式化汇编语言并进行输出 继续反汇编下一条指令  2、如何识别反汇编起点、如何选择下一条指令、何时完成反汇编？ 书中介绍了两种算法：线性扫描反汇编与递归下降反汇编
@@ -52,7 +52,7 @@
 <meta name="application-name" content="LoveIt">
 <meta name="apple-mobile-web-app-title" content="LoveIt"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="http://sh1no.icu/reverse/" /><link rel="prev" href="http://sh1no.icu/cnsssummer/" /><link rel="next" href="http://sh1no.icu/cnssrecruit/" /><link rel="stylesheet" href="/lib/normalize/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"><link rel="stylesheet" href="/lib/animate/animate.min.css"><script type="application/ld+json">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="http://sh11no.github.io/reverse/" /><link rel="prev" href="http://sh11no.github.io/cnsssummer/" /><link rel="next" href="http://sh11no.github.io/cnssrecruit/" /><link rel="stylesheet" href="/lib/normalize/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"><link rel="stylesheet" href="/lib/animate/animate.min.css"><script type="application/ld+json">
     {
         "@context": "http://schema.org",
         "@type": "BlogPosting",
@@ -60,9 +60,9 @@
         "inLanguage": "zh-CN",
         "mainEntityOfPage": {
             "@type": "WebPage",
-            "@id": "http:\/\/sh1no.icu\/reverse\/"
+            "@id": "http:\/\/sh11no.github.io\/reverse\/"
         },"genre": "posts","wordcount":  188 ,
-        "url": "http:\/\/sh1no.icu\/reverse\/","datePublished": "2021-09-15T19:33:35+08:00","dateModified": "2021-09-15T19:33:35+08:00","publisher": {
+        "url": "http:\/\/sh11no.github.io\/reverse\/","datePublished": "2021-09-15T19:33:35+08:00","dateModified": "2021-09-15T19:33:35+08:00","publisher": {
             "@type": "Organization",
             "name": ""},"author": {
                 "@type": "Person",
@@ -327,7 +327,7 @@
                             <a class="link-to-markdown" href="/reverse/index.md" target="_blank">阅读原始文档</a>
                         </span></div>
             <div class="post-info-share">
-                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="http://sh1no.icu/reverse/" data-title="Reverse学习笔记"><i class="fab fa-twitter fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Facebook" data-sharer="facebook" data-url="http://sh1no.icu/reverse/"><i class="fab fa-facebook-square fa-fw"></i></a><a href="javascript:void(0);" title="分享到 WhatsApp" data-sharer="whatsapp" data-url="http://sh1no.icu/reverse/" data-title="Reverse学习笔记" data-web><i class="fab fa-whatsapp fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Line" data-sharer="line" data-url="http://sh1no.icu/reverse/" data-title="Reverse学习笔记"><i data-svg-src="/lib/simple-icons/icons/line.min.svg"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="http://sh1no.icu/reverse/" data-title="Reverse学习笔记"><i class="fab fa-weibo fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Myspace" data-sharer="myspace" data-url="http://sh1no.icu/reverse/" data-title="Reverse学习笔记" data-description=""><i data-svg-src="/lib/simple-icons/icons/myspace.min.svg"></i></a><a href="javascript:void(0);" title="分享到 Blogger" data-sharer="blogger" data-url="http://sh1no.icu/reverse/" data-title="Reverse学习笔记" data-description=""><i class="fab fa-blogger fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Evernote" data-sharer="evernote" data-url="http://sh1no.icu/reverse/" data-title="Reverse学习笔记"><i class="fab fa-evernote fa-fw"></i></a></span>
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="http://sh11no.github.io/reverse/" data-title="Reverse学习笔记"><i class="fab fa-twitter fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Facebook" data-sharer="facebook" data-url="http://sh11no.github.io/reverse/"><i class="fab fa-facebook-square fa-fw"></i></a><a href="javascript:void(0);" title="分享到 WhatsApp" data-sharer="whatsapp" data-url="http://sh11no.github.io/reverse/" data-title="Reverse学习笔记" data-web><i class="fab fa-whatsapp fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Line" data-sharer="line" data-url="http://sh11no.github.io/reverse/" data-title="Reverse学习笔记"><i data-svg-src="/lib/simple-icons/icons/line.min.svg"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="http://sh11no.github.io/reverse/" data-title="Reverse学习笔记"><i class="fab fa-weibo fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Myspace" data-sharer="myspace" data-url="http://sh11no.github.io/reverse/" data-title="Reverse学习笔记" data-description=""><i data-svg-src="/lib/simple-icons/icons/myspace.min.svg"></i></a><a href="javascript:void(0);" title="分享到 Blogger" data-sharer="blogger" data-url="http://sh11no.github.io/reverse/" data-title="Reverse学习笔记" data-description=""><i class="fab fa-blogger fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Evernote" data-sharer="evernote" data-url="http://sh11no.github.io/reverse/" data-title="Reverse学习笔记"><i class="fab fa-evernote fa-fw"></i></a></span>
             </div>
         </div>
     </div>
