@@ -3,7 +3,36 @@
         <title>所有文章 - Shino Channel</title>
         <link>http://sh11no.github.io/posts/</link>
         <description>所有文章 | Shino Channel</description>
-        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Mon, 18 Oct 2021 22:34:34 &#43;0800</lastBuildDate><atom:link href="http://sh11no.github.io/posts/" rel="self" type="application/rss+xml" /><item>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Mon, 08 Nov 2021 20:34:09 &#43;0800</lastBuildDate><atom:link href="http://sh11no.github.io/posts/" rel="self" type="application/rss+xml" /><item>
+    <title>使用Nonebot2和Gocq搭建QQ机器人并部署到服务器</title>
+    <link>http://sh11no.github.io/bot/</link>
+    <pubDate>Mon, 08 Nov 2021 20:34:09 &#43;0800</pubDate>
+    <author>作者</author>
+    <guid>http://sh11no.github.io/bot/</guid>
+    <description><![CDATA[配置机器人 QQ机器人的基本架构 这里引用一个看到过的例子：
+在一个餐馆中，你点了一盘菜。此时会发生什么事情呢？
+ 1、服务员接受你点的菜
+2、服务员把你点的菜告诉大厨
+3、大厨进行一个烹饪
+4、服务员把菜端到你桌上
+ 在一个QQ机器人中，go-cqhttp就类似于一个服务员，负责接收消息、把消息传达给nonebot2、发送消息。而nonebot2 就相当于一个大厨，负责“思考”对消息该做出什么反应。
+那么go-cqhttp如何将消息传达给nonebot2呢？
+这里我们使用的是反向websocket连接：go-cqhttp会主动寻找nonebot2的程序，并将消息通过websocket推送给nonebot2。当然，如果你只是想要做出一个QQ机器人，你可以不需要深入了解该通信方式。
+准备 我们需要：一个云服务器，nonebot2，go-cqhttp
+由于nonebot2是基于python3.7+的，所以我们还需要配置一个python。
+我推荐在服务器上执行命令前先使用sudo -i切换到管理员账户来避免一些麻烦
+安装系统镜像&amp;python 首先你需要一个云服务器，并安装系统镜像。我这里选用的是Ubuntu20.07系统镜像，因为Ubuntu20.07自带一个Python3.8.10，可以省去python的配置步骤。
+这一步按理来说是可以一键完成的，起码腾讯云和阿里云都有一键安装的入口。
+安装nonebot2 执行以下命令：
+1 2  pip3 install nb-cli pip3 install nonebot-adapter-cqhttp   如果找不到库的话，可以试试换源：
+1 2  pip3 install nb-cli -i https://pypi.org/simple pip3 install nonebot-adapter-cqhttp -i https://pypi.org/simple   安装go-cqhttp 下载go-cqhttp 在go-cqhttp的Release页面找到go-cqhttp_linux_386.tar.gz并下载。
+或者直接点击这里下载。
+这里下载的是适用于Linux的32位go-cqhttp，如果你是64位，请找到并下载go-cqhttp_linux_amd64.tar.gz
+将go-cqhttp上传至服务器 这里使用宝塔Linux面板辅助上传。宝塔yyds。
+这是宝塔官网，可以在上面找到对应系统镜像的安装脚本：https://www.bt.cn/download/linux.html
+如果你和我一样使用Ubuntu，直接执行以下命令吧：
+1  wget -O install.sh http://download.bt.cn/install/install-ubuntu_6.0.sh &amp;&amp; sudo bash install.sh   执行完成后在服务器上执行bt来配置用户名和密码。]]></description>
+</item><item>
     <title>Go语言乱学速成学习笔记</title>
     <link>http://sh11no.github.io/go/</link>
     <pubDate>Mon, 18 Oct 2021 22:34:34 &#43;0800</pubDate>
