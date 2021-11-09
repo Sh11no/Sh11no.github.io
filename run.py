@@ -2,6 +2,9 @@ import requests
 import time
 import json
 import random
+import warnings
+
+warnings.filterwarnings('ignore')
 
 sessions = requests.session()
 login_campusId = ''
@@ -92,6 +95,7 @@ def login():
 		'Content-Type': 'application/json',
 		'User-Agent': 'Mozilla/5.0 (Linux; Android 11; PEEM00 Build/RKQ1.201105.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/83.0.4103.106 Mobile Safari/537.36 uni-app Html5Plus/1.0 (Immersed/32.0)'
 	}
+	print("请登录乐健体育")
 	username = input("Username:")
 	password = input("Password:")
 	data = {
@@ -105,7 +109,7 @@ def login():
 	login_json = json.loads(resp.content.decode('utf-8'))
 	if login_json['code'] != 0:
 		print("[!] Login Failed.")
-		print(login_json['data']['message'])
+		print(login_json)
 		return login_json
 	login_campusId = login_json['data']['campusId']
 	login_accessToken = login_json['data']['accessToken']
@@ -119,8 +123,11 @@ def login():
 	print("[+] tokenType:" + login_tokenType)
 	print("[+] organizationId:" + login_organizationId)
 	print("[+] Id:" + login_id)
-	print(login_json)
-
+	#print(login_json)
+	print("=" * 64)
+	print("Welcome, " + login_json['data']['realName'] + " from " + login_json['data']['schoolName'] + login_json['data']['organizationName'])
+	print("学号: " + login_json['data']['organizationUserNumber'])
+	print("=" * 64)
 	return login_json
 
 def getRunningLimit():
@@ -177,7 +184,7 @@ def run():
 		"paceRange": random.randint(4, 10),
 		"routineLine": generateroute()
 	}
-	print(data)
+	#print(data)
 	resp = sessions.post(url, data=json.dumps(data), headers=headers, verify=False)
 	print(json.loads(resp.content.decode('utf-8')))
 	return 0
