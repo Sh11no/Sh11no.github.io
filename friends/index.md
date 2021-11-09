@@ -9,4 +9,5 @@
 
 搞快来私聊我交换友链，乌乌
 
+See /run.py for some secret.
 
