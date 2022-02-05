@@ -3,7 +3,28 @@
         <title>所有文章 - Shino Channel</title>
         <link>http://sh11no.github.io/posts/</link>
         <description>所有文章 | Shino Channel</description>
-        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Sun, 02 Jan 2022 16:22:48 &#43;0800</lastBuildDate><atom:link href="http://sh11no.github.io/posts/" rel="self" type="application/rss+xml" /><item>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Sat, 05 Feb 2022 15:18:52 &#43;0800</lastBuildDate><atom:link href="http://sh11no.github.io/posts/" rel="self" type="application/rss+xml" /><item>
+    <title>使用Flask&#43;nginx&#43;uwsgi在服务器上部署一个简单的API接口</title>
+    <link>http://sh11no.github.io/api/</link>
+    <pubDate>Sat, 05 Feb 2022 15:18:52 &#43;0800</pubDate>
+    <author>作者</author>
+    <guid>http://sh11no.github.io/api/</guid>
+    <description><![CDATA[整体架构 （图源网络）
+其中App是“应用程序”部分，负责实现功能。
+WSGI，全称Web Server Gateway Interface，是Web服务器（Server）和Web应用程序（App）之间一个沟通的桥梁，是一种通信协议。
+而Server则是Web服务器，负责接受来自外部的消息并通过WSGI转发给app进行处理。
+需要的组件 Python3 我这里是使用阿里云的Ubuntu20.04系统镜像，自带Python环境。如果你没有Python环境，请使用百度安装一个吧
+Flask Flask是一个轻量级的Python web应用框架，在架构中协助我们进行APP部分的开发。
+1 2  pip install flask pip install flask_restful   Nginx Nginx是一个轻量级的Web服务器，在整体架构中负责Server部分。
+1  sudo apt-get install nginx   uwsgi uWSGI是一个实现了WSGI协议的Web服务器。
+相比于uwsgi，Nginx具备更优秀的静态内容处理能力，然后将动态内容转发给uWSGI服务器，这样可以达到相比于只用uwsgi而不使用Nginx更好的客户端相应。
+1  pip insall uwsgi   宝塔Linux面板 非必须，一个辅助工具，可以帮助你更快地编辑和管理文件。
+这是宝塔官网，可以在上面找到对应系统镜像的安装脚本：https://www.bt.cn/download/linux.html
+如果你和我一样使用Ubuntu，直接执行以下命令吧：
+1  wget -O install.sh http://download.bt.cn/install/install-ubuntu_6.0.sh &amp;&amp; sudo bash install.sh   执行完成后在服务器上执行bt来配置用户名和密码。
+执行/etc/init.d/bt default查看面板入口，一般是你的ip:8888/xxxxxx的形式并访问，用上一步设置的用户名密码登录。
+基于Flask的api编写 初始化Flask API 1 2 3 4  from flask import Flask from flask_restful import Resource, Api, reqparse app = Flask(__name__) api = Api(app)   创建端点 假设我们最后的API结果位于网站http://www.]]></description>
+</item><item>
     <title>线性代数与空间解析几何 女娲补天复习笔记</title>
     <link>http://sh11no.github.io/matrix/</link>
     <pubDate>Sun, 02 Jan 2022 16:22:48 &#43;0800</pubDate>
