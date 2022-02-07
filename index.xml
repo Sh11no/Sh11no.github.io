@@ -3,9 +3,20 @@
         <title>Shino Channel</title>
         <link>http://sh11no.github.io/</link>
         <description>这是我的全新 Hugo 网站</description>
-        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Sat, 05 Feb 2022 15:18:52 &#43;0800</lastBuildDate>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Mon, 07 Feb 2022 17:12:57 &#43;0800</lastBuildDate>
             <atom:link href="http://sh11no.github.io/index.xml" rel="self" type="application/rss+xml" />
         <item>
+    <title>记一次模拟登陆和验证码绕过</title>
+    <link>http://sh11no.github.io/captcha/</link>
+    <pubDate>Mon, 07 Feb 2022 17:12:57 &#43;0800</pubDate>
+    <author>作者</author>
+    <guid>http://sh11no.github.io/captcha/</guid>
+    <description><![CDATA[目标需求 因为某种原因，我需要实现一个验证某组用户名和密码是否可以成功登录网站的模块。
+这里的目标网站是icoding.run.
+拟使用python requests模块伪造数据包来达成目标.
+数据包分析 使用BurpSuite截获发送的数据包.比较关键的是以下两个数据包:
+请求验证码 1 2 3 4 5 6 7 8 9 10 11 12 13 14  GET /verificationCode HTTP/1.1 Host: icoding.run Sec-Ch-Ua: &#34;Chromium&#34;;v=&#34;97&#34;, &#34; Not;A Brand&#34;;v=&#34;99&#34; Sec-Ch-Ua-Mobile: ?0 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36 Sec-Ch-Ua-Platform: &#34;Windows&#34; Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8 Sec-Fetch-Site: same-origin Sec-Fetch-Mode: no-cors Sec-Fetch-Dest: image Referer: https://icoding.run/login Accept-Encoding: gzip, deflate Accept-Language: zh-CN,zh;q=0.9 Connection: close   返回数据Headers:]]></description>
+</item><item>
     <title>使用Flask&#43;nginx&#43;uwsgi在服务器上部署一个简单的API接口</title>
     <link>http://sh11no.github.io/api/</link>
     <pubDate>Sat, 05 Feb 2022 15:18:52 &#43;0800</pubDate>
