@@ -129,8 +129,6 @@ for(int i = 2; i <= n; ++i)
 
 ## 后缀数组
 
-说实话我并不记得我学过这东西，我为啥写过
-
 ```C++
 void getSA() {
 	for(int i = 1; i <= n; ++i) ++c[x[i] = s[i]];
@@ -220,47 +218,6 @@ void MM(int u, int l, int r, int tl, int tr, int k) {
 int Q(int u, int l, int r, int tl, int tr) {
 	if(tr < l || tl > r) return 0; if(tl <= l && r <= tr) return t[u];
 	PD(u, l, r); return (Q(L(u), l, mid, tl, tr) + Q(R(u), mid+1, r, tl, tr)) % P;
-}
-```
-
-## DLX
-
-```c++
-void init() {
-	rt = 0; cnt = m;
-	for(int i = 0; i <= m; ++i) {
-		L[i] = i-1; R[i] = i+1;
-		U[i] = D[i] = i;
-	} L[0] = m; R[m] = 0;
-	memset(h, -1, sizeof h);
-}
-void add(int r, int c) {
-	++cnt; ++size[c]; col[cnt] = c; row[cnt] = r;
-	U[cnt] = U[c]; D[cnt] = c; D[U[cnt]] = U[D[cnt]] = cnt;
-	if(~h[r]) L[cnt] = h[r], R[cnt] = R[h[r]], R[L[cnt]] = cnt, L[R[cnt]] = cnt;
-	else h[r] = L[cnt] = R[cnt] = cnt;
-}
-void Del(int c) {
-	L[R[c]] = L[c]; R[L[c]] = R[c];
-	for(int i = D[c]; i != c; i = D[i])
-		for(int j = R[i]; j != i; j = R[j])
-			U[D[j]] = U[j], D[U[j]] = D[j], size[col[j]]--;
-}
-void Re(int c) {
-	for(int i = D[c]; i != c; i = D[i])
-		for(int j = R[i]; j != i; j = R[j])
-			U[D[j]] = D[U[j]] = j, size[col[j]]++;
-	L[R[c]] = R[L[c]] = c;
-}
-bool LetsDance() {
-	if(R[rt] == rt) return 1; int c = R[rt];
-	for(int j = R[rt]; j != rt; j = R[j]) if(size[j] < size[c]) c = j;
-	Del(c);
-	for(int i = D[c]; i != c; i = D[i]) {
-		for(int j = R[i]; j != i; j = R[j]) Del(col[j]);
-		if(LetsDance()) {printf("%d ", row[i]); return 1;}
-		for(int j = L[i]; j != i; j = L[j]) Re(col[j]);
-	} Re(c); return 0;
 }
 ```
 
@@ -686,6 +643,182 @@ int main() {
 	for(int i = 1; i <= m; ++i) ans[q[i].id] = q[i].ans;
 	for(int i = 1; i <= m; ++i) printf("%lld\n", ans[i]);
 }
+```
+
+## 莫比乌斯反演
+
+```C++
+void GetMu() {
+	mu[1] = 1;
+	for(int i = 2; i <= 10000000; ++i) {
+		if(!vis[i]) p[++cnt] = i, mu[i] = -1;
+		for(int j = 1; j <= cnt && p[j] * i <= 10000000; ++j) {
+			vis[p[j]*i] = 1;
+			if(i % p[j]) mu[p[j]*i] = -mu[i];
+		}
+	}
+	for(int i = 1; i <= cnt; ++i)
+		for(int j = 1; j * p[i] <= 10000000; ++j)
+			f[j*p[i]] += mu[j];
+	for(int i = 1; i <= 10000000; ++i) pref[i] = pref[i-1] + f[i];
+}
+lint calc(int a, int b) {
+	lint res = 0;
+	if(a > b) swap(a, b);
+	for(int l = 1, r = 0; l <= a; l = r + 1) {
+		r = min(a/(a/l), b/(b/l));
+		res += (pref[r] - pref[l-1])*1ll*(a/l)*(b/l);
+	} return res;
+}
+```
+
+## 树剖
+
+```c++
+void ADD(int u, int l, int r, int k) {t[u] = (t[u] + 1ll*k*(r-l+1)%P) % P; tag[u] = (tag[u] + k) % P;}
+void PD(int u, int l, int r) {ADD(L(u), l, mid, tag[u]); ADD(R(u), mid+1, r, tag[u]); tag[u] = 0;}
+void PU(int u) {t[u] = (t[L(u)] + t[R(u)]) % P;}
+void build(int u, int l, int r) {
+	if(l == r) {t[u] = w[id[l]]; return; }
+	build(L(u), l, mid); build(R(u), mid+1, r); PU(u); 
+}
+void upd(int u, int l, int r, int tl, int tr, int k) {
+	if(tr < l || tl > r) return; if(tl <= l && r <= tr) ADD(u, l, r, k);
+	else PD(u, l, r), upd(L(u), l, mid, tl, tr, k), upd(R(u), mid+1, r, tl, tr, k), PU(u);
+}
+int qry(int u, int l, int r, int tl, int tr) {
+	if(tr < l || tl > r) return 0; if(tl <= l && r <= tr) return t[u]; PD(u, l, r);
+	return (qry(L(u), l, mid, tl, tr) + qry(R(u), mid+1, r, tl, tr)) % P;
+}
+void dfs1(int u, int p) {
+	fa[u] = p; siz[u] = 1; dep[u] = dep[p] + 1;
+	for(int v, i = h[u]; ~i; i = e[i].next)
+		if((v = e[i].to) != p) {
+			dfs1(v, u); siz[u] += siz[v];
+			if(siz[son[u]] < siz[v]) son[u] = v;
+		}
+}
+void dfs2(int u, int p) {
+	id[dfn[u] = ++idx] = u; top[u] = p;
+	if(son[u]) dfs2(son[u], p);
+	for(int v, i = h[u]; ~i; i = e[i].next)
+		if((v = e[i].to) != fa[u] && v != son[u]) dfs2(v, v);
+}
+void addpath(int x, int y, int k) {
+	for(; top[x] != top[y]; x = fa[top[x]]) {
+		if(dep[top[x]] < dep[top[y]]) swap(x, y);
+		upd(1, 1, n, dfn[top[x]], dfn[x], k);
+	}
+	if(dep[x] > dep[y]) swap(x, y);
+	upd(1, 1, n, dfn[x], dfn[y], k);
+}
+int qrypath(int x, int y) {
+	int res = 0;
+	for(; top[x] != top[y]; x = fa[top[x]]) {
+		if(dep[top[x]] < dep[top[y]]) swap(x, y);
+		res = (res + qry(1, 1, n, dfn[top[x]], dfn[x])) % P;
+	}
+	if(dep[x] > dep[y]) swap(x, y);
+	return (res + qry(1, 1, n, dfn[x], dfn[y])) % P;
+}
+void addroot(int x, int k) {upd(1, 1, n, dfn[x], dfn[x] + siz[x] - 1, k); }
+int qryroot(int x) {return qry(1, 1, n, dfn[x], dfn[x] + siz[x] - 1);}
+```
+
+## 主席树
+
+```c++
+struct JZM_T {int ch[2], v;} t[MAXN << 6];
+int cnt, rt[MAXN << 6], o[MAXN], a[MAXN], n, m;
+void build(int &u, int l, int r) {
+	t[u = ++cnt].v = 0;
+	if(l != r) build(L(u), l, mid), build(R(u), mid+1, r);
+}
+void update(int &u, int v, int l, int r, int p, int k) {
+	t[u = ++cnt] = t[v]; t[u].v += k;
+	if(l != r) p <= mid ? update(L(u), L(v), l, mid, p, k) : update(R(u), R(v), mid+1, r, p, k);
+}
+int query(int tl, int tr, int l, int r, int k) {
+	if(l == r) return o[l]; int s = t[L(tr)].v - t[L(tl)].v;
+	return k <= s ? query(L(tl), L(tr), l, mid, k) : query(R(tl), R(tr), mid+1, r, k-s);
+}
+int main() {
+	read(n); read(m);
+	for(int i = 1; i <= n; ++i) read(a[i]), o[i] = a[i];
+	sort(o+1, o+n+1); int _n = unique(o+1, o+n+1)-o-1; build(rt[0], 1, _n);
+	for(int i = 1; i <= n; ++i)
+		update(rt[i], rt[i-1], 1, _n, lower_bound(o+1, o+_n+1, a[i])-o, 1);
+	for(int l, r, k; m--; ) {
+		read(l); read(r); read(k);
+		printf("%d\n", query(rt[l-1], rt[r], 1, _n, k));
+	}
+}
+```
+
+## GCD-BlackMagic
+
+```C++
+int gcd(int a, int b) {
+	int g = 1;
+	for(int tmp, i = 0; i < 3; b /= tmp, g *= tmp, ++i)
+		tmp = (k[a][i] > siz) ? (b % k[a][i] == 0 ? k[a][i] : 1) : _gcd[k[a][i]][b%k[a][i]];
+	return g;
+}
+int main() {
+	k[1][0] = k[1][1] = k[1][2] = 1; notp[1] = 1;
+	for(int i = 2; i <= V; ++i) {
+		if(!notp[i]) p[++cnt] = i, k[i][2] = i, k[i][1] = k[i][0] = 1;
+		for(int j = 1; p[j] * i <= V; ++j) {
+			notp[i * p[j]] = 1; int *t = k[i*p[j]];
+			t[0] = k[i][0] * p[j]; t[1] = k[i][1]; t[2] = k[i][2];
+			if(t[1] < t[0]) swap(t[0], t[1]); if(t[2] < t[1]) swap(t[1], t[2]);
+			if(i % p[j] == 0) break;
+		}
+	}
+	for(int i = 1; i <= siz; ++i) _gcd[i][0] = _gcd[0][i] = i;
+	for(int _max = 1; _max <= siz; ++_max)
+		for(int i = 1; i <= _max; ++i)
+			_gcd[i][_max] = _gcd[_max][i] = _gcd[_max % i][i];
+```
+
+## FFT
+
+```C++
+struct Complex {
+	double x, y;
+	Complex(double xx = 0, double yy = 0) {x = xx; y = yy;}
+	Complex operator + (Complex &b) const {return Complex(x+b.x, y+b.y);}
+	Complex operator - (Complex &b) const {return Complex(x-b.x, y-b.y);}
+	Complex operator * (Complex &b) const {return Complex(x*b.x-y*b.y, y*b.x+x*b.y);}
+} a[MAXN], b[MAXN];
+int r[MAXN], n, m, l, limit;
+void FFT (Complex *A, int t) {
+	for(int i = 0; i < limit; ++i)
+		if(i < r[i]) swap(A[i], A[r[i]]);
+	for(int mid = 1; mid < limit; mid <<= 1) {
+		Complex Wn = Complex(cos(Pi/mid), t * sin(Pi/mid));
+		for(int R = mid<<1, j = 0; j < limit; j += R) {
+			Complex w = Complex(1, 0);
+			for(int k = 0; k < mid; ++k, w = w * Wn) {
+				Complex x = A[j+k], y = w*A[j+mid+k];
+				A[j+k] = x+y; A[j+mid+k] = x-y;
+			}
+		}
+	}
+}
+int main() {
+	n = read(); m = read();
+	for(int i = 0; i <= n; ++i) a[i].x = read();
+	for(int i = 0; i <= m; ++i) b[i].x = read();
+	for(limit = 1; limit <= n+m; limit <<= 1, ++l);
+	for(int i = 0; i < limit; ++i) r[i] = (r[i>>1]>>1)|((i&1)<<(l-1));
+	FFT(a, 1); FFT(b, 1);
+	for(int i = 0; i <= limit; ++i) a[i] = a[i]*b[i];
+	FFT(a, -1);
+	for(int i = 0; i <= n+m; ++i) printf("%d ", (int)(a[i].x/limit+0.5));
+	puts("");
+	
+} 
 ```
 
 

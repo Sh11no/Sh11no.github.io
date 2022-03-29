@@ -3,7 +3,15 @@
         <title>所有文章 - Shino Channel</title>
         <link>http://sh11no.github.io/posts/</link>
         <description>所有文章 | Shino Channel</description>
-        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Wed, 09 Mar 2022 18:26:20 &#43;0800</lastBuildDate><atom:link href="http://sh11no.github.io/posts/" rel="self" type="application/rss+xml" /><item>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Tue, 29 Mar 2022 21:02:13 &#43;0800</lastBuildDate><atom:link href="http://sh11no.github.io/posts/" rel="self" type="application/rss+xml" /><item>
+    <title>使用Go&#43;Gin&#43;Redis实现一个简单的登录注册系统</title>
+    <link>http://sh11no.github.io/go-auth/</link>
+    <pubDate>Tue, 29 Mar 2022 21:02:13 &#43;0800</pubDate>
+    <author>作者</author>
+    <guid>http://sh11no.github.io/go-auth/</guid>
+    <description><![CDATA[简易前端 我们先随便写一个简单的前端页面，放在工作目录下./templates文件夹中。
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21  &lt;html lang=&#34;en&#34;&gt; &lt;head&gt; &lt;meta charset=&#34;UTF-8&#34;&gt; &lt;meta name=&#34;viewport&#34; content=&#34;width=device-width, initial-scale=1.0&#34;&gt; &lt;meta http-equiv=&#34;X-UA-Compatible&#34; content=&#34;ie=edge&#34;&gt; &lt;title&gt;Document&lt;/title&gt; &lt;/head&gt; &lt;body&gt; &lt;form action=&#34;http://47.108.140.140:8080/loginform&#34; method=&#34;post&#34;&gt; 用户名：&lt;input type=&#34;text&#34; name=&#34;username&#34; placeholder=&#34;请输入你的用户名&#34;&gt; &lt;br&gt; 密&amp;nbsp;&amp;nbsp;&amp;nbsp;码：&lt;input type=&#34;password&#34; name=&#34;password&#34; placeholder=&#34;请输入你的密码&#34;&gt; &lt;br&gt; &lt;input type=&#34;submit&#34; value=&#34;登录&#34;&gt; &lt;/form&gt; &lt;p&gt; ============OR============= &lt;/p&gt; &lt;form action=&#34;http://47.108.140.140:8080/registerform&#34; method=&#34;post&#34;&gt; 用户名：&lt;input type=&#34;text&#34; name=&#34;username&#34; placeholder=&#34;请输入你的用户名&#34;&gt; &lt;br&gt; 密&amp;nbsp;&amp;nbsp;&amp;nbsp;码：&lt;input type=&#34;password&#34; name=&#34;password&#34; placeholder=&#34;请输入你的密码&#34;&gt; &lt;br&gt; &lt;input type=&#34;submit&#34; value=&#34;注册&#34;&gt; &lt;/form&gt; &lt;/body&gt; &lt;/html&gt;   由于不是重点，这里不详细介绍前端功能]]></description>
+</item><item>
     <title>板子 (ver.诗乃)</title>
     <link>http://sh11no.github.io/templates/</link>
     <pubDate>Wed, 09 Mar 2022 18:26:20 &#43;0800</pubDate>
@@ -157,20 +165,5 @@ http://121.41.7.149:65002/?file=php://filter/read=convert.base64-encode/resource
 ​	递归下降算法具有区分代码与数据的强大能力。IDA是典型的递归下降反汇编器。
 栈帧相关 1、栈帧是什么？ ​	栈帧是在程序的运行时栈中分配的内存块，专门用于特定的函数调用。当函数被调用时，可能因为函数需要传参或是局部变量的使用而需要用到内存。编译器通过栈帧使得对函数参数和局部变量进行分配的过程对程序员透明。
 2、函数调用的详细步骤 1. 函数调用方将调用函数所需要的任何参数放入调用约定指定的位置。 2. 调用方将控制权转交给被调用的函数。 3. 如有必要，被调用的函数会配置一个栈指针，并保存调用方希望保持不变的任何寄存器值。 4. 被调用的函数为局部变量分配空间。 5. 被调用的函数执行其操作。 6. 被调用的函数完成操作，为局部变量保存的栈空间被全部释放。 7. 将3.中保存的寄存器值恢复至原样。 8. 被调用的函数将控制权还给调用方。根据调用指令，可能清除程序栈中的一个或多个参数。 9. 调用方获得控制权，并对栈进行调整，以将程序栈指针恢复到1.之前的值。  3、调用约定相关 ​	调用约定指定调用方放置函数所需参数的具体位置。调用约定可能要求将参数放置在寄存器、程序栈或寄存器和栈中。同时，在传递参数时，程序栈还需要决定被调用函数完成它的操作后，谁负责删除这些参数。]]></description>
-</item><item>
-    <title>CNSS2021夏令营游记</title>
-    <link>http://sh11no.github.io/cnsssummer/</link>
-    <pubDate>Fri, 20 Aug 2021 13:36:08 &#43;0800</pubDate>
-    <author>作者</author>
-    <guid>http://sh11no.github.io/cnsssummer/</guid>
-    <description><![CDATA[写在前面 ​	第一次玩CTF属于是，萌新吓傻了。（更新中）
-Web 0x01 第一次冒险 ​	按照网页提示操作，最后结合提示在cookie中得到一个字符串，使用base64解密得到flag
-0x02 更简单的计算题 ​	算出来发现提交不了？F12修改输入框的长度限制和提交按钮的disable状态，提交得到flag
-0x03 卖菜刀 ​	依照题目，使用工具中国菜刀，在网站根目录可以找到flag文件。
-0x04 最好的语言？ ​	这个题有点难，搞了好久。具体就是利用php的反序列化漏洞，即最后会将GET到的interesting参数反序列化。而我们可以利用这一点在interesting变量中加入代码让它执行达到目的。
-​	class中的wakeup()函数会在对象被反序列化的时候执行，destruct()函数会在对象被销毁时执行。观察一下当a=&lsquo;1&rsquo;,b=&lsquo;2&rsquo;,c=&lsquo;3&rsquo;时对象就会在被销毁时输出flag。（注意是字符类型的123）而wakeup()函数会把abc修改成数值类型的123。而众所周知，对象会在程序执行结束后被销毁。所以我们的目的就是：利用反序列化漏洞构造一个Flag类的参数t，并且绕过其反序列化时执行的wakeup()直接执行destruct()。
-​	那么怎么绕过wakeup()呢？
-​	百度搜索可以得知：在某些php版本中，如果表示对象属性个数的值大于真实的属性个数时就会跳过wakeup()的执行。写个代码看看对象序列化之后啥样：
-1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16  class Flag { public $a = &#39;1&#39;; protected $b = &#39;2&#39;; private $c = &#39;3&#39;; function __construct() { $this-&gt;a = &#39;1&#39;; $this-&gt;b = &#39;2&#39;; $this-&gt;c = &#39;3&#39;; } } $t = new Flag(); echo serialize($t);   得到结果：]]></description>
 </item></channel>
 </rss>

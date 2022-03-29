@@ -126,8 +126,8 @@ class Query(Resource):
     def post(self):
         parser = reqparse.RequestParser() #初始化
         
-        parser = add_argument('username', required = True) #添加需要的参数字段
-        parser = add_argument('password', required = True)
+        parser.add_argument('username', required = True) #添加需要的参数字段
+        parser.add_argument('password', required = True)
         
         args = parser.parse_args() #将参数解析为Python字典
         #在解析为Python字典之后，既可以用Python字典方式获取字段的值
