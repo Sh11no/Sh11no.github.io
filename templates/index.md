@@ -12,7 +12,9 @@ void tarjan(int u) {
 			low[u] = min(low[u], low[v]);
 		} else if(ins[v]) low[u] = min(low[u], low[v]);
 	if(low[u] == dfn[u]) {
-		int y; while(y = stac[top--]) {sd[y] = u; ins[y] = 0; if(u == y) break; p[u] += p[y];}
+		int y; while(y = stac[top--]) {
+            sd[y] = u; ins[y] = 0; if(u == y) break; p[u] += p[y];
+        }
 	}
 }
 void topo() {
@@ -58,7 +60,8 @@ struct RMQ {
 	int prf[MAXN], suf[MAXN], n, st[MAXB][13], lg2[MAXN], a[MAXN];
 	void init(int *s, int _n, int k) {
 		n = _n;
-		for(int i = 1; i <= n; ++i) a[i] = s[i] % k, st[bl(i)][0] = min(st[bl(i)][0], a[i]);
+		for(int i = 1; i <= n; ++i)
+            a[i] = s[i] % k, st[bl(i)][0] = min(st[bl(i)][0], a[i]);
 		for(int i = 1; i <= bl(n); ++i) {
 			prf[L(i)] = a[L(i)]; suf[R(i)] = a[R(i)];
 			for(int j = L(i)+1; j <= R(i); ++j) prf[j] = min(prf[j-1], a[j]);
@@ -819,6 +822,232 @@ int main() {
 	puts("");
 	
 } 
+```
+
+## 多项式
+
+```c++
+#include<bits/stdc++.h>
+#define ll long long
+#define FIO "loj150"
+using namespace std;
+const int N=1e5+5,MOD=998244353,P=19,INV2=MOD+1>>1;
+
+inline int add(int a,const int &b){if((a+=b)>=MOD)a-=MOD;return a;}
+inline int sub(int a,const int &b){if((a-=b)<		0)a+=MOD;return a;}
+inline int mul(const int &a,const int &b){return 1ll*a*b%MOD;}
+inline void inc(int &a,const int &b=1){a=add(a,b);}
+inline void dec(int &a,const int &b=1){a=sub(a,b);}
+inline void pro(int &a,const int &b){a=mul(a,b);}
+inline int qpow(int a,int b){int c=1;for(;b;b>>=1,pro(a,a))if(b&1)pro(c,a);return c;}
+
+int n,k,w[2][1<<P];
+
+inline void pre(){
+	for(int i=1;i<1<<P;i<<=1){
+		w[0][i]=w[1][i]=1;
+		int wn1=qpow(3,(MOD-1)/(i<<1)),wn0=qpow(wn1,MOD-2);
+		for(int j=1;j<i;j++)
+			w[0][i+j]=mul(w[0][i+j-1],wn0),w[1][i+j]=mul(w[1][i+j-1],wn1);
+	}
+}
+
+#define poly vector<int> 
+inline void read(poly &a,const int &n){
+	a.resize(n);
+	for(int i=0;i<n;i++)scanf("%d",&a[i]);
+}
+
+inline void out(const poly &a){
+	for(int i=0,n=a.size();i<n;i++)printf("%d%c",a[i],i^n-1?' ':'\n');
+}
+
+inline void clear(poly &a){
+	int n=a.size();
+	while(n>1&&!a[n-1])n--;
+	a.resize(n);
+}
+
+inline poly operator +(poly a,const int &b){inc(a[0],b);return a;}
+inline poly operator +(const int &b,poly a){inc(a[0],b);return a;}
+inline poly operator -(poly a,const int &b){dec(a[0],b);return a;}
+inline poly operator -(const int &b,poly a){dec(a[0],b);return a;}
+
+inline poly operator +(poly a,const poly &b){
+	if(a.size()<b.size())a.resize(b.size());
+	for(int i=0,n=a.size();i<n;i++)inc(a[i],b[i]);
+	return a;
+}
+
+inline poly operator -(poly a,const poly &b){
+	if(a.size()<b.size())a.resize(b.size());
+	for(int i=0,n=a.size();i<n;i++)dec(a[i],b[i]);
+	return a;
+}
+
+inline void ntt(int *f,int opt,int l){
+	poly rev(l);
+	for(int i=0;i<l;i++){rev[i]=(rev[i>>1]>>1)|((i&1)*(l>>1));if(i<rev[i])swap(f[i],f[rev[i]]);}
+	for(int i=1;i<l;i<<=1)
+		for(int j=0;j<l;j+=i<<1)
+			for(int k=0;k<i;k++){
+				int x=f[j+k],y=mul(f[i+j+k],w[opt][i+k]);
+				f[j+k]=add(x,y);
+				f[i+j+k]=sub(x,y);
+			}
+	if(opt)for(int i=0,inv=qpow(l,MOD-2);i<l;i++)pro(f[i],inv);
+}
+
+inline poly operator *(poly a,poly b){
+	int n=a.size(),m=b.size(),l=1;
+	while(l<n+m)l<<=1;
+	a.resize(l);b.resize(l);
+	ntt(&a[0],0,l);ntt(&b[0],0,l);
+	for(int i=0;i<l;i++)pro(a[i],b[i]);
+	ntt(&a[0],1,l);
+	clear(a);
+	return a;
+}
+
+inline poly& operator *=(poly &a,const poly b){return a=a*b;}
+
+inline poly operator *(poly a,const int &b){
+	for(int i=0,n=a.size();i<n;i++)pro(a[i],b);
+	return a;
+}
+
+inline poly inv(const poly &a,const int &n){
+	if(n==1)return poly(1,qpow(a[0],MOD-2));
+	int l=1;while(l<=n<<1)l<<=1;
+	poly b=inv(a,n+1>>1),c(l);b.resize(l);
+	for(int i=0;i<n;i++)c[i]=a[i];
+	ntt(&b[0],0,l);ntt(&c[0],0,l);
+	for(int i=0;i<l;i++)pro(b[i],sub(2,mul(b[i],c[i])));
+	ntt(&b[0],1,l);
+	b.resize(n);
+	clear(b);
+	return b;
+}
+
+inline poly inv(const poly &a){return inv(a,a.size());}
+
+int B;
+#define pii pair<int,int>
+inline pii operator *(pii a,pii b){
+	return pii(add(mul(a.first,b.first),mul(mul(a.second,b.second),B)),add(mul(a.first,b.second),mul(a.second,b.first)));
+}
+inline pii qpow(pii a,int b){pii c=pii(1,0);for(;b;b>>=1,a=a*a)if(b&1)c=c*a;return c;}
+
+inline int remain(int x){
+	if(x<=1)return x;
+	int a=mul(mul(rand(),rand()),rand());
+	while(qpow(B=sub(mul(a,a),x),MOD-1>>1)==1)a=mul(mul(rand(),rand()),rand());
+	pii A=pii(a,1),ans=qpow(A,MOD+1>>1);
+	return min(ans.first,MOD-ans.first);
+}
+
+inline poly sqrt(const poly &a,const int &n){
+	if(n==1)return poly(1,remain(a[0]));
+	int l=1;while(l<=n<<1)l<<=1;
+	poly b=sqrt(a,n+1>>1),c(l),d;
+	b.resize(n);d=inv(b)*INV2;
+	b.resize(l);d.resize(l);
+	for(int i=0;i<n;i++)c[i]=a[i];
+	ntt(&b[0],0,l);ntt(&c[0],0,l);ntt(&d[0],0,l);
+	for(int i=0;i<l;i++)b[i]=mul(d[i],add(mul(b[i],b[i]),c[i]));
+	ntt(&b[0],1,l);
+	b.resize(n);
+	clear(b);
+	return b;
+}
+
+inline poly sqrt(const poly &a){return sqrt(a,a.size());}
+
+inline poly deri(poly a){
+	int n=a.size();
+	if(n==1)return poly(1,0);
+	for(int i=0;i<n;i++)a[i]=mul(a[i+1],i+1);
+	a.resize(n-1);
+	return a;
+}
+
+inline poly inte(poly a){
+	int n=a.size();
+	a.resize(n+1);
+	for(int i=n;i;i--)a[i]=mul(a[i-1],qpow(i,MOD-2));
+	a[0]=0;
+	return a;
+}
+
+inline poly ln(const poly &a){
+	int n=a.size();
+	poly c=inv(a)*deri(a);
+	c.resize(n-1);
+	return inte(c);
+}
+
+inline poly exp(const poly &a,const int &n){
+	if(n==1)return poly(1,1);
+	poly b=exp(a,n+1>>1),c;
+	b.resize(n);c=ln(b);
+	for(int i=0;i<n;i++)c[i]=sub(a[i],c[i]);
+	inc(c[0]);
+	b*=c;
+	b.resize(n);
+	return b;
+}
+
+inline poly exp(const poly &a){return exp(a,a.size());}
+
+inline poly qpow(poly a,const double &b){return exp(ln(a)*b);}
+
+poly a;
+
+int main(){
+	srand(19260817);
+	pre();
+
+	scanf("%d%d",&n,&k);
+	read(a,1+n);
+	a=deri(qpow(1+ln(2+a-a[0]-exp(inte(inv(sqrt(a))))),k));
+	a.resize(n);
+	out(a);
+	return 0;
+}
+```
+
+## 珂朵莉树
+
+```c++
+//以防我忘了set迭代器怎么写
+struct node {
+	int l, r;
+	mutable lint v;
+	node(int L, int R = -1, lint V = 0) : l(L), r(R), v(V) {}
+	bool operator < (const node &o) const {
+		return l < o.l;
+	}
+};
+set <node> s;
+IT spilit (int pos) {
+	IT it = s.lower_bound(node(pos));
+	if(it != s.end() && it->l == pos) return it;
+	it--;
+	int L = it -> l, R = it -> r;
+	lint V = it->v;
+	s.erase(it);
+	s.insert(node(L, pos-1, V));
+	return s.insert(node(pos, R, V)).first;
+}
+void add(int l, int r, int val) {
+	IT il = spilit(l), ir = spilit(r+1);
+	for(; il != ir; il->v += val, il++);
+}
+void tp(int l, int r, int val = 0) {
+	IT il = spilit(l), ir = spilit(r+1);
+	s.erase(il, ir);
+	s.insert(node(l, r, val));
+}
 ```
 
 
