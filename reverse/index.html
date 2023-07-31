@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+        <title>Reverse学习笔记 - Shino Channel</title><meta name="Description" content="这是我的全新 Hugo 网站"><meta property="og:title" content="Reverse学习笔记" />
+<meta property="og:description" content="反汇编工作原理 1、基本反汇编算法  区分指令与数据，确认文件中包含代码和代码入口点的位置。 读取指令起始地址的值，查表将二进制操作码与汇编语言助记符对应起来。 格式化汇编语言并进行输出 继续反汇编下一条指令  2、如何识别反汇编起点、如何选择下一条指令、何时完成反汇编？ 书中介绍了两种算法：线性扫描反汇编与递归下降反汇编
+1.线性扫描反汇编 ​	线性扫描法通过寻找一条指令结束、另一条指令开始的地方来确定需要反汇编的指令位置。具体方法为：假设程序中标注为代码的程序段内全部是机器语言指令，则从第一个字节开始逐条反汇编。这种算法并不会通过识别分支等非线性指令来了解程序的控制流。
+​	线性扫描法的优点在于它能够完全覆盖程序的所有代码段，但其没有考虑到代码中可能混有数据。线性扫描法无法正确地将嵌入的数据与代码区分开来。
+​	GNU调试器(gdb)、微软的WinDbg调试器和odjump的反汇编引擎均采用线性扫描算法。
+2.递归下降反汇编 ​	递归下降法强调控制流的概念。控制流根据一条指令是否被另一条指令引用来决定是否对其进行反汇编。
+​	有以下几种指令：
+1.顺序流指令 ​	顺序流指令将执行权传递给下一条指令。
+2.条件分支指令 ​	当条件为真的时候修改指令指针使其指向分支目标，否则以线性模式执行指令。
+​	递归下降法会反汇编以上两条路径。分支目标指令地址被添加到稍后进行反汇编的地址列表中，推迟其反汇编过程。
+3.无条件分支指令 ​	执行权传给一条指令，但这条指令不需要紧跟在无条件分支指令后面。
+​	递归下降法会尝试确定无条件跳转的目标，但如果跳转指令的目标取决于一个运行时的值，这时使用静态分析无法确定跳转目标，将会带来麻烦。
+4.函数调用指令 ​	与无条件跳转指令相似，区别在于一旦跳转的函数执行完成，执行权将返还给紧跟在后面的指令。
+​	从被调用函数返回的时候，如果程序运行出现异常，可能导致递归下降算法的失败。函数中的代码有可能会有意篡改函数的返回地址。这样在函数完成的时候，控制权将返回到反汇编器无法返回的地址。
+5.返回指令 ​	有时递归下降算法访问了所有的路径，而函数返回指令没有提供接下来将要执行的指令的信息。此时，若程序确实正在运行，则可以从运行时栈顶部获得一个地址，从这个地址开始恢复执行指令。但反汇编器不具备访问栈的能力，因此反汇编过程会突然终止。
+​	递归下降算法具有区分代码与数据的强大能力。IDA是典型的递归下降反汇编器。
+栈帧相关 1、栈帧是什么？ ​	栈帧是在程序的运行时栈中分配的内存块，专门用于特定的函数调用。当函数被调用时，可能因为函数需要传参或是局部变量的使用而需要用到内存。编译器通过栈帧使得对函数参数和局部变量进行分配的过程对程序员透明。
+2、函数调用的详细步骤 1. 函数调用方将调用函数所需要的任何参数放入调用约定指定的位置。 2. 调用方将控制权转交给被调用的函数。 3. 如有必要，被调用的函数会配置一个栈指针，并保存调用方希望保持不变的任何寄存器值。 4. 被调用的函数为局部变量分配空间。 5. 被调用的函数执行其操作。 6. 被调用的函数完成操作，为局部变量保存的栈空间被全部释放。 7. 将3.中保存的寄存器值恢复至原样。 8. 被调用的函数将控制权还给调用方。根据调用指令，可能清除程序栈中的一个或多个参数。 9. 调用方获得控制权，并对栈进行调整，以将程序栈指针恢复到1.之前的值。  3、调用约定相关 ​	调用约定指定调用方放置函数所需参数的具体位置。调用约定可能要求将参数放置在寄存器、程序栈或寄存器和栈中。同时，在传递参数时，程序栈还需要决定被调用函数完成它的操作后，谁负责删除这些参数。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://sh11no.github.io/reverse/" /><meta property="og:image" content="http://sh11no.github.io/logo.png"/><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2021-09-15T19:33:35+08:00" />
+<meta property="article:modified_time" content="2021-09-15T19:33:35+08:00" />
+
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="http://sh11no.github.io/logo.png"/>
+
+<meta name="twitter:title" content="Reverse学习笔记"/>
+<meta name="twitter:description" content="反汇编工作原理 1、基本反汇编算法  区分指令与数据，确认文件中包含代码和代码入口点的位置。 读取指令起始地址的值，查表将二进制操作码与汇编语言助记符对应起来。 格式化汇编语言并进行输出 继续反汇编下一条指令  2、如何识别反汇编起点、如何选择下一条指令、何时完成反汇编？ 书中介绍了两种算法：线性扫描反汇编与递归下降反汇编
+1.线性扫描反汇编 ​	线性扫描法通过寻找一条指令结束、另一条指令开始的地方来确定需要反汇编的指令位置。具体方法为：假设程序中标注为代码的程序段内全部是机器语言指令，则从第一个字节开始逐条反汇编。这种算法并不会通过识别分支等非线性指令来了解程序的控制流。
+​	线性扫描法的优点在于它能够完全覆盖程序的所有代码段，但其没有考虑到代码中可能混有数据。线性扫描法无法正确地将嵌入的数据与代码区分开来。
+​	GNU调试器(gdb)、微软的WinDbg调试器和odjump的反汇编引擎均采用线性扫描算法。
+2.递归下降反汇编 ​	递归下降法强调控制流的概念。控制流根据一条指令是否被另一条指令引用来决定是否对其进行反汇编。
+​	有以下几种指令：
+1.顺序流指令 ​	顺序流指令将执行权传递给下一条指令。
+2.条件分支指令 ​	当条件为真的时候修改指令指针使其指向分支目标，否则以线性模式执行指令。
+​	递归下降法会反汇编以上两条路径。分支目标指令地址被添加到稍后进行反汇编的地址列表中，推迟其反汇编过程。
+3.无条件分支指令 ​	执行权传给一条指令，但这条指令不需要紧跟在无条件分支指令后面。
+​	递归下降法会尝试确定无条件跳转的目标，但如果跳转指令的目标取决于一个运行时的值，这时使用静态分析无法确定跳转目标，将会带来麻烦。
+4.函数调用指令 ​	与无条件跳转指令相似，区别在于一旦跳转的函数执行完成，执行权将返还给紧跟在后面的指令。
+​	从被调用函数返回的时候，如果程序运行出现异常，可能导致递归下降算法的失败。函数中的代码有可能会有意篡改函数的返回地址。这样在函数完成的时候，控制权将返回到反汇编器无法返回的地址。
+5.返回指令 ​	有时递归下降算法访问了所有的路径，而函数返回指令没有提供接下来将要执行的指令的信息。此时，若程序确实正在运行，则可以从运行时栈顶部获得一个地址，从这个地址开始恢复执行指令。但反汇编器不具备访问栈的能力，因此反汇编过程会突然终止。
+​	递归下降算法具有区分代码与数据的强大能力。IDA是典型的递归下降反汇编器。
+栈帧相关 1、栈帧是什么？ ​	栈帧是在程序的运行时栈中分配的内存块，专门用于特定的函数调用。当函数被调用时，可能因为函数需要传参或是局部变量的使用而需要用到内存。编译器通过栈帧使得对函数参数和局部变量进行分配的过程对程序员透明。
+2、函数调用的详细步骤 1. 函数调用方将调用函数所需要的任何参数放入调用约定指定的位置。 2. 调用方将控制权转交给被调用的函数。 3. 如有必要，被调用的函数会配置一个栈指针，并保存调用方希望保持不变的任何寄存器值。 4. 被调用的函数为局部变量分配空间。 5. 被调用的函数执行其操作。 6. 被调用的函数完成操作，为局部变量保存的栈空间被全部释放。 7. 将3.中保存的寄存器值恢复至原样。 8. 被调用的函数将控制权还给调用方。根据调用指令，可能清除程序栈中的一个或多个参数。 9. 调用方获得控制权，并对栈进行调整，以将程序栈指针恢复到1.之前的值。  3、调用约定相关 ​	调用约定指定调用方放置函数所需参数的具体位置。调用约定可能要求将参数放置在寄存器、程序栈或寄存器和栈中。同时，在传递参数时，程序栈还需要决定被调用函数完成它的操作后，谁负责删除这些参数。"/>
+<meta name="application-name" content="LoveIt">
+<meta name="apple-mobile-web-app-title" content="LoveIt"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="http://sh11no.github.io/reverse/" /><link rel="prev" href="http://sh11no.github.io/cnsssummer/" /><link rel="next" href="http://sh11no.github.io/cnssrecruit/" /><link rel="stylesheet" href="/lib/normalize/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"><link rel="stylesheet" href="/lib/animate/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "Reverse学习笔记",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/sh11no.github.io\/reverse\/"
+        },"genre": "posts","wordcount":  188 ,
+        "url": "http:\/\/sh11no.github.io\/reverse\/","datePublished": "2021-09-15T19:33:35+08:00","dateModified": "2021-09-15T19:33:35+08:00","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "Shino"
+            },"description": ""
+    }
+    </script></head>
+    <body header-desktop="fixed" header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('dark' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'dark' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Shino Channel"><span id="id-1" class="typeit"></span></a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="http://www.nu1l.com/" rel="noopener noreffer" target="_blank"> Nu1L </a><a class="menu-item" href="http://blog.cnss.io/" rel="noopener noreffer" target="_blank"> CNSS </a><a class="menu-item" href="/friends/"> Friends </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Shino Channel"><span id="id-2" class="typeit"></span></a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="http://www.nu1l.com/" title="" rel="noopener noreffer" target="_blank">Nu1L</a><a class="menu-item" href="http://blog.cnss.io/" title="" rel="noopener noreffer" target="_blank">CNSS</a><a class="menu-item" href="/friends/" title="">Friends</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw"></i>
+            </a></div>
+    </div>
+</header>
+<div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+</div>
+<div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+</div>
+<main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animated flipInX">Reverse学习笔记</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2021-09-15">2021-09-15</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 188 字&nbsp;
+                <i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 1 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  kept="true">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#反汇编工作原理">反汇编工作原理</a>
+      <ul>
+        <li><a href="#1基本反汇编算法">1、基本反汇编算法</a></li>
+        <li><a href="#2如何识别反汇编起点如何选择下一条指令何时完成反汇编">2、如何识别反汇编起点、如何选择下一条指令、何时完成反汇编？</a>
+          <ul>
+            <li><a href="#1线性扫描反汇编">1.线性扫描反汇编</a></li>
+            <li><a href="#2递归下降反汇编">2.递归下降反汇编</a>
+              <ul>
+                <li><a href="#1顺序流指令">1.顺序流指令</a></li>
+                <li><a href="#2条件分支指令">2.条件分支指令</a></li>
+                <li><a href="#3无条件分支指令">3.无条件分支指令</a></li>
+                <li><a href="#4函数调用指令">4.函数调用指令</a></li>
+                <li><a href="#5返回指令">5.返回指令</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="#栈帧相关">栈帧相关</a>
+      <ul>
+        <li><a href="#1栈帧是什么">1、栈帧是什么？</a></li>
+        <li><a href="#2函数调用的详细步骤">2、函数调用的详细步骤</a></li>
+        <li><a href="#3调用约定相关">3、调用约定相关</a>
+          <ul>
+            <li><a href="#1c调用约定">1.C调用约定</a></li>
+            <li><a href="#2标准调用约定">2.标准调用约定</a></li>
+            <li><a href="#3x86-fastcall约定">3.x86 fastcall约定</a></li>
+            <li><a href="#4c调用约定">4.C++调用约定</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="#数据结构的识别">数据结构的识别</a>
+      <ul>
+        <li><a href="#1-数组">1. 数组</a>
+          <ul>
+            <li><a href="#1全局分配的数组">1.全局分配的数组</a></li>
+            <li><a href="#2栈分配的数组">2.栈分配的数组</a></li>
+            <li><a href="#3堆分配的数组">3.堆分配的数组</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="反汇编工作原理">反汇编工作原理</h2>
+<h3 id="1基本反汇编算法">1、基本反汇编算法</h3>
+<ol>
+<li>区分指令与数据，确认文件中包含代码和代码入口点的位置。</li>
+<li>读取指令起始地址的值，查表将二进制操作码与汇编语言助记符对应起来。</li>
+<li>格式化汇编语言并进行输出</li>
+<li>继续反汇编下一条指令</li>
+</ol>
+<h3 id="2如何识别反汇编起点如何选择下一条指令何时完成反汇编">2、如何识别反汇编起点、如何选择下一条指令、何时完成反汇编？</h3>
+<p>书中介绍了两种算法：<strong>线性扫描反汇编</strong>与<strong>递归下降反汇编</strong></p>
+<h4 id="1线性扫描反汇编">1.线性扫描反汇编</h4>
+<p>​	线性扫描法通过寻找一条指令结束、另一条指令开始的地方来确定需要反汇编的指令位置。具体方法为：假设程序中标注为代码的程序段内全部是机器语言指令，则从第一个字节开始逐条反汇编。这种算法并不会通过识别分支等非线性指令来了解程序的控制流。</p>
+<p>​	线性扫描法的优点在于它能够完全覆盖程序的所有代码段，但其没有考虑到代码中可能混有数据。线性扫描法无法正确地将嵌入的数据与代码区分开来。</p>
+<p>​	GNU调试器(gdb)、微软的WinDbg调试器和odjump的反汇编引擎均采用线性扫描算法。</p>
+<h4 id="2递归下降反汇编">2.递归下降反汇编</h4>
+<p>​	递归下降法强调控制流的概念。控制流根据一条指令是否被另一条指令引用来决定是否对其进行反汇编。</p>
+<p>​	有以下几种指令：</p>
+<h5 id="1顺序流指令">1.顺序流指令</h5>
+<p>​	顺序流指令将执行权传递给下一条指令。</p>
+<h5 id="2条件分支指令">2.条件分支指令</h5>
+<p>​	当条件为真的时候修改指令指针使其指向分支目标，否则以线性模式执行指令。</p>
+<p>​	递归下降法会反汇编以上两条路径。分支目标指令地址被添加到稍后进行反汇编的地址列表中，推迟其反汇编过程。</p>
+<h5 id="3无条件分支指令">3.无条件分支指令</h5>
+<p>​	执行权传给一条指令，但这条指令不需要紧跟在无条件分支指令后面。</p>
+<p>​	递归下降法会尝试确定无条件跳转的目标，但如果跳转指令的目标取决于一个运行时的值，这时使用静态分析无法确定跳转目标，将会带来麻烦。</p>
+<h5 id="4函数调用指令">4.函数调用指令</h5>
+<p>​	与无条件跳转指令相似，区别在于一旦跳转的函数执行完成，执行权将返还给紧跟在后面的指令。</p>
+<p>​	从被调用函数返回的时候，如果程序运行出现异常，可能导致递归下降算法的失败。函数中的代码有可能会有意篡改函数的返回地址。这样在函数完成的时候，控制权将返回到反汇编器无法返回的地址。</p>
+<h5 id="5返回指令">5.返回指令</h5>
+<p>​	有时递归下降算法访问了所有的路径，而函数返回指令没有提供接下来将要执行的指令的信息。此时，若程序确实正在运行，则可以从运行时栈顶部获得一个地址，从这个地址开始恢复执行指令。但反汇编器不具备访问栈的能力，因此反汇编过程会突然终止。</p>
+<p>​	递归下降算法具有区分代码与数据的强大能力。IDA是典型的递归下降反汇编器。</p>
+<h2 id="栈帧相关">栈帧相关</h2>
+<h3 id="1栈帧是什么">1、栈帧是什么？</h3>
+<p>​	栈帧是在程序的运行时栈中分配的内存块，专门用于特定的函数调用。当函数被调用时，可能因为函数需要传参或是局部变量的使用而需要用到内存。编译器通过栈帧使得对函数参数和局部变量进行分配的过程对程序员透明。</p>
+<h3 id="2函数调用的详细步骤">2、函数调用的详细步骤</h3>
+<pre><code>1.  函数调用方将调用函数所需要的任何参数放入调用约定指定的位置。
+2.  调用方将控制权转交给被调用的函数。
+3.  如有必要，被调用的函数会配置一个栈指针，并保存调用方希望保持不变的任何寄存器值。
+4.  被调用的函数为局部变量分配空间。
+5.  被调用的函数执行其操作。
+6.  被调用的函数完成操作，为局部变量保存的栈空间被全部释放。
+7.  将3.中保存的寄存器值恢复至原样。
+8.  被调用的函数将控制权还给调用方。根据调用指令，可能清除程序栈中的一个或多个参数。
+9.  调用方获得控制权，并对栈进行调整，以将程序栈指针恢复到1.之前的值。
+</code></pre>
+<h3 id="3调用约定相关">3、调用约定相关</h3>
+<p>​	调用约定指定调用方放置函数所需参数的具体位置。调用约定可能要求将参数放置在寄存器、程序栈或寄存器和栈中。同时，在传递参数时，程序栈还需要决定被调用函数完成它的操作后，谁负责删除这些参数。</p>
+<h4 id="1c调用约定">1.C调用约定</h4>
+<p>​	C/C++程序中常用的<code>_cdecl</code>修饰符会迫使编译器利用C编译规定，因此这种调用约定别叫做<code>cdecl</code>调用约定。该调用约定规定：调用方按从右到左的顺序将函数参数放入栈中，在被调用的函数完成其操作后，<strong>调用方</strong>负责从栈中清除参数。</p>
+<p>​	从右到左在栈中放入参数导致最左边（第一个）参数将始终位于栈顶，我们可以轻易找到第一个参数，非常适用于参数数量可变的函数如<code>printf</code></p>
+<p>​	要求调用函数从栈中删除参数，意味着指令由被调用函数返回后，会立即对程序栈指针进行调整。如果函数参数数量可变，则调用方比被调用方更加清楚参数的个数，从而更加适应这种调整。</p>
+<h4 id="2标准调用约定">2.标准调用约定</h4>
+<p>​	“标准”是微软为自己的调用约定所起的名称，在函数声明中使用了修饰符<code>_stdcall</code>，为避免混淆，将这种调用约定称为<code>stdcall</code>调用约定。</p>
+<p>​	<code>stdcall</code>调用约定规定：调用方按从右到左的顺序将函数放入栈中，但在函数结束执行的时候，由被调用函数负责删除栈中的函数参数。这要求被调用函数清楚栈中由多少个参数，因此<strong>printf这种接受参数个数可变的命令不适用于stdcall调用约定</strong>。</p>
+<p>​	<code>stdcall</code>调用约定的优点在于可以生成体积稍小、速度稍快的程序。</p>
+<p>​	**微团对所有由共享库文件（DLL）输出的参数数量固定的函数使用<code>stdcall</code>约定。</p>
+<h4 id="3x86-fastcall约定">3.x86 fastcall约定</h4>
+<p>​	<code>fastcall</code>约定是<code>stdcall</code>约定的一个变体。传递给函数的前两个参数将分别位于ECX和EDXX寄存器中，其余的则以类似<code>stdcall</code>的方式从右往左放入栈中。返回时同样通过被调用方删除栈中的函数参数。</p>
+<h4 id="4c调用约定">4.C++调用约定</h4>
+<p>​	C++类中的非静态成员函数函数需要使用<code>this</code>指针，指向用于调用函数的对象。</p>
+<p>​	<code>Microsoft Visual C++</code>提供<code>thiscall</code>调用约定，将<code>this</code>传入ECX寄存器中， 并要求非静态成员函数清除栈中的参数</p>
+<p>​	<code>GNU G++</code>编译器将<code>this</code>看成是非静态成员函数的第一个隐藏参数，其他方便与<code>cdecl</code>调用约定相同。</p>
+<h2 id="数据结构的识别">数据结构的识别</h2>
+<h3 id="1-数组">1. 数组</h3>
+<h4 id="1全局分配的数组">1.全局分配的数组</h4>
+<p>例如：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="kt">int</span> <span class="n">global_array</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+	<span class="kt">int</span> <span class="n">idx</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+	<span class="n">global_array</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+	<span class="n">global_array</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+	<span class="n">global_array</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">30</span><span class="p">;</span>
+	<span class="n">global_array</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="mi">40</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>在IDA中，我们将可以看到（部分）：</p>
+<blockquote>
+<p>.text:00401000 idx				= dword ptr - 4</p>
+<p>&hellip;&hellip;&hellip;</p>
+<p>.text:0040100B						mov	dword_40B720, 10①</p>
+<p>.text:00401015						mov	dword_40B724, 20②</p>
+<p>.text:0040101F						mov	dword_40B728, 30③</p>
+<p>.text:00401029						mov	eax, [ebp+idx]</p>
+<p>.text:0040102C						mov	dword_40B720[eax*4], 40④</p>
+<p>&hellip;&hellip;&hellip;.</p>
+</blockquote>
+<p>从①②③看，这个程序似乎使用了4个全局变量，但④对偏移量的计算（<code>eax*4</code>）暗示了全局数组的存在，变量名与①处相同。当函数中使用固定索引(0， 1， 2)的时候，数组元素将以全局变量的形式存在，不提供任何数组存在的证据。但通过对④的观察，我们可以知道数组的基址(<code>dword_40B720</code>，即数组开头的地址)和数组每个元素的大小（<code>eax*4</code>代表每个数组元素占位4）</p>
+<h4 id="2栈分配的数组">2.栈分配的数组</h4>
+<p>编译器以完全相同的方式处理栈分配的数组和全局分配的数组。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+	<span class="kt">int</span> <span class="n">stack_array</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+	<span class="kt">int</span> <span class="n">idx</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>不同的是，如上代码所示，观察栈中idx的位置将有助于确定数组最多包含的元素个数。</p>
+<h4 id="3堆分配的数组">3.堆分配的数组</h4>
+<p>堆分配的数组是由动态内存分配函数（如<code>malloc</code>或<code>new</code>）分配而得。此时编译器需要根据内存分配函数返回的地址值生成对数组的引用。</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2021-09-15</span>
+            </div>
+            <div class="post-info-license"></div>
+        </div>
+        <div class="post-info-line">
+            <div class="post-info-md"><span>
+                            <a class="link-to-markdown" href="/reverse/index.md" target="_blank">阅读原始文档</a>
+                        </span></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="http://sh11no.github.io/reverse/" data-title="Reverse学习笔记" data-via="Akarexol"><i class="fab fa-twitter fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Facebook" data-sharer="facebook" data-url="http://sh11no.github.io/reverse/"><i class="fab fa-facebook-square fa-fw"></i></a><a href="javascript:void(0);" title="分享到 WhatsApp" data-sharer="whatsapp" data-url="http://sh11no.github.io/reverse/" data-title="Reverse学习笔记" data-web><i class="fab fa-whatsapp fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Line" data-sharer="line" data-url="http://sh11no.github.io/reverse/" data-title="Reverse学习笔记"><i data-svg-src="/lib/simple-icons/icons/line.min.svg"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="http://sh11no.github.io/reverse/" data-title="Reverse学习笔记"><i class="fab fa-weibo fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Myspace" data-sharer="myspace" data-url="http://sh11no.github.io/reverse/" data-title="Reverse学习笔记" data-description=""><i data-svg-src="/lib/simple-icons/icons/myspace.min.svg"></i></a><a href="javascript:void(0);" title="分享到 Blogger" data-sharer="blogger" data-url="http://sh11no.github.io/reverse/" data-title="Reverse学习笔记" data-description=""><i class="fab fa-blogger fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Evernote" data-sharer="evernote" data-url="http://sh11no.github.io/reverse/" data-title="Reverse学习笔记"><i class="fab fa-evernote fa-fw"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/cnsssummer/" class="prev" rel="prev" title="CNSS2021夏令营游记"><i class="fas fa-angle-left fa-fw"></i>CNSS2021夏令营游记</a>
+            <a href="/cnssrecruit/" class="next" rel="next" title="CNSS招新赛游记">CNSS招新赛游记<i class="fas fa-angle-right fa-fw"></i></a></div>
+</div>
+<div id="comments"></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.87.0">Hugo</a> 强力驱动 | 主题 - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.10"><i class="far fa-kiss-wink-heart fa-fw"></i> LoveIt</a>
+                </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2019 - 2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">Shino</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw"></i>
+            </a>
+        </div><link rel="stylesheet" href="/lib/katex/katex.min.css"><link rel="stylesheet" href="/lib/katex/copy-tex.min.css"><script type="text/javascript" src="/lib/smooth-scroll/smooth-scroll.min.js"></script><script type="text/javascript" src="/lib/autocomplete/autocomplete.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="/lib/lazysizes/lazysizes.min.js"></script><script type="text/javascript" src="/lib/clipboard/clipboard.min.js"></script><script type="text/javascript" src="/lib/sharer/sharer.min.js"></script><script type="text/javascript" src="/lib/typeit/typeit.min.js"></script><script type="text/javascript" src="/lib/katex/katex.min.js"></script><script type="text/javascript" src="/lib/katex/auto-render.min.js"></script><script type="text/javascript" src="/lib/katex/copy-tex.min.js"></script><script type="text/javascript" src="/lib/katex/mhchem.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":100},"comment":{},"data":{"id-1":"Shino","id-2":"Shino"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"$$","right":"$$"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"},{"display":false,"left":"$","right":"$"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"lunr"},"typeit":{"cursorChar":"|","cursorSpeed":1000,"data":{"id-1":["id-1"],"id-2":["id-2"]},"duration":-1,"speed":100}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

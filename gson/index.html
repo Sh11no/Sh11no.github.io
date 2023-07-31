@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+        <title>SCTF2023 - SycGson - Shino Channel</title><meta name="Description" content="这是我的全新 Hugo 网站"><meta property="og:title" content="SCTF2023 - SycGson" />
+<meta property="og:description" content="打开看到 Golang 字样，使用 go_parser 恢复一下符号。
+https://github.com/0xjiayu/go_parser
+1 2 3 4 5 6 7  v24 = &#34;115.239.215.75&#34;; v25 = 14LL; v26 = &#34;12345&#34;; v27 = 5LL; *((_QWORD *)&amp;v2 &#43; 1) = 2LL; v7 = os_exec_Command(); v12 = os_exec__Cmd_StdoutPipe(v7);   奇妙的逻辑，可以通过字符串判断是 nc 取数据，nc 115.239.215.75 12345 看一眼拿到的数据，形式如下：
+1 2 3 4 5 6 7  {1801 [ {1878 1630 {1600 1047 1355}} {1968 1923 {1602 1096 1287}} {1805 1572 {1600 1102 1283}} {1963 1669 {1600 1165 1327}}] 4}   看数据 parse 逻辑，从." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://sh11no.github.io/gson/" /><meta property="og:image" content="http://sh11no.github.io/logo.png"/><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2023-06-20T22:49:08+08:00" />
+<meta property="article:modified_time" content="2023-06-20T22:49:08+08:00" />
+
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="http://sh11no.github.io/logo.png"/>
+
+<meta name="twitter:title" content="SCTF2023 - SycGson"/>
+<meta name="twitter:description" content="打开看到 Golang 字样，使用 go_parser 恢复一下符号。
+https://github.com/0xjiayu/go_parser
+1 2 3 4 5 6 7  v24 = &#34;115.239.215.75&#34;; v25 = 14LL; v26 = &#34;12345&#34;; v27 = 5LL; *((_QWORD *)&amp;v2 &#43; 1) = 2LL; v7 = os_exec_Command(); v12 = os_exec__Cmd_StdoutPipe(v7);   奇妙的逻辑，可以通过字符串判断是 nc 取数据，nc 115.239.215.75 12345 看一眼拿到的数据，形式如下：
+1 2 3 4 5 6 7  {1801 [ {1878 1630 {1600 1047 1355}} {1968 1923 {1602 1096 1287}} {1805 1572 {1600 1102 1283}} {1963 1669 {1600 1165 1327}}] 4}   看数据 parse 逻辑，从."/>
+<meta name="application-name" content="LoveIt">
+<meta name="apple-mobile-web-app-title" content="LoveIt"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="http://sh11no.github.io/gson/" /><link rel="prev" href="http://sh11no.github.io/pwsh/" /><link rel="stylesheet" href="/lib/normalize/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"><link rel="stylesheet" href="/lib/animate/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "SCTF2023 - SycGson",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/sh11no.github.io\/gson\/"
+        },"genre": "posts","wordcount":  581 ,
+        "url": "http:\/\/sh11no.github.io\/gson\/","datePublished": "2023-06-20T22:49:08+08:00","dateModified": "2023-06-20T22:49:08+08:00","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "Shino"
+            },"description": ""
+    }
+    </script></head>
+    <body header-desktop="fixed" header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('dark' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'dark' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Shino Channel"><span id="id-1" class="typeit"></span></a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="http://www.nu1l.com/" rel="noopener noreffer" target="_blank"> Nu1L </a><a class="menu-item" href="http://blog.cnss.io/" rel="noopener noreffer" target="_blank"> CNSS </a><a class="menu-item" href="/friends/"> Friends </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Shino Channel"><span id="id-2" class="typeit"></span></a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="http://www.nu1l.com/" title="" rel="noopener noreffer" target="_blank">Nu1L</a><a class="menu-item" href="http://blog.cnss.io/" title="" rel="noopener noreffer" target="_blank">CNSS</a><a class="menu-item" href="/friends/" title="">Friends</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw"></i>
+            </a></div>
+    </div>
+</header>
+<div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+</div>
+<div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+</div>
+<main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animated flipInX">SCTF2023 - SycGson</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2023-06-20">2023-06-20</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 581 字&nbsp;
+                <i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 3 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  kept="true">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents"></nav></div>
+            </div><div class="content" id="content"><p>打开看到 Golang 字样，使用 go_parser 恢复一下符号。</p>
+<p><a href="https://github.com/0xjiayu/go_parser" target="_blank" rel="noopener noreffer">https://github.com/0xjiayu/go_parser</a></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"> <span class="n">v24</span> <span class="o">=</span> <span class="s">&#34;115.239.215.75&#34;</span><span class="p">;</span>
+  <span class="n">v25</span> <span class="o">=</span> <span class="mi">14LL</span><span class="p">;</span>
+  <span class="n">v26</span> <span class="o">=</span> <span class="s">&#34;12345&#34;</span><span class="p">;</span>
+  <span class="n">v27</span> <span class="o">=</span> <span class="mi">5LL</span><span class="p">;</span>
+  <span class="o">*</span><span class="p">((</span><span class="n">_QWORD</span> <span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">v2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">=</span> <span class="mi">2LL</span><span class="p">;</span>
+  <span class="n">v7</span> <span class="o">=</span> <span class="n">os_exec_Command</span><span class="p">();</span>
+  <span class="n">v12</span> <span class="o">=</span> <span class="n">os_exec__Cmd_StdoutPipe</span><span class="p">(</span><span class="n">v7</span><span class="p">);</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>奇妙的逻辑，可以通过字符串判断是 nc 取数据，<code>nc 115.239.215.75 12345</code> 看一眼拿到的数据，形式如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="p">{</span><span class="mi">1801</span> 
+<span class="p">[</span>
+<span class="p">{</span><span class="mi">1878</span> <span class="mi">1630</span> <span class="p">{</span><span class="mi">1600</span> <span class="mi">1047</span> <span class="mi">1355</span><span class="p">}}</span> 
+<span class="p">{</span><span class="mi">1968</span> <span class="mi">1923</span> <span class="p">{</span><span class="mi">1602</span> <span class="mi">1096</span> <span class="mi">1287</span><span class="p">}}</span> 
+<span class="p">{</span><span class="mi">1805</span> <span class="mi">1572</span> <span class="p">{</span><span class="mi">1600</span> <span class="mi">1102</span> <span class="mi">1283</span><span class="p">}}</span> 
+<span class="p">{</span><span class="mi">1963</span> <span class="mi">1669</span> <span class="p">{</span><span class="mi">1600</span> <span class="mi">1165</span> <span class="mi">1327</span><span class="p">}}]</span> 
+<span class="mi">4</span><span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>看数据 parse 逻辑，从.rodata段残留的结构体信息恢复结构体：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="kd">struct</span> <span class="nx">City</span> <span class="p">{</span>
+	<span class="nx">Name</span><span class="p">:</span> <span class="kt">int</span><span class="p">;</span>
+	<span class="nx">Neighbours</span><span class="p">:</span> <span class="p">[]</span><span class="nx">NeighbourCity</span><span class="p">;</span>
+	<span class="nx">Delta</span><span class="p">:</span> <span class="kt">uint8</span>
+<span class="p">}</span>
+<span class="kd">struct</span> <span class="nx">NeighbourCity</span> <span class="p">{</span>
+    <span class="nx">Name</span><span class="p">:</span> <span class="kt">int</span><span class="p">;</span>
+    <span class="nx">Distance</span><span class="p">:</span> <span class="kt">int</span><span class="p">;</span>
+    <span class="nx">Cost</span><span class="p">:</span> <span class="nx">Cost</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="kd">struct</span> <span class="nx">Cost</span> <span class="p">{</span>
+    <span class="nx">Transportation</span><span class="p">:</span> <span class="kt">int</span><span class="p">;</span>
+    <span class="nx">Time</span><span class="p">:</span> <span class="kt">int</span><span class="p">;</span>
+    <span class="nx">Expense</span><span class="p">:</span> <span class="kt">int</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>看 FindPath 逻辑，简单易懂，每次选一个 NeighborCity，加上Distance，减去 Transportation， 异或 Time，乘上 Expense，加上点 Delta，找一条五种权重都满足约束的路径。</p>
+<p>输入和选择的路对应的关系有点玄学，动调一下也不难发现是第一组对应<code>fedc</code>第二组对应<code>ba98</code>以此类推，所以只需要从起点 2 开始找到一条到终点 1986 的满足条件的路径就行了。</p>
+<p>直接搜复杂度不对，注意到 Transportation 都大于等于 1600，而要求的约束正好是100000 - 1600*31，所以只有 Transportation 为 1600 的路径可以使用。</p>
+<p>赛场上没看到这个调了一整天，我但凡睁开眼睛看看早就做完了，给 cnss 的民那谢罪了。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">  1
+</span><span class="lnt">  2
+</span><span class="lnt">  3
+</span><span class="lnt">  4
+</span><span class="lnt">  5
+</span><span class="lnt">  6
+</span><span class="lnt">  7
+</span><span class="lnt">  8
+</span><span class="lnt">  9
+</span><span class="lnt"> 10
+</span><span class="lnt"> 11
+</span><span class="lnt"> 12
+</span><span class="lnt"> 13
+</span><span class="lnt"> 14
+</span><span class="lnt"> 15
+</span><span class="lnt"> 16
+</span><span class="lnt"> 17
+</span><span class="lnt"> 18
+</span><span class="lnt"> 19
+</span><span class="lnt"> 20
+</span><span class="lnt"> 21
+</span><span class="lnt"> 22
+</span><span class="lnt"> 23
+</span><span class="lnt"> 24
+</span><span class="lnt"> 25
+</span><span class="lnt"> 26
+</span><span class="lnt"> 27
+</span><span class="lnt"> 28
+</span><span class="lnt"> 29
+</span><span class="lnt"> 30
+</span><span class="lnt"> 31
+</span><span class="lnt"> 32
+</span><span class="lnt"> 33
+</span><span class="lnt"> 34
+</span><span class="lnt"> 35
+</span><span class="lnt"> 36
+</span><span class="lnt"> 37
+</span><span class="lnt"> 38
+</span><span class="lnt"> 39
+</span><span class="lnt"> 40
+</span><span class="lnt"> 41
+</span><span class="lnt"> 42
+</span><span class="lnt"> 43
+</span><span class="lnt"> 44
+</span><span class="lnt"> 45
+</span><span class="lnt"> 46
+</span><span class="lnt"> 47
+</span><span class="lnt"> 48
+</span><span class="lnt"> 49
+</span><span class="lnt"> 50
+</span><span class="lnt"> 51
+</span><span class="lnt"> 52
+</span><span class="lnt"> 53
+</span><span class="lnt"> 54
+</span><span class="lnt"> 55
+</span><span class="lnt"> 56
+</span><span class="lnt"> 57
+</span><span class="lnt"> 58
+</span><span class="lnt"> 59
+</span><span class="lnt"> 60
+</span><span class="lnt"> 61
+</span><span class="lnt"> 62
+</span><span class="lnt"> 63
+</span><span class="lnt"> 64
+</span><span class="lnt"> 65
+</span><span class="lnt"> 66
+</span><span class="lnt"> 67
+</span><span class="lnt"> 68
+</span><span class="lnt"> 69
+</span><span class="lnt"> 70
+</span><span class="lnt"> 71
+</span><span class="lnt"> 72
+</span><span class="lnt"> 73
+</span><span class="lnt"> 74
+</span><span class="lnt"> 75
+</span><span class="lnt"> 76
+</span><span class="lnt"> 77
+</span><span class="lnt"> 78
+</span><span class="lnt"> 79
+</span><span class="lnt"> 80
+</span><span class="lnt"> 81
+</span><span class="lnt"> 82
+</span><span class="lnt"> 83
+</span><span class="lnt"> 84
+</span><span class="lnt"> 85
+</span><span class="lnt"> 86
+</span><span class="lnt"> 87
+</span><span class="lnt"> 88
+</span><span class="lnt"> 89
+</span><span class="lnt"> 90
+</span><span class="lnt"> 91
+</span><span class="lnt"> 92
+</span><span class="lnt"> 93
+</span><span class="lnt"> 94
+</span><span class="lnt"> 95
+</span><span class="lnt"> 96
+</span><span class="lnt"> 97
+</span><span class="lnt"> 98
+</span><span class="lnt"> 99
+</span><span class="lnt">100
+</span><span class="lnt">101
+</span><span class="lnt">102
+</span><span class="lnt">103
+</span><span class="lnt">104
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="c1">#数据 ]</span>
+<span class="n">p</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">a</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">200</span><span class="p">)]</span>
+<span class="n">o</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">axor</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">200</span><span class="p">)]</span>
+<span class="n">asub</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">200</span><span class="p">)]</span>
+<span class="n">amul</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">200</span><span class="p">)]</span>
+<span class="n">aadd</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">200</span><span class="p">)]</span>
+<span class="k">while</span> <span class="n">p</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+	<span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">p</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">1800</span><span class="p">)</span>
+	<span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">p</span><span class="o">+</span><span class="mi">6</span><span class="p">]</span><span class="o">-</span><span class="mi">1800</span><span class="p">)</span>
+	<span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">p</span><span class="o">+</span><span class="mi">11</span><span class="p">]</span><span class="o">-</span><span class="mi">1800</span><span class="p">)</span>
+	<span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">p</span><span class="o">+</span><span class="mi">16</span><span class="p">]</span><span class="o">-</span><span class="mi">1800</span><span class="p">)</span>
+
+	<span class="n">aadd</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">p</span><span class="o">+</span><span class="mi">2</span><span class="p">])</span>
+	<span class="n">aadd</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">p</span><span class="o">+</span><span class="mi">7</span><span class="p">])</span>
+	<span class="n">aadd</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">p</span><span class="o">+</span><span class="mi">12</span><span class="p">])</span>
+	<span class="n">aadd</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">p</span><span class="o">+</span><span class="mi">17</span><span class="p">])</span>
+
+	<span class="n">asub</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">p</span><span class="o">+</span><span class="mi">3</span><span class="p">])</span>
+	<span class="n">asub</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">p</span><span class="o">+</span><span class="mi">8</span><span class="p">])</span>
+	<span class="n">asub</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">p</span><span class="o">+</span><span class="mi">13</span><span class="p">])</span>
+	<span class="n">asub</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">p</span><span class="o">+</span><span class="mi">18</span><span class="p">])</span>
+
+	<span class="n">axor</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">p</span><span class="o">+</span><span class="mi">4</span><span class="p">])</span>
+	<span class="n">axor</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">p</span><span class="o">+</span><span class="mi">9</span><span class="p">])</span>
+	<span class="n">axor</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">p</span><span class="o">+</span><span class="mi">14</span><span class="p">])</span>
+	<span class="n">axor</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">p</span><span class="o">+</span><span class="mi">19</span><span class="p">])</span>
+
+	<span class="n">amul</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">p</span><span class="o">+</span><span class="mi">5</span><span class="p">])</span>
+	<span class="n">amul</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">p</span><span class="o">+</span><span class="mi">10</span><span class="p">])</span>
+	<span class="n">amul</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">p</span><span class="o">+</span><span class="mi">15</span><span class="p">])</span>
+	<span class="n">amul</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">p</span><span class="o">+</span><span class="mi">20</span><span class="p">])</span>
+
+	<span class="n">o</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">p</span><span class="o">+</span><span class="mi">21</span><span class="p">])</span>
+	<span class="n">p</span> <span class="o">+=</span> <span class="mi">22</span>
+	<span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+<span class="n">order</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">200</span><span class="p">):</span>
+	<span class="n">order</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+	<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+		<span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+			<span class="k">if</span> <span class="n">aadd</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">order</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]]</span> <span class="o">&lt;</span> <span class="n">aadd</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">order</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">]]:</span>
+				<span class="n">tmp</span> <span class="o">=</span> <span class="n">order</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span>
+				<span class="n">order</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">order</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+				<span class="n">order</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp</span>
+
+
+<span class="n">st</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">fi</span> <span class="o">=</span> <span class="mi">186</span>
+<span class="n">vis</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">200</span><span class="p">)]</span>
+<span class="n">pre</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">200</span><span class="p">)]</span>
+
+<span class="k">def</span> <span class="nf">dfs</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">dep</span><span class="p">,</span> <span class="n">xx</span><span class="p">,</span> <span class="n">xorsum</span><span class="p">,</span> <span class="n">subsum</span><span class="p">,</span> <span class="n">mulsum</span><span class="p">,</span> <span class="n">addsum</span><span class="p">):</span>
+	<span class="n">vis</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+	<span class="k">if</span> <span class="n">dep</span> <span class="o">==</span> <span class="mi">31</span><span class="p">:</span>
+		<span class="k">if</span> <span class="n">u</span> <span class="o">==</span> <span class="n">fi</span> <span class="ow">and</span> <span class="n">mulsum</span> <span class="o">==</span> <span class="mh">0xAA000000</span> <span class="ow">and</span> <span class="n">addsum</span> <span class="o">==</span> <span class="mh">0xD898</span> <span class="ow">and</span> <span class="n">subsum</span> <span class="o">==</span> <span class="mh">0xC4E0</span> <span class="ow">and</span> <span class="n">xorsum</span> <span class="o">==</span> <span class="mh">0x3D0</span> <span class="ow">and</span> <span class="n">xx</span> <span class="o">==</span> <span class="mi">131</span><span class="p">:</span>
+			<span class="nb">print</span><span class="p">(</span><span class="s2">&#34;</span><span class="si">%x</span><span class="s2">&#34;</span><span class="o">%</span><span class="n">mulsum</span><span class="p">)</span>
+			<span class="nb">print</span><span class="p">(</span><span class="s2">&#34;</span><span class="si">%x</span><span class="s2">&#34;</span><span class="o">%</span><span class="n">addsum</span><span class="p">)</span>
+			<span class="nb">print</span><span class="p">(</span><span class="s2">&#34;</span><span class="si">%x</span><span class="s2">&#34;</span><span class="o">%</span><span class="n">subsum</span><span class="p">)</span>
+			<span class="nb">print</span><span class="p">(</span><span class="s2">&#34;</span><span class="si">%x</span><span class="s2">&#34;</span><span class="o">%</span><span class="n">xorsum</span><span class="p">)</span>
+			<span class="nb">print</span><span class="p">(</span><span class="s2">&#34;Solved&#34;</span><span class="p">)</span>
+			<span class="k">return</span> <span class="mi">1</span>
+		<span class="k">return</span> <span class="mi">0</span>
+	<span class="k">if</span> <span class="n">subsum</span> <span class="o">&lt;</span> <span class="mh">0xC4E0</span><span class="p">:</span>
+		<span class="k">return</span> <span class="mi">0</span>
+	<span class="k">if</span> <span class="n">addsum</span> <span class="o">&gt;</span> <span class="mh">0xD898</span><span class="p">:</span>
+		<span class="k">return</span> <span class="mi">0</span>
+	<span class="k">if</span> <span class="n">xx</span> <span class="o">&gt;</span> <span class="mi">131</span><span class="p">:</span>
+		<span class="k">return</span> <span class="mi">0</span>
+	<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+		<span class="n">v</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+		<span class="k">if</span> <span class="n">asub</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">1600</span><span class="p">:</span>
+			<span class="k">continue</span>
+		<span class="k">if</span> <span class="n">vis</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+			<span class="n">vis</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+			<span class="k">if</span> <span class="n">dfs</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">dep</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">xx</span><span class="o">+</span><span class="n">o</span><span class="p">[</span><span class="n">u</span><span class="p">],</span> <span class="n">xorsum</span><span class="o">^</span><span class="n">axor</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="n">subsum</span><span class="o">-</span><span class="n">asub</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="p">(</span><span class="n">mulsum</span><span class="o">*</span><span class="n">amul</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">i</span><span class="p">])</span><span class="o">&amp;</span><span class="mh">0xFFFFFFFF</span><span class="p">,</span> <span class="n">addsum</span><span class="o">+</span><span class="n">aadd</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">i</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+				<span class="nb">print</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&#34;, &#34;</span><span class="p">)</span>
+				<span class="k">return</span> <span class="mi">1</span>
+			<span class="n">vis</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+	<span class="n">vis</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+	<span class="k">return</span> <span class="mi">0</span>
+<span class="n">vis</span><span class="p">[</span><span class="n">st</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">dfs</span><span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">100000</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">lis</span> <span class="o">=</span> <span class="p">[</span><span class="mi">186</span><span class="p">,</span> <span class="mi">187</span><span class="p">,</span> <span class="mi">188</span><span class="p">,</span> <span class="mi">189</span><span class="p">,</span> <span class="mi">190</span><span class="p">,</span> <span class="mi">191</span><span class="p">,</span> <span class="mi">172</span><span class="p">,</span> <span class="mi">153</span><span class="p">,</span> <span class="mi">134</span><span class="p">,</span> <span class="mi">114</span><span class="p">,</span> <span class="mi">94</span><span class="p">,</span> <span class="mi">74</span><span class="p">,</span> <span class="mi">53</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">29</span><span class="p">,</span> <span class="mi">48</span><span class="p">,</span> <span class="mi">68</span><span class="p">,</span> <span class="mi">88</span><span class="p">,</span> <span class="mi">107</span><span class="p">,</span> <span class="mi">126</span><span class="p">,</span> <span class="mi">145</span><span class="p">,</span> <span class="mi">144</span><span class="p">,</span> <span class="mi">143</span><span class="p">,</span> <span class="mi">122</span><span class="p">,</span> <span class="mi">101</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">21</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="n">i</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">lis</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&#34;&#34;</span><span class="p">)</span>
+<span class="n">nowp</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">table</span> <span class="o">=</span> <span class="s2">&#34;fedcba9876543210&#34;</span>
+<span class="k">while</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+	<span class="n">n</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+	<span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+		<span class="k">if</span> <span class="n">a</span><span class="p">[</span><span class="n">lis</span><span class="p">[</span><span class="n">i</span><span class="p">]][</span><span class="n">j</span><span class="p">]</span> <span class="o">==</span> <span class="n">lis</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+			<span class="n">n</span> <span class="o">=</span> <span class="n">j</span>
+			<span class="k">break</span>
+	<span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+		<span class="nb">print</span><span class="p">(</span><span class="s2">&#34;panic&#34;</span><span class="p">)</span>
+	<span class="nb">print</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="n">nowp</span><span class="o">+</span><span class="n">n</span><span class="p">],</span> <span class="n">end</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span>
+	<span class="n">nowp</span> <span class="o">+=</span> <span class="mi">4</span>
+	<span class="n">nowp</span> <span class="o">%=</span> <span class="mi">16</span>
+	<span class="n">i</span> <span class="o">-=</span> <span class="mi">1</span>
+
+</code></pre></td></tr></table>
+</div>
+</div><p><code>SCTF{db61f852f960da71c873e950e952c97}</code></p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2023-06-20</span>
+            </div>
+            <div class="post-info-license"></div>
+        </div>
+        <div class="post-info-line">
+            <div class="post-info-md"><span>
+                            <a class="link-to-markdown" href="/gson/index.md" target="_blank">阅读原始文档</a>
+                        </span></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="http://sh11no.github.io/gson/" data-title="SCTF2023 - SycGson" data-via="Akarexol"><i class="fab fa-twitter fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Facebook" data-sharer="facebook" data-url="http://sh11no.github.io/gson/"><i class="fab fa-facebook-square fa-fw"></i></a><a href="javascript:void(0);" title="分享到 WhatsApp" data-sharer="whatsapp" data-url="http://sh11no.github.io/gson/" data-title="SCTF2023 - SycGson" data-web><i class="fab fa-whatsapp fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Line" data-sharer="line" data-url="http://sh11no.github.io/gson/" data-title="SCTF2023 - SycGson"><i data-svg-src="/lib/simple-icons/icons/line.min.svg"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="http://sh11no.github.io/gson/" data-title="SCTF2023 - SycGson"><i class="fab fa-weibo fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Myspace" data-sharer="myspace" data-url="http://sh11no.github.io/gson/" data-title="SCTF2023 - SycGson" data-description=""><i data-svg-src="/lib/simple-icons/icons/myspace.min.svg"></i></a><a href="javascript:void(0);" title="分享到 Blogger" data-sharer="blogger" data-url="http://sh11no.github.io/gson/" data-title="SCTF2023 - SycGson" data-description=""><i class="fab fa-blogger fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Evernote" data-sharer="evernote" data-url="http://sh11no.github.io/gson/" data-title="SCTF2023 - SycGson"><i class="fab fa-evernote fa-fw"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/pwsh/" class="prev" rel="prev" title="ciscn2023-Pwsh Powershell反混淆对抗实战"><i class="fas fa-angle-left fa-fw"></i>ciscn2023-Pwsh Powershell反混淆对抗实战</a></div>
+</div>
+<div id="comments"></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.87.0">Hugo</a> 强力驱动 | 主题 - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.10"><i class="far fa-kiss-wink-heart fa-fw"></i> LoveIt</a>
+                </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2019 - 2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">Shino</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw"></i>
+            </a>
+        </div><link rel="stylesheet" href="/lib/katex/katex.min.css"><link rel="stylesheet" href="/lib/katex/copy-tex.min.css"><script type="text/javascript" src="/lib/smooth-scroll/smooth-scroll.min.js"></script><script type="text/javascript" src="/lib/autocomplete/autocomplete.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="/lib/lazysizes/lazysizes.min.js"></script><script type="text/javascript" src="/lib/clipboard/clipboard.min.js"></script><script type="text/javascript" src="/lib/sharer/sharer.min.js"></script><script type="text/javascript" src="/lib/typeit/typeit.min.js"></script><script type="text/javascript" src="/lib/katex/katex.min.js"></script><script type="text/javascript" src="/lib/katex/auto-render.min.js"></script><script type="text/javascript" src="/lib/katex/copy-tex.min.js"></script><script type="text/javascript" src="/lib/katex/mhchem.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":100},"comment":{},"data":{"id-1":"Shino","id-2":"Shino"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"$$","right":"$$"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"},{"display":false,"left":"$","right":"$"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"lunr"},"typeit":{"cursorChar":"|","cursorSpeed":1000,"data":{"id-1":["id-1"],"id-2":["id-2"]},"duration":-1,"speed":100}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

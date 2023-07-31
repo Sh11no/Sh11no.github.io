@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+        <title>使用Flask&#43;nginx&#43;uwsgi在服务器上部署一个简单的API接口 - Shino Channel</title><meta name="Description" content="这是我的全新 Hugo 网站"><meta property="og:title" content="使用Flask&#43;nginx&#43;uwsgi在服务器上部署一个简单的API接口" />
+<meta property="og:description" content="整体架构 （图源网络）
+其中App是“应用程序”部分，负责实现功能。
+WSGI，全称Web Server Gateway Interface，是Web服务器（Server）和Web应用程序（App）之间一个沟通的桥梁，是一种通信协议。
+而Server则是Web服务器，负责接受来自外部的消息并通过WSGI转发给app进行处理。
+需要的组件 Python3 我这里是使用阿里云的Ubuntu20.04系统镜像，自带Python环境。如果你没有Python环境，请使用百度安装一个吧
+Flask Flask是一个轻量级的Python web应用框架，在架构中协助我们进行APP部分的开发。
+1 2  pip install flask pip install flask_restful   Nginx Nginx是一个轻量级的Web服务器，在整体架构中负责Server部分。
+1  sudo apt-get install nginx   uwsgi uWSGI是一个实现了WSGI协议的Web服务器。
+相比于uwsgi，Nginx具备更优秀的静态内容处理能力，然后将动态内容转发给uWSGI服务器，这样可以达到相比于只用uwsgi而不使用Nginx更好的客户端相应。
+1  pip insall uwsgi   宝塔Linux面板 非必须，一个辅助工具，可以帮助你更快地编辑和管理文件。
+这是宝塔官网，可以在上面找到对应系统镜像的安装脚本：https://www.bt.cn/download/linux.html
+如果你和我一样使用Ubuntu，直接执行以下命令吧：
+1  wget -O install.sh http://download.bt.cn/install/install-ubuntu_6.0.sh &amp;&amp; sudo bash install.sh   执行完成后在服务器上执行bt来配置用户名和密码。
+执行/etc/init.d/bt default查看面板入口，一般是你的ip:8888/xxxxxx的形式并访问，用上一步设置的用户名密码登录。
+基于Flask的api编写 初始化Flask API 1 2 3 4  from flask import Flask from flask_restful import Resource, Api, reqparse app = Flask(__name__) api = Api(app)   创建端点 假设我们最后的API结果位于网站http://www." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://sh11no.github.io/api/" /><meta property="og:image" content="http://sh11no.github.io/logo.png"/><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2022-02-05T15:18:52+08:00" />
+<meta property="article:modified_time" content="2022-02-05T15:18:52+08:00" />
+
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="http://sh11no.github.io/logo.png"/>
+
+<meta name="twitter:title" content="使用Flask&#43;nginx&#43;uwsgi在服务器上部署一个简单的API接口"/>
+<meta name="twitter:description" content="整体架构 （图源网络）
+其中App是“应用程序”部分，负责实现功能。
+WSGI，全称Web Server Gateway Interface，是Web服务器（Server）和Web应用程序（App）之间一个沟通的桥梁，是一种通信协议。
+而Server则是Web服务器，负责接受来自外部的消息并通过WSGI转发给app进行处理。
+需要的组件 Python3 我这里是使用阿里云的Ubuntu20.04系统镜像，自带Python环境。如果你没有Python环境，请使用百度安装一个吧
+Flask Flask是一个轻量级的Python web应用框架，在架构中协助我们进行APP部分的开发。
+1 2  pip install flask pip install flask_restful   Nginx Nginx是一个轻量级的Web服务器，在整体架构中负责Server部分。
+1  sudo apt-get install nginx   uwsgi uWSGI是一个实现了WSGI协议的Web服务器。
+相比于uwsgi，Nginx具备更优秀的静态内容处理能力，然后将动态内容转发给uWSGI服务器，这样可以达到相比于只用uwsgi而不使用Nginx更好的客户端相应。
+1  pip insall uwsgi   宝塔Linux面板 非必须，一个辅助工具，可以帮助你更快地编辑和管理文件。
+这是宝塔官网，可以在上面找到对应系统镜像的安装脚本：https://www.bt.cn/download/linux.html
+如果你和我一样使用Ubuntu，直接执行以下命令吧：
+1  wget -O install.sh http://download.bt.cn/install/install-ubuntu_6.0.sh &amp;&amp; sudo bash install.sh   执行完成后在服务器上执行bt来配置用户名和密码。
+执行/etc/init.d/bt default查看面板入口，一般是你的ip:8888/xxxxxx的形式并访问，用上一步设置的用户名密码登录。
+基于Flask的api编写 初始化Flask API 1 2 3 4  from flask import Flask from flask_restful import Resource, Api, reqparse app = Flask(__name__) api = Api(app)   创建端点 假设我们最后的API结果位于网站http://www."/>
+<meta name="application-name" content="LoveIt">
+<meta name="apple-mobile-web-app-title" content="LoveIt"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="http://sh11no.github.io/api/" /><link rel="prev" href="http://sh11no.github.io/matrix/" /><link rel="next" href="http://sh11no.github.io/captcha/" /><link rel="stylesheet" href="/lib/normalize/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"><link rel="stylesheet" href="/lib/animate/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "使用Flask+nginx+uwsgi在服务器上部署一个简单的API接口",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/sh11no.github.io\/api\/"
+        },"genre": "posts","wordcount":  587 ,
+        "url": "http:\/\/sh11no.github.io\/api\/","datePublished": "2022-02-05T15:18:52+08:00","dateModified": "2022-02-05T15:18:52+08:00","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "Shino"
+            },"description": ""
+    }
+    </script></head>
+    <body header-desktop="fixed" header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('dark' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'dark' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Shino Channel"><span id="id-1" class="typeit"></span></a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="http://www.nu1l.com/" rel="noopener noreffer" target="_blank"> Nu1L </a><a class="menu-item" href="http://blog.cnss.io/" rel="noopener noreffer" target="_blank"> CNSS </a><a class="menu-item" href="/friends/"> Friends </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Shino Channel"><span id="id-2" class="typeit"></span></a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="http://www.nu1l.com/" title="" rel="noopener noreffer" target="_blank">Nu1L</a><a class="menu-item" href="http://blog.cnss.io/" title="" rel="noopener noreffer" target="_blank">CNSS</a><a class="menu-item" href="/friends/" title="">Friends</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw"></i>
+            </a></div>
+    </div>
+</header>
+<div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+</div>
+<div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+</div>
+<main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animated flipInX">使用Flask&#43;nginx&#43;uwsgi在服务器上部署一个简单的API接口</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2022-02-05">2022-02-05</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 587 字&nbsp;
+                <i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 3 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  kept="true">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#整体架构">整体架构</a></li>
+    <li><a href="#需要的组件">需要的组件</a>
+      <ul>
+        <li><a href="#python3">Python3</a></li>
+        <li><a href="#flask">Flask</a></li>
+        <li><a href="#nginx">Nginx</a></li>
+        <li><a href="#uwsgi">uwsgi</a></li>
+        <li><a href="#宝塔linux面板">宝塔Linux面板</a></li>
+      </ul>
+    </li>
+    <li><a href="#基于flask的api编写">基于Flask的api编写</a>
+      <ul>
+        <li><a href="#初始化flask-api">初始化Flask API</a></li>
+        <li><a href="#创建端点">创建端点</a></li>
+        <li><a href="#运行本地server">运行本地Server</a></li>
+        <li><a href="#编写api">编写API</a></li>
+        <li><a href="#测试">测试</a></li>
+      </ul>
+    </li>
+    <li><a href="#配置并启动uwsgi">配置并启动uWSGI</a></li>
+    <li><a href="#配置并启动nginx">配置并启动Nginx</a></li>
+    <li><a href="#本地测试">本地测试</a></li>
+    <li><a href="#开放防火墙设置">开放防火墙设置</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="整体架构">整体架构</h2>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/flask.png"
+        data-srcset="/images/flask.png, /images/flask.png 1.5x, /images/flask.png 2x"
+        data-sizes="auto"
+        alt="/images/flask.png"
+        title="/images/flask.png" /></p>
+<p>（图源网络）</p>
+<p>其中App是“应用程序”部分，负责实现功能。</p>
+<p>WSGI，全称<code>Web Server Gateway Interface</code>，是Web服务器（Server）和Web应用程序（App）之间一个沟通的桥梁，是一种通信协议。</p>
+<p>而Server则是Web服务器，负责接受来自外部的消息并通过WSGI转发给app进行处理。</p>
+<h2 id="需要的组件">需要的组件</h2>
+<h3 id="python3">Python3</h3>
+<p>我这里是使用阿里云的Ubuntu20.04系统镜像，自带Python环境。如果你没有Python环境，请使用百度安装一个吧</p>
+<h3 id="flask">Flask</h3>
+<p>Flask是一个轻量级的Python web应用框架，在架构中协助我们进行APP部分的开发。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">pip install flask
+pip install flask_restful
+</code></pre></td></tr></table>
+</div>
+</div><h3 id="nginx">Nginx</h3>
+<p>Nginx是一个轻量级的Web服务器，在整体架构中负责Server部分。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">sudo apt-get install nginx
+</code></pre></td></tr></table>
+</div>
+</div><h3 id="uwsgi">uwsgi</h3>
+<p>uWSGI是一个实现了WSGI协议的Web服务器。</p>
+<p>相比于uwsgi，Nginx具备更优秀的静态内容处理能力，然后将动态内容转发给uWSGI服务器，这样可以达到相比于只用uwsgi而不使用Nginx更好的客户端相应。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">pip insall uwsgi
+</code></pre></td></tr></table>
+</div>
+</div><h3 id="宝塔linux面板">宝塔Linux面板</h3>
+<p>非必须，一个辅助工具，可以帮助你更快地编辑和管理文件。</p>
+<p>这是宝塔官网，可以在上面找到对应系统镜像的安装脚本：https://www.bt.cn/download/linux.html</p>
+<p>如果你和我一样使用Ubuntu，直接执行以下命令吧：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">wget -O install.sh http://download.bt.cn/install/install-ubuntu_6.0.sh &amp;&amp; sudo bash install.sh
+</code></pre></td></tr></table>
+</div>
+</div><p>执行完成后在服务器上执行<code>bt</code>来配置用户名和密码。</p>
+<p>执行<code>/etc/init.d/bt default</code>查看面板入口，一般是<code>你的ip:8888/xxxxxx</code>的形式并访问，用上一步设置的用户名密码登录。</p>
+<h2 id="基于flask的api编写">基于Flask的api编写</h2>
+<h3 id="初始化flask-api">初始化Flask API</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">Flask</span>
+<span class="kn">from</span> <span class="nn">flask_restful</span> <span class="kn">import</span> <span class="n">Resource</span><span class="p">,</span> <span class="n">Api</span><span class="p">,</span> <span class="n">reqparse</span>
+<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">api</span> <span class="o">=</span> <span class="n">Api</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+</code></pre></td></tr></table>
+</div>
+</div><h3 id="创建端点">创建端点</h3>
+<p>假设我们最后的API结果位于网站http://www.sh1no.icu，现在我们想要实现请求http://www.sh1no.icu/query来进行某种交互，则<code>/query</code>便称作我们的一个API端点。</p>
+<p>为了创建端点，我们需要定义一个Python类，然后用<code>app.addresource</code>将其连接到所需的端点。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="k">class</span> <span class="nc">Query</span><span class="p">(</span><span class="n">Resource</span><span class="p">):</span>
+    <span class="c1">#Methods</span>
+    <span class="k">pass</span>
+
+<span class="n">api</span><span class="o">.</span><span class="n">add_resource</span><span class="p">(</span><span class="n">Query</span><span class="p">,</span> <span class="s1">&#39;/query&#39;</span><span class="p">)</span>
+</code></pre></td></tr></table>
+</div>
+</div><h3 id="运行本地server">运行本地Server</h3>
+<p>这一切结束后，我们需要将它托管至本地进行测试。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">debug</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="s2">&#34;0.0.0.0&#34;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">3773</span><span class="p">)</span>
+</code></pre></td></tr></table>
+</div>
+</div><h3 id="编写api">编写API</h3>
+<p>这里以常用的post方法为例（其他方法大同小异）。我们在刚才创建的类中尝试创建一个post方法：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="k">class</span> <span class="nc">Query</span><span class="p">(</span><span class="n">Resource</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">post</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;success&#39;</span> <span class="p">:</span> <span class="kc">True</span>
+            <span class="s1">&#39;code&#39;</span> <span class="p">:</span> <span class="mi">200</span>
+        <span class="p">}</span>
+   	<span class="k">pass</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>这样我们就编写好了一个POST访问就会返回成功的API。</p>
+<p>众所周知，我们的API多半需要获取一些参数字段。这里以以下的请求格式为例：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">{
+	&#39;username&#39; : &#39;xxxxx&#39;,
+	&#39;password&#39; : &#39;xxxxx&#39;
+}
+</code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="k">class</span> <span class="nc">Query</span><span class="p">(</span><span class="n">Resource</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">post</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">parser</span> <span class="o">=</span> <span class="n">reqparse</span><span class="o">.</span><span class="n">RequestParser</span><span class="p">()</span> <span class="c1">#初始化</span>
+        
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;username&#39;</span><span class="p">,</span> <span class="n">required</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="c1">#添加需要的参数字段</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;password&#39;</span><span class="p">,</span> <span class="n">required</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+        
+        <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span> <span class="c1">#将参数解析为Python字典</span>
+        <span class="c1">#在解析为Python字典之后，既可以用Python字典方式获取字段的值</span>
+        <span class="n">username</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;username&#39;</span><span class="p">]</span>
+        <span class="n">password</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;password&#39;</span><span class="p">]</span>
+        
+        <span class="c1">#一些你需要实现的功能</span>
+        
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;data&#39;</span> <span class="p">:</span> <span class="n">data</span> <span class="c1">#返回一些你需要返回的数据</span>
+            <span class="s1">&#39;success&#39;</span> <span class="p">:</span> <span class="kc">True</span>
+            <span class="s1">&#39;code&#39;</span> <span class="p">:</span> <span class="mi">200</span>
+        <span class="p">}</span>
+   	<span class="k">pass</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>至此，一个支持POST方法的API就完成了。</p>
+<p>Sample Code(Full version):</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">Flask</span>
+<span class="kn">from</span> <span class="nn">flask_restful</span> <span class="kn">import</span> <span class="n">Resource</span><span class="p">,</span> <span class="n">Api</span><span class="p">,</span> <span class="n">reqparse</span>
+<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">api</span> <span class="o">=</span> <span class="n">Api</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">Query</span><span class="p">(</span><span class="n">Resource</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">post</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">parser</span> <span class="o">=</span> <span class="n">reqparse</span><span class="o">.</span><span class="n">RequestParser</span><span class="p">()</span> <span class="c1">#初始化</span>
+        
+        <span class="n">parser</span> <span class="o">=</span> <span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;username&#39;</span><span class="p">,</span> <span class="n">required</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="c1">#添加需要的参数字段</span>
+        <span class="n">parser</span> <span class="o">=</span> <span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;password&#39;</span><span class="p">,</span> <span class="n">required</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+        
+        <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span> <span class="c1">#将参数解析为Python字典</span>
+        <span class="c1">#在解析为Python字典之后，既可以用Python字典方式获取字段的值</span>
+        <span class="n">username</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;username&#39;</span><span class="p">]</span>
+        <span class="n">password</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;password&#39;</span><span class="p">]</span>
+        
+        <span class="c1">#一些你需要实现的功能</span>
+        
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;data&#39;</span> <span class="p">:</span> <span class="n">data</span> <span class="c1">#返回一些你需要返回的数据</span>
+            <span class="s1">&#39;success&#39;</span> <span class="p">:</span> <span class="kc">True</span>
+            <span class="s1">&#39;code&#39;</span> <span class="p">:</span> <span class="mi">200</span>
+        <span class="p">}</span>
+   	<span class="k">pass</span>
+<span class="n">api</span><span class="o">.</span><span class="n">add_resource</span><span class="p">(</span><span class="n">Query</span><span class="p">,</span> <span class="s1">&#39;/query&#39;</span><span class="p">)</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">debug</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="s2">&#34;0.0.0.0&#34;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">3773</span><span class="p">)</span>
+    <span class="c1">#这里开启了Debug模式，使用端口3773，当然你也可以不使用这个端口.</span>
+</code></pre></td></tr></table>
+</div>
+</div><h3 id="测试">测试</h3>
+<p>将上述程序保存为API.py，并在本地试运行。</p>
+<p>试试在本地编写一个测试脚本。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="n">url</span> <span class="o">=</span> <span class="s2">&#34;http://127.0.0.1:3773/query&#34;</span>
+<span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;Content-Type&#39;</span> <span class="p">:</span> <span class="s1">&#39;application/json&#39;</span>
+<span class="p">}</span>
+<span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;username&#39;</span> <span class="p">:</span> <span class="s1">&#39;shino&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;password&#39;</span> <span class="p">:</span> <span class="s1">&#39;daisuke&#39;</span>
+<span class="p">}</span>
+<span class="n">sessions</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">sessions</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span> <span class="n">verify</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">what</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">what</span><span class="o">.</span><span class="n">decode</span><span class="p">())</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>运行返回：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">{
+	&#39;success&#39; : True,
+	&#39;code&#39; : 200
+}
+</code></pre></td></tr></table>
+</div>
+</div><p>说明API已经可以运行了。</p>
+<h2 id="配置并启动uwsgi">配置并启动uWSGI</h2>
+<p>在项目路径下创建一个配置文件<code>uwsgi.ini</code></p>
+<p>这里项目路径以<code>/home/flask</code>为例。</p>
+<p>填入以下内容：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">[uwsgi]
+# uwsgi 启动时所使用的地址与端口,也可以使用.sock文件的方式
+socket = 127.0.0.1:3773
+# 指向网站目录
+chdir = /home/flask
+# python 启动程序文件
+wsgi-file = API.py
+# python 程序内用以启动的 application 变量名
+callable = app
+# 处理器数
+processes = 1
+# 线程数
+threads = 1
+#项目flask日志文件
+logto = /home/moco/www/myflask/log.log
+</code></pre></td></tr></table>
+</div>
+</div><p>以<code>uwsgi.ini</code>为配置文件启动uwsgi：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">uwsgi --ini /home/flask/uwsgi.ini
+</code></pre></td></tr></table>
+</div>
+</div><h2 id="配置并启动nginx">配置并启动Nginx</h2>
+<p>配置Nginx配置文件中的<code>sites-enabled/default</code></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">server {
+    listen 1664;   #希望接收信息的端口
+    server_name sh1no.icu; #好像可以不填？
+    charset utf-8;
+    client_max_body_size 75M;
+    location / {
+        include uwsgi_params;
+        uwsgi_pass 127.0.0.1:3773; #与uwsgi启动的端口一致
+    }
+}
+</code></pre></td></tr></table>
+</div>
+</div><p>运行nginx：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">service nginx start
+</code></pre></td></tr></table>
+</div>
+</div><p>你可能会用到的命令：</p>
+<p>重新加载配置文件</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">nginx -s reload
+</code></pre></td></tr></table>
+</div>
+</div><p>（该命令需要nginx正在运行，否则会报错找不到pid）</p>
+<p>重启nginx服务</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">service nginx restart
+</code></pre></td></tr></table>
+</div>
+</div><p>停止nginx服务</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">nginx -s stop
+</code></pre></td></tr></table>
+</div>
+</div><h2 id="本地测试">本地测试</h2>
+<p>还是用刚刚的测试脚本：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="n">url</span> <span class="o">=</span> <span class="s2">&#34;http://127.0.0.1:1664/query&#34;</span> <span class="c1">#这里改成nginx监听的端口</span>
+<span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;Content-Type&#39;</span> <span class="p">:</span> <span class="s1">&#39;application/json&#39;</span>
+<span class="p">}</span>
+<span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;username&#39;</span> <span class="p">:</span> <span class="s1">&#39;shino&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;password&#39;</span> <span class="p">:</span> <span class="s1">&#39;daisuke&#39;</span>
+<span class="p">}</span>
+<span class="n">sessions</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">sessions</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span> <span class="n">verify</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">what</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">what</span><span class="o">.</span><span class="n">decode</span><span class="p">())</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>在服务器端运行，如果成功则说明nginx、uwsgi、flask三者连接完好。</p>
+<h2 id="开放防火墙设置">开放防火墙设置</h2>
+<p>若将上述脚本中<code>127.0.0.1:1664</code>改成服务器的公网ip或域名无法得到回复，说明我们连接可能被防火墙阻止。</p>
+<p>首先检查服务器提供商安全组策略是否放开端口</p>
+<p>然后检查系统自带的防火墙。以<code>Ubuntu20.04</code>为例，<code>Ubuntu20.04</code>默认安装了<code>ufw</code>防火墙</p>
+<p>输入：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">sudo ufw status verbose
+</code></pre></td></tr></table>
+</div>
+</div><p>可以查看ufw的活动状态和允许的访问端口。</p>
+<p>设置允许端口：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">sudo ufw allow 1664
+</code></pre></td></tr></table>
+</div>
+</div><p>运行测试脚本，访问成功，大功告成！</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2022-02-05</span>
+            </div>
+            <div class="post-info-license"></div>
+        </div>
+        <div class="post-info-line">
+            <div class="post-info-md"><span>
+                            <a class="link-to-markdown" href="/api/index.md" target="_blank">阅读原始文档</a>
+                        </span></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="http://sh11no.github.io/api/" data-title="使用Flask&#43;nginx&#43;uwsgi在服务器上部署一个简单的API接口" data-via="Akarexol"><i class="fab fa-twitter fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Facebook" data-sharer="facebook" data-url="http://sh11no.github.io/api/"><i class="fab fa-facebook-square fa-fw"></i></a><a href="javascript:void(0);" title="分享到 WhatsApp" data-sharer="whatsapp" data-url="http://sh11no.github.io/api/" data-title="使用Flask&#43;nginx&#43;uwsgi在服务器上部署一个简单的API接口" data-web><i class="fab fa-whatsapp fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Line" data-sharer="line" data-url="http://sh11no.github.io/api/" data-title="使用Flask&#43;nginx&#43;uwsgi在服务器上部署一个简单的API接口"><i data-svg-src="/lib/simple-icons/icons/line.min.svg"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="http://sh11no.github.io/api/" data-title="使用Flask&#43;nginx&#43;uwsgi在服务器上部署一个简单的API接口"><i class="fab fa-weibo fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Myspace" data-sharer="myspace" data-url="http://sh11no.github.io/api/" data-title="使用Flask&#43;nginx&#43;uwsgi在服务器上部署一个简单的API接口" data-description=""><i data-svg-src="/lib/simple-icons/icons/myspace.min.svg"></i></a><a href="javascript:void(0);" title="分享到 Blogger" data-sharer="blogger" data-url="http://sh11no.github.io/api/" data-title="使用Flask&#43;nginx&#43;uwsgi在服务器上部署一个简单的API接口" data-description=""><i class="fab fa-blogger fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Evernote" data-sharer="evernote" data-url="http://sh11no.github.io/api/" data-title="使用Flask&#43;nginx&#43;uwsgi在服务器上部署一个简单的API接口"><i class="fab fa-evernote fa-fw"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/matrix/" class="prev" rel="prev" title="线性代数与空间解析几何 女娲补天复习笔记"><i class="fas fa-angle-left fa-fw"></i>线性代数与空间解析几何 女娲补天复习笔记</a>
+            <a href="/captcha/" class="next" rel="next" title="记一次模拟登陆和验证码绕过">记一次模拟登陆和验证码绕过<i class="fas fa-angle-right fa-fw"></i></a></div>
+</div>
+<div id="comments"></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.87.0">Hugo</a> 强力驱动 | 主题 - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.10"><i class="far fa-kiss-wink-heart fa-fw"></i> LoveIt</a>
+                </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2019 - 2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">Shino</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw"></i>
+            </a>
+        </div><link rel="stylesheet" href="/lib/katex/katex.min.css"><link rel="stylesheet" href="/lib/katex/copy-tex.min.css"><script type="text/javascript" src="/lib/smooth-scroll/smooth-scroll.min.js"></script><script type="text/javascript" src="/lib/autocomplete/autocomplete.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="/lib/lazysizes/lazysizes.min.js"></script><script type="text/javascript" src="/lib/clipboard/clipboard.min.js"></script><script type="text/javascript" src="/lib/sharer/sharer.min.js"></script><script type="text/javascript" src="/lib/typeit/typeit.min.js"></script><script type="text/javascript" src="/lib/katex/katex.min.js"></script><script type="text/javascript" src="/lib/katex/auto-render.min.js"></script><script type="text/javascript" src="/lib/katex/copy-tex.min.js"></script><script type="text/javascript" src="/lib/katex/mhchem.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":100},"comment":{},"data":{"id-1":"Shino","id-2":"Shino"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"$$","right":"$$"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"},{"display":false,"left":"$","right":"$"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"lunr"},"typeit":{"cursorChar":"|","cursorSpeed":1000,"data":{"id-1":["id-1"],"id-2":["id-2"]},"duration":-1,"speed":100}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

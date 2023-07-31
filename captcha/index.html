@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+        <title>记一次模拟登陆和验证码绕过 - Shino Channel</title><meta name="Description" content="这是我的全新 Hugo 网站"><meta property="og:title" content="记一次模拟登陆和验证码绕过" />
+<meta property="og:description" content="目标需求 因为某种原因，我需要实现一个验证某组用户名和密码是否可以成功登录网站的模块。
+这里的目标网站是icoding.run.
+拟使用python requests模块伪造数据包来达成目标.
+数据包分析 使用BurpSuite截获发送的数据包.比较关键的是以下两个数据包:
+请求验证码 1 2 3 4 5 6 7 8 9 10 11 12 13 14  GET /verificationCode HTTP/1.1 Host: icoding.run Sec-Ch-Ua: &#34;Chromium&#34;;v=&#34;97&#34;, &#34; Not;A Brand&#34;;v=&#34;99&#34; Sec-Ch-Ua-Mobile: ?0 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36 Sec-Ch-Ua-Platform: &#34;Windows&#34; Accept: image/avif,image/webp,image/apng,image/svg&#43;xml,image/*,*/*;q=0.8 Sec-Fetch-Site: same-origin Sec-Fetch-Mode: no-cors Sec-Fetch-Dest: image Referer: https://icoding.run/login Accept-Encoding: gzip, deflate Accept-Language: zh-CN,zh;q=0.9 Connection: close   返回数据Headers:" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://sh11no.github.io/captcha/" /><meta property="og:image" content="http://sh11no.github.io/logo.png"/><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2022-02-07T17:12:57+08:00" />
+<meta property="article:modified_time" content="2022-02-07T17:12:57+08:00" />
+
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="http://sh11no.github.io/logo.png"/>
+
+<meta name="twitter:title" content="记一次模拟登陆和验证码绕过"/>
+<meta name="twitter:description" content="目标需求 因为某种原因，我需要实现一个验证某组用户名和密码是否可以成功登录网站的模块。
+这里的目标网站是icoding.run.
+拟使用python requests模块伪造数据包来达成目标.
+数据包分析 使用BurpSuite截获发送的数据包.比较关键的是以下两个数据包:
+请求验证码 1 2 3 4 5 6 7 8 9 10 11 12 13 14  GET /verificationCode HTTP/1.1 Host: icoding.run Sec-Ch-Ua: &#34;Chromium&#34;;v=&#34;97&#34;, &#34; Not;A Brand&#34;;v=&#34;99&#34; Sec-Ch-Ua-Mobile: ?0 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36 Sec-Ch-Ua-Platform: &#34;Windows&#34; Accept: image/avif,image/webp,image/apng,image/svg&#43;xml,image/*,*/*;q=0.8 Sec-Fetch-Site: same-origin Sec-Fetch-Mode: no-cors Sec-Fetch-Dest: image Referer: https://icoding.run/login Accept-Encoding: gzip, deflate Accept-Language: zh-CN,zh;q=0.9 Connection: close   返回数据Headers:"/>
+<meta name="application-name" content="LoveIt">
+<meta name="apple-mobile-web-app-title" content="LoveIt"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="http://sh11no.github.io/captcha/" /><link rel="prev" href="http://sh11no.github.io/api/" /><link rel="next" href="http://sh11no.github.io/d3ctf2022/" /><link rel="stylesheet" href="/lib/normalize/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"><link rel="stylesheet" href="/lib/animate/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "记一次模拟登陆和验证码绕过",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/sh11no.github.io\/captcha\/"
+        },"genre": "posts","wordcount":  1096 ,
+        "url": "http:\/\/sh11no.github.io\/captcha\/","datePublished": "2022-02-07T17:12:57+08:00","dateModified": "2022-02-07T17:12:57+08:00","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "Shino"
+            },"description": ""
+    }
+    </script></head>
+    <body header-desktop="fixed" header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('dark' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'dark' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Shino Channel"><span id="id-1" class="typeit"></span></a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="http://www.nu1l.com/" rel="noopener noreffer" target="_blank"> Nu1L </a><a class="menu-item" href="http://blog.cnss.io/" rel="noopener noreffer" target="_blank"> CNSS </a><a class="menu-item" href="/friends/"> Friends </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Shino Channel"><span id="id-2" class="typeit"></span></a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="http://www.nu1l.com/" title="" rel="noopener noreffer" target="_blank">Nu1L</a><a class="menu-item" href="http://blog.cnss.io/" title="" rel="noopener noreffer" target="_blank">CNSS</a><a class="menu-item" href="/friends/" title="">Friends</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw"></i>
+            </a></div>
+    </div>
+</header>
+<div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+</div>
+<div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+</div>
+<main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animated flipInX">记一次模拟登陆和验证码绕过</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2022-02-07">2022-02-07</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 1096 字&nbsp;
+                <i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 6 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  kept="true">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#目标需求">目标需求</a></li>
+    <li><a href="#数据包分析">数据包分析</a>
+      <ul>
+        <li><a href="#请求验证码">请求验证码</a></li>
+        <li><a href="#登录">登录</a></li>
+        <li><a href="#分析">分析</a></li>
+      </ul>
+    </li>
+    <li><a href="#请求验证码和jsessionid">请求验证码和JSESSIONID</a></li>
+    <li><a href="#识别验证码">识别验证码</a>
+      <ul>
+        <li><a href="#找轮子">找轮子</a></li>
+        <li><a href="#安装依赖库">安装依赖库</a></li>
+        <li><a href="#造轮子">造轮子</a></li>
+      </ul>
+    </li>
+    <li><a href="#模拟登录">模拟登录</a></li>
+    <li><a href="#完整代码">完整代码</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="目标需求">目标需求</h2>
+<p>因为某种原因，我需要实现一个验证某组用户名和密码是否可以成功登录网站的模块。</p>
+<p>这里的目标网站是icoding.run.</p>
+<p>拟使用python requests模块伪造数据包来达成目标.</p>
+<h2 id="数据包分析">数据包分析</h2>
+<p>使用BurpSuite截获发送的数据包.比较关键的是以下两个数据包:</p>
+<h3 id="请求验证码">请求验证码</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">GET /verificationCode HTTP/1.1
+Host: icoding.run
+Sec-Ch-Ua: &#34;Chromium&#34;;v=&#34;97&#34;, &#34; Not;A Brand&#34;;v=&#34;99&#34;
+Sec-Ch-Ua-Mobile: ?0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36
+Sec-Ch-Ua-Platform: &#34;Windows&#34;
+Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Dest: image
+Referer: https://icoding.run/login
+Accept-Encoding: gzip, deflate
+Accept-Language: zh-CN,zh;q=0.9
+Connection: close
+</code></pre></td></tr></table>
+</div>
+</div><p>返回数据Headers:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">Server: nginx/1.18.0 (Ubuntu)
+Date: Mon, 07 Feb 2022 09:23:01 GMT
+Content-Type: image/jpeg
+Connection: close
+Set-Cookie: JSESSIONID=2ae541d8-248e-4cb7-ad45-9a5976222ed3; Path=/; HttpOnly
+Expires: Thu, 01 Jan 1970 00:00:00 GMT
+Cache-Control: no-store, no-cache, must-revalidate
+Cache-Control: post-check=0, pre-check=0
+Pragma: no-cache
+Content-Length: 2127
+</code></pre></td></tr></table>
+</div>
+</div><p>返回数据的Content则是一张验证码图片.</p>
+<h3 id="登录">登录</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">POST /login HTTP/1.1
+Host: icoding.run
+Cookie: JSESSIONID=bbcb8c2f-e0f5-4786-b00f-19135c215909
+Content-Length: 61
+Sec-Ch-Ua: &#34;Chromium&#34;;v=&#34;97&#34;, &#34; Not;A Brand&#34;;v=&#34;99&#34;
+Accept: application/json, text/javascript, */*; q=0.01
+Content-Type: application/x-www-form-urlencoded; charset=UTF-8
+X-Requested-With: XMLHttpRequest
+Sec-Ch-Ua-Mobile: ?0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36
+Sec-Ch-Ua-Platform: &#34;Windows&#34;
+Origin: https://icoding.run
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: cors
+Sec-Fetch-Dest: empty
+Referer: https://icoding.run/login
+Accept-Encoding: gzip, deflate
+Accept-Language: zh-CN,zh;q=0.9
+Connection: close
+
+username=*******&amp;password=******&amp;verification=8195
+</code></pre></td></tr></table>
+</div>
+</div><p>会返回登录是否成功以及失败原因（密码错误或验证码错误等）</p>
+<h3 id="分析">分析</h3>
+<p>对于请求验证码的数据包，我们只需要直接模拟发送就可以得到验证码图片。值得关注的是返回Headers的这一行：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">Set-Cookie: JSESSIONID=2ae541d8-248e-4cb7-ad45-9a5976222ed3; Path=/; HttpOnly
+</code></pre></td></tr></table>
+</div>
+</div><p>JSESSIONID是一个起用户标识作用的字段，在模拟发送登录数据包时我们需要同时发送这个字段。</p>
+<p>因此我们的设计逻辑就比较清晰了：</p>
+<ol>
+<li>发送GET请求获得验证码图片和JSESSIONID</li>
+<li>识别验证码</li>
+<li>发送POST请求获得返回值</li>
+</ol>
+<h2 id="请求验证码和jsessionid">请求验证码和JSESSIONID</h2>
+<p>这部分是相对比较好实现的。</p>
+<p>我们需要把收到的验证码保存到某个文件中。但考虑到可能的并发问题，这里选择使用随机文件名来防止两个进程同时对一个文件进行读写，这里选择使用一个随机的字符串作为文件名。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="k">def</span> <span class="nf">GenerateFilename</span><span class="p">():</span>
+	<span class="k">return</span> <span class="sa">r</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">ascii_letters</span> <span class="o">+</span> <span class="n">string</span><span class="o">.</span><span class="n">digits</span><span class="p">,</span> <span class="mi">16</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">getCaptcha</span><span class="p">():</span>
+	<span class="n">url</span> <span class="o">=</span> <span class="s2">&#34;https://icoding.run/verificationCode&#34;</span>
+	<span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+    <span class="c1">#事实证明根本不需要Headers，笑死</span>
+	<span class="n">sessionid</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Set-Cookie&#39;</span><span class="p">]</span>
+	<span class="n">src</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;captchas/&#39;</span> <span class="o">+</span> <span class="n">GenerateFilename</span><span class="p">()</span> <span class="o">+</span> <span class="sa">r</span><span class="s1">&#39;.png&#39;</span>
+	<span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span>
+	<span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+	<span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+	<span class="n">code</span> <span class="o">=</span> <span class="n">captcha</span><span class="o">.</span><span class="n">recognize_text</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
+    <span class="c1">#对图片进行一个识别，将在后文介绍。</span>
+	<span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
+    <span class="c1">#防止垃圾文件堆积，在识别过后删除文件</span>
+	<span class="k">return</span> <span class="n">code</span><span class="p">,</span> <span class="n">sessionid</span>
+</code></pre></td></tr></table>
+</div>
+</div><h2 id="识别验证码">识别验证码</h2>
+<h3 id="找轮子">找轮子</h3>
+<p>从文章：《Python代码实现验证码识别，<strong>很稳</strong>》中拿到一个现成的轮子：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">import</span> <span class="nn">cv2</span> <span class="k">as</span> <span class="nn">cv</span>
+<span class="kn">import</span> <span class="nn">pytesseract</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+ 
+ 
+<span class="k">def</span> <span class="nf">recognize_text</span><span class="p">(</span><span class="n">image</span><span class="p">):</span>
+    <span class="c1"># 边缘保留滤波  去噪</span>
+    <span class="n">dst</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">pyrMeanShiftFiltering</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">sp</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">sr</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+    <span class="c1"># 灰度图像</span>
+    <span class="n">gray</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">dst</span><span class="p">,</span> <span class="n">cv</span><span class="o">.</span><span class="n">COLOR_BGR2GRAY</span><span class="p">)</span>
+    <span class="c1"># 二值化</span>
+    <span class="n">ret</span><span class="p">,</span> <span class="n">binary</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">threshold</span><span class="p">(</span><span class="n">gray</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="n">cv</span><span class="o">.</span><span class="n">THRESH_BINARY_INV</span> <span class="o">|</span> <span class="n">cv</span><span class="o">.</span><span class="n">THRESH_OTSU</span><span class="p">)</span>
+    <span class="c1"># 形态学操作   腐蚀  膨胀</span>
+    <span class="n">erode</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">erode</span><span class="p">(</span><span class="n">binary</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">dilate</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">dilate</span><span class="p">(</span><span class="n">erode</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">cv</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="s1">&#39;dilate&#39;</span><span class="p">,</span> <span class="n">dilate</span><span class="p">)</span>
+    <span class="c1"># 逻辑运算  让背景为白色  字体为黑  便于识别</span>
+    <span class="n">cv</span><span class="o">.</span><span class="n">bitwise_not</span><span class="p">(</span><span class="n">dilate</span><span class="p">,</span> <span class="n">dilate</span><span class="p">)</span>
+    <span class="n">cv</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="s1">&#39;binary-image&#39;</span><span class="p">,</span> <span class="n">dilate</span><span class="p">)</span>
+    <span class="c1"># 识别</span>
+    <span class="n">test_message</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">fromarray</span><span class="p">(</span><span class="n">dilate</span><span class="p">)</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">pytesseract</span><span class="o">.</span><span class="n">image_to_string</span><span class="p">(</span><span class="n">test_message</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;识别结果：</span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+ 
+ 
+<span class="n">src</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;./test/044.png&#39;</span><span class="p">)</span>
+<span class="n">cv</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="s1">&#39;input image&#39;</span><span class="p">,</span> <span class="n">src</span><span class="p">)</span>
+<span class="n">recognize_text</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
+<span class="n">cv</span><span class="o">.</span><span class="n">waitKey</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">cv</span><span class="o">.</span><span class="n">destroyAllWindows</span><span class="p">()</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>思路是先处理图片，然后直接进行一个OCR。</p>
+<p>直接拿来进行一个跑，啥都识别不出来！把图片处理结果打出来一看，我都看不懂！</p>
+<p>其实也不是这个轮子有啥问题，就是这个图片处理方式的特异性比较强，只适用于某种方式生成的验证码。对于图片结构不太一样的验证码这种处理方式就会当场去世了。</p>
+<p>虽然但是，我们只需要针对icoding验证码来去除干扰（小黑线小点点啥的）就可以了。</p>
+<h3 id="安装依赖库">安装依赖库</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">pip install pytesseract
+pip install opencv-python
+sudo apt-get install tesseract-ocr
+pip install pillow
+</code></pre></td></tr></table>
+</div>
+</div><h3 id="造轮子">造轮子</h3>
+<p>上面那个轮子提供的图片处理基本不能作为参考。观察到验证码的主题部分为蓝色系，干扰部分是黑色的丝丝，考虑进行一个颜色的筛选，留住比较蓝的部分，去除其他部分：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">src</span><span class="p">)</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&#34;RGB&#34;</span><span class="p">)</span>
+<span class="n">width</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">size</span>
+<span class="n">LIM</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">LIM2</span> <span class="o">=</span> <span class="mf">0.4</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">width</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">height</span><span class="p">):</span>
+        <span class="n">R</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">pix</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">getpixel</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
+        <span class="n">sigma</span> <span class="o">=</span> <span class="n">R</span><span class="o">+</span><span class="n">G</span><span class="o">+</span><span class="n">B</span>
+        <span class="k">if</span> <span class="n">sigma</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">img</span><span class="o">.</span><span class="n">putpixel</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">))</span>
+            <span class="k">continue</span>
+        <span class="n">B</span> <span class="o">/=</span> <span class="n">sigma</span>
+        <span class="k">if</span> <span class="n">B</span> <span class="o">&gt;=</span> <span class="n">LIM2</span> <span class="ow">and</span> <span class="n">sigma</span> <span class="o">&gt;=</span> <span class="n">LIM</span><span class="p">:</span>
+            <span class="n">img</span><span class="o">.</span><span class="n">putpixel</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">img</span><span class="o">.</span><span class="n">putpixel</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">))</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>这里是直接根据RGB色号进行了筛选。设定了两个筛选条件：</p>
+<ol>
+<li>RGB中蓝色占比大于某一阈值</li>
+<li>颜色不要太深（过滤黑色）</li>
+</ol>
+<p>这样筛选完可以基本得到验证码的主体部分。但是现在的识别失败率依然非常高，问题在于在黑线挡住蓝色的场景下，可能会有数字被“一分为二”导致识别失败。</p>
+<p>参考了一下刚刚的轮子，考虑套用pyrMeanShiftFiltering方法：Opencv均值漂移来让主体部分”侵蚀“掉面积较小的干扰断层。</p>
+<p>最后使用pytesseract直接进行一个OCR识别，返回识别结果。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">import</span> <span class="nn">cv2</span> <span class="k">as</span> <span class="nn">cv</span>
+<span class="kn">import</span> <span class="nn">pytesseract</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+ 
+ 
+<span class="k">def</span> <span class="nf">recognize_text</span><span class="p">(</span><span class="n">src</span><span class="p">):</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">src</span><span class="p">)</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&#34;RGB&#34;</span><span class="p">)</span>
+    <span class="n">width</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">size</span>
+    <span class="n">LIM</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">LIM2</span> <span class="o">=</span> <span class="mf">0.4</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">width</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">height</span><span class="p">):</span>
+            <span class="n">R</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">pix</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">getpixel</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
+            <span class="n">sigma</span> <span class="o">=</span> <span class="n">R</span><span class="o">+</span><span class="n">G</span><span class="o">+</span><span class="n">B</span>
+            <span class="k">if</span> <span class="n">sigma</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">img</span><span class="o">.</span><span class="n">putpixel</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">))</span>
+                <span class="k">continue</span>
+            <span class="n">B</span> <span class="o">/=</span> <span class="n">sigma</span>
+            <span class="k">if</span> <span class="n">B</span> <span class="o">&gt;=</span> <span class="n">LIM2</span> <span class="ow">and</span> <span class="n">sigma</span> <span class="o">&gt;=</span> <span class="n">LIM</span><span class="p">:</span>
+                <span class="n">img</span><span class="o">.</span><span class="n">putpixel</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">img</span><span class="o">.</span><span class="n">putpixel</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">))</span>
+    <span class="n">img</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
+    <span class="c1">#这里的交接应该有更好的传递方式？</span>
+    <span class="n">dst</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">pyrMeanShiftFiltering</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">sp</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">sr</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">test_message</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">fromarray</span><span class="p">(</span><span class="n">dst</span><span class="p">)</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">pytesseract</span><span class="o">.</span><span class="n">image_to_string</span><span class="p">(</span><span class="n">test_message</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">text</span>
+
+</code></pre></td></tr></table>
+</div>
+</div><p>到这里我们的验证码识别成功率已经可以满足需求了。</p>
+<h2 id="模拟登录">模拟登录</h2>
+<p>意思就是获得验证码和JSSESIONID之后把数据包抄一遍发过去。我也懒得管headers里哪些是不需要的了发就完事了</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="k">def</span> <span class="nf">trylogin</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">):</span>
+	<span class="n">code</span><span class="p">,</span> <span class="n">sessionid</span> <span class="o">=</span> <span class="n">getCaptcha</span><span class="p">()</span>
+	<span class="n">url</span> <span class="o">=</span> <span class="s2">&#34;https://icoding.run/login&#34;</span>
+	<span class="c1">#print(sessionid)</span>
+	<span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+		<span class="s1">&#39;Cookie&#39;</span><span class="p">:</span> <span class="n">sessionid</span><span class="p">,</span>
+		<span class="s1">&#39;Content-Length&#39;</span><span class="p">:</span> <span class="s1">&#39;61&#39;</span><span class="p">,</span>
+		<span class="s1">&#39;Sec-Ch-Ua&#39;</span><span class="p">:</span> <span class="s1">&#39;&#34;Chromium&#34;;v=&#34;97&#34;, &#34; Not;A Brand&#34;;v=&#34;99&#34;&#39;</span><span class="p">,</span>
+		<span class="s1">&#39;Accept&#39;</span><span class="p">:</span> <span class="s1">&#39;application/json, text/javascript, */*; q=0.01&#39;</span><span class="p">,</span>
+		<span class="s1">&#39;Content-Type&#39;</span><span class="p">:</span> <span class="s1">&#39;application/x-www-form-urlencoded; charset=UTF-8&#39;</span><span class="p">,</span>
+		<span class="s1">&#39;X-Requested-With&#39;</span><span class="p">:</span> <span class="s1">&#39;XMLHttpRequest&#39;</span><span class="p">,</span>
+		<span class="s1">&#39;Sec-Ch-Ua-Mobile&#39;</span><span class="p">:</span> <span class="s1">&#39;?0&#39;</span><span class="p">,</span>
+		<span class="s1">&#39;User-Agent&#39;</span><span class="p">:</span> <span class="s1">&#39;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36&#39;</span><span class="p">,</span>
+		<span class="s1">&#39;Sec-Ch-Ua-Platform&#39;</span><span class="p">:</span> <span class="s1">&#39;&#34;Windows&#34;&#39;</span><span class="p">,</span>
+		<span class="s1">&#39;Sec-Fetch-Site&#39;</span><span class="p">:</span> <span class="s1">&#39;same-origin&#39;</span><span class="p">,</span>
+		<span class="s1">&#39;Sec-Fetch-Mode&#39;</span><span class="p">:</span> <span class="s1">&#39;cors&#39;</span><span class="p">,</span>
+		<span class="s1">&#39;Sec-Fetch-Dest&#39;</span><span class="p">:</span> <span class="s1">&#39;empty&#39;</span><span class="p">,</span>
+		<span class="s1">&#39;Accept-Encoding&#39;</span><span class="p">:</span> <span class="s1">&#39;gzip, deflate&#39;</span><span class="p">,</span>
+		<span class="s1">&#39;Accept-Language&#39;</span><span class="p">:</span> <span class="s1">&#39;zh-CN,zh;q=0.9&#39;</span>
+	<span class="p">}</span>
+	<span class="n">data</span> <span class="o">=</span> <span class="s2">&#34;username=&#34;</span><span class="o">+</span><span class="n">username</span><span class="o">+</span><span class="s2">&#34;&amp;password=&#34;</span><span class="o">+</span><span class="n">password</span><span class="o">+</span><span class="s2">&#34;&amp;verification=&#34;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">code</span><span class="p">[:</span><span class="mi">4</span><span class="p">])</span>
+	<span class="c1">#print(data.encode())</span>
+	<span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">resp</span><span class="o">.</span><span class="n">content</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>但是由于我们的验证码识别并不是100%准确，这样的登录尝试很可能返回”验证码错误“，故考虑使用多次试登录的方法。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="k">def</span> <span class="nf">login</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">):</span>
+	<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">50</span><span class="p">):</span>
+		<span class="n">args</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">trylogin</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+		<span class="c1">#print(args[&#39;status&#39;])</span>
+		<span class="c1">#print(args[&#39;msg&#39;][0])</span>
+		<span class="k">if</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+			<span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="mi">200</span>
+		<span class="k">elif</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;msg&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;验&#39;</span><span class="p">:</span> <span class="c1">#不是验证码错误，说明账号密码有问题</span>
+			<span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="mi">200</span>
+	<span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="mi">500</span> <span class="c1">#尝试超时</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>至此大功告成。</p>
+<h2 id="完整代码">完整代码</h2>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span><span class="lnt">75
+</span><span class="lnt">76
+</span><span class="lnt">77
+</span><span class="lnt">78
+</span><span class="lnt">79
+</span><span class="lnt">80
+</span><span class="lnt">81
+</span><span class="lnt">82
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">string</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">cv2</span> <span class="k">as</span> <span class="nn">cv</span>
+<span class="kn">import</span> <span class="nn">pytesseract</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+ 
+<span class="k">def</span> <span class="nf">recognize_text</span><span class="p">(</span><span class="n">src</span><span class="p">):</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">src</span><span class="p">)</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&#34;RGB&#34;</span><span class="p">)</span>
+    <span class="n">width</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">size</span>
+    <span class="n">LIM</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">LIM2</span> <span class="o">=</span> <span class="mf">0.4</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">width</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">height</span><span class="p">):</span>
+            <span class="n">R</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">pix</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">getpixel</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
+            <span class="c1">#print(R, G, B)</span>
+            <span class="n">sigma</span> <span class="o">=</span> <span class="n">R</span><span class="o">+</span><span class="n">G</span><span class="o">+</span><span class="n">B</span>
+            <span class="k">if</span> <span class="n">sigma</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">img</span><span class="o">.</span><span class="n">putpixel</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">))</span>
+                <span class="k">continue</span>
+            <span class="n">B</span> <span class="o">/=</span> <span class="n">sigma</span>
+            <span class="k">if</span> <span class="n">B</span> <span class="o">&gt;=</span> <span class="n">LIM2</span> <span class="ow">and</span> <span class="n">sigma</span> <span class="o">&gt;=</span> <span class="n">LIM</span><span class="p">:</span>
+                <span class="n">img</span><span class="o">.</span><span class="n">putpixel</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">img</span><span class="o">.</span><span class="n">putpixel</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">))</span>
+    <span class="n">img</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
+    <span class="n">dst</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">pyrMeanShiftFiltering</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">sp</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">sr</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">cv</span><span class="o">.</span><span class="n">imwrite</span><span class="p">(</span><span class="s2">&#34;tmp.jpg&#34;</span><span class="p">,</span> <span class="n">dst</span><span class="p">)</span>
+    <span class="n">test_message</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">fromarray</span><span class="p">(</span><span class="n">dst</span><span class="p">)</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">pytesseract</span><span class="o">.</span><span class="n">image_to_string</span><span class="p">(</span><span class="n">test_message</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">text</span>
+
+<span class="k">def</span> <span class="nf">GenerateFilename</span><span class="p">():</span>
+	<span class="k">return</span> <span class="sa">r</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">ascii_letters</span> <span class="o">+</span> <span class="n">string</span><span class="o">.</span><span class="n">digits</span><span class="p">,</span> <span class="mi">16</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">getCaptcha</span><span class="p">():</span>
+	<span class="n">url</span> <span class="o">=</span> <span class="s2">&#34;https://icoding.run/verificationCode&#34;</span>
+	<span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+	<span class="n">sessionid</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Set-Cookie&#39;</span><span class="p">]</span>
+	<span class="n">src</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;captchas/&#39;</span> <span class="o">+</span> <span class="n">GenerateFilename</span><span class="p">()</span> <span class="o">+</span> <span class="sa">r</span><span class="s1">&#39;.png&#39;</span>
+	<span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span>
+	<span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+	<span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+	<span class="n">code</span> <span class="o">=</span> <span class="n">recognize_text</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
+	<span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">code</span><span class="p">,</span> <span class="n">sessionid</span>
+
+<span class="k">def</span> <span class="nf">trylogin</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">):</span>
+	<span class="n">code</span><span class="p">,</span> <span class="n">sessionid</span> <span class="o">=</span> <span class="n">getCaptcha</span><span class="p">()</span>
+	<span class="n">url</span> <span class="o">=</span> <span class="s2">&#34;https://icoding.run/login&#34;</span>
+	<span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+		<span class="s1">&#39;Cookie&#39;</span><span class="p">:</span> <span class="n">sessionid</span><span class="p">,</span>
+		<span class="s1">&#39;Content-Length&#39;</span><span class="p">:</span> <span class="s1">&#39;61&#39;</span><span class="p">,</span>
+		<span class="s1">&#39;Sec-Ch-Ua&#39;</span><span class="p">:</span> <span class="s1">&#39;&#34;Chromium&#34;;v=&#34;97&#34;, &#34; Not;A Brand&#34;;v=&#34;99&#34;&#39;</span><span class="p">,</span>
+		<span class="s1">&#39;Accept&#39;</span><span class="p">:</span> <span class="s1">&#39;application/json, text/javascript, */*; q=0.01&#39;</span><span class="p">,</span>
+		<span class="s1">&#39;Content-Type&#39;</span><span class="p">:</span> <span class="s1">&#39;application/x-www-form-urlencoded; charset=UTF-8&#39;</span><span class="p">,</span>
+		<span class="s1">&#39;X-Requested-With&#39;</span><span class="p">:</span> <span class="s1">&#39;XMLHttpRequest&#39;</span><span class="p">,</span>
+		<span class="s1">&#39;Sec-Ch-Ua-Mobile&#39;</span><span class="p">:</span> <span class="s1">&#39;?0&#39;</span><span class="p">,</span>
+		<span class="s1">&#39;User-Agent&#39;</span><span class="p">:</span> <span class="s1">&#39;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36&#39;</span><span class="p">,</span>
+		<span class="s1">&#39;Sec-Ch-Ua-Platform&#39;</span><span class="p">:</span> <span class="s1">&#39;&#34;Windows&#34;&#39;</span><span class="p">,</span>
+		<span class="s1">&#39;Sec-Fetch-Site&#39;</span><span class="p">:</span> <span class="s1">&#39;same-origin&#39;</span><span class="p">,</span>
+		<span class="s1">&#39;Sec-Fetch-Mode&#39;</span><span class="p">:</span> <span class="s1">&#39;cors&#39;</span><span class="p">,</span>
+		<span class="s1">&#39;Sec-Fetch-Dest&#39;</span><span class="p">:</span> <span class="s1">&#39;empty&#39;</span><span class="p">,</span>
+		<span class="s1">&#39;Accept-Encoding&#39;</span><span class="p">:</span> <span class="s1">&#39;gzip, deflate&#39;</span><span class="p">,</span>
+		<span class="s1">&#39;Accept-Language&#39;</span><span class="p">:</span> <span class="s1">&#39;zh-CN,zh;q=0.9&#39;</span>
+	<span class="p">}</span>
+	<span class="n">data</span> <span class="o">=</span> <span class="s2">&#34;username=&#34;</span><span class="o">+</span><span class="n">username</span><span class="o">+</span><span class="s2">&#34;&amp;password=&#34;</span><span class="o">+</span><span class="n">password</span><span class="o">+</span><span class="s2">&#34;&amp;verification=&#34;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">code</span><span class="p">[:</span><span class="mi">4</span><span class="p">])</span>
+	<span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">resp</span><span class="o">.</span><span class="n">content</span>
+
+<span class="k">def</span> <span class="nf">login</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">):</span>
+	<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">50</span><span class="p">):</span>
+		<span class="n">args</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">trylogin</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+		<span class="k">if</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+			<span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="mi">200</span>
+		<span class="k">elif</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;msg&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;验&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="mi">200</span>
+	<span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="mi">500</span>
+
+</code></pre></td></tr></table>
+</div>
+</div></div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2022-02-07</span>
+            </div>
+            <div class="post-info-license"></div>
+        </div>
+        <div class="post-info-line">
+            <div class="post-info-md"><span>
+                            <a class="link-to-markdown" href="/captcha/index.md" target="_blank">阅读原始文档</a>
+                        </span></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="http://sh11no.github.io/captcha/" data-title="记一次模拟登陆和验证码绕过" data-via="Akarexol"><i class="fab fa-twitter fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Facebook" data-sharer="facebook" data-url="http://sh11no.github.io/captcha/"><i class="fab fa-facebook-square fa-fw"></i></a><a href="javascript:void(0);" title="分享到 WhatsApp" data-sharer="whatsapp" data-url="http://sh11no.github.io/captcha/" data-title="记一次模拟登陆和验证码绕过" data-web><i class="fab fa-whatsapp fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Line" data-sharer="line" data-url="http://sh11no.github.io/captcha/" data-title="记一次模拟登陆和验证码绕过"><i data-svg-src="/lib/simple-icons/icons/line.min.svg"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="http://sh11no.github.io/captcha/" data-title="记一次模拟登陆和验证码绕过"><i class="fab fa-weibo fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Myspace" data-sharer="myspace" data-url="http://sh11no.github.io/captcha/" data-title="记一次模拟登陆和验证码绕过" data-description=""><i data-svg-src="/lib/simple-icons/icons/myspace.min.svg"></i></a><a href="javascript:void(0);" title="分享到 Blogger" data-sharer="blogger" data-url="http://sh11no.github.io/captcha/" data-title="记一次模拟登陆和验证码绕过" data-description=""><i class="fab fa-blogger fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Evernote" data-sharer="evernote" data-url="http://sh11no.github.io/captcha/" data-title="记一次模拟登陆和验证码绕过"><i class="fab fa-evernote fa-fw"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/api/" class="prev" rel="prev" title="使用Flask&#43;nginx&#43;uwsgi在服务器上部署一个简单的API接口"><i class="fas fa-angle-left fa-fw"></i>使用Flask&#43;nginx&#43;uwsgi在服务器上部署一个简单的API接口</a>
+            <a href="/d3ctf2022/" class="next" rel="next" title="D3CTF2022wp-BadW3ter &amp; d3bug">D3CTF2022wp-BadW3ter &amp; d3bug<i class="fas fa-angle-right fa-fw"></i></a></div>
+</div>
+<div id="comments"></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.87.0">Hugo</a> 强力驱动 | 主题 - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.10"><i class="far fa-kiss-wink-heart fa-fw"></i> LoveIt</a>
+                </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2019 - 2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">Shino</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw"></i>
+            </a>
+        </div><link rel="stylesheet" href="/lib/katex/katex.min.css"><link rel="stylesheet" href="/lib/katex/copy-tex.min.css"><script type="text/javascript" src="/lib/smooth-scroll/smooth-scroll.min.js"></script><script type="text/javascript" src="/lib/autocomplete/autocomplete.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="/lib/lazysizes/lazysizes.min.js"></script><script type="text/javascript" src="/lib/clipboard/clipboard.min.js"></script><script type="text/javascript" src="/lib/sharer/sharer.min.js"></script><script type="text/javascript" src="/lib/typeit/typeit.min.js"></script><script type="text/javascript" src="/lib/katex/katex.min.js"></script><script type="text/javascript" src="/lib/katex/auto-render.min.js"></script><script type="text/javascript" src="/lib/katex/copy-tex.min.js"></script><script type="text/javascript" src="/lib/katex/mhchem.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":100},"comment":{},"data":{"id-1":"Shino","id-2":"Shino"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"$$","right":"$$"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"},{"display":false,"left":"$","right":"$"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"lunr"},"typeit":{"cursorChar":"|","cursorSpeed":1000,"data":{"id-1":["id-1"],"id-2":["id-2"]},"duration":-1,"speed":100}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

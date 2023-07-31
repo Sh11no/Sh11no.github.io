@@ -1,0 +1,117 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>Shino Channel</title>
+        <link>http://sh11no.github.io/</link>
+        <description>这是我的全新 Hugo 网站</description>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Tue, 20 Jun 2023 22:49:08 &#43;0800</lastBuildDate>
+            <atom:link href="http://sh11no.github.io/index.xml" rel="self" type="application/rss+xml" />
+        <item>
+    <title>SCTF2023 - SycGson</title>
+    <link>http://sh11no.github.io/gson/</link>
+    <pubDate>Tue, 20 Jun 2023 22:49:08 &#43;0800</pubDate>
+    <author>作者</author>
+    <guid>http://sh11no.github.io/gson/</guid>
+    <description><![CDATA[打开看到 Golang 字样，使用 go_parser 恢复一下符号。
+https://github.com/0xjiayu/go_parser
+1 2 3 4 5 6 7  v24 = &#34;115.239.215.75&#34;; v25 = 14LL; v26 = &#34;12345&#34;; v27 = 5LL; *((_QWORD *)&amp;v2 + 1) = 2LL; v7 = os_exec_Command(); v12 = os_exec__Cmd_StdoutPipe(v7);   奇妙的逻辑，可以通过字符串判断是 nc 取数据，nc 115.239.215.75 12345 看一眼拿到的数据，形式如下：
+1 2 3 4 5 6 7  {1801 [ {1878 1630 {1600 1047 1355}} {1968 1923 {1602 1096 1287}} {1805 1572 {1600 1102 1283}} {1963 1669 {1600 1165 1327}}] 4}   看数据 parse 逻辑，从.]]></description>
+</item><item>
+    <title>ciscn2023-Pwsh Powershell反混淆对抗实战</title>
+    <link>http://sh11no.github.io/pwsh/</link>
+    <pubDate>Sun, 28 May 2023 22:35:33 &#43;0800</pubDate>
+    <author>作者</author>
+    <guid>http://sh11no.github.io/pwsh/</guid>
+    <description><![CDATA[碎碎念 ​	刚进黑灯模式就出了flag，看到还是 0 解题以为可以拿全场唯一解光荣退役了，结果平台的flag配置是烂的，以为 0 解的原因是平台烂直接找运维对线，拉扯了一个小时左右赛后说 pwsh 需要人工验证flag以为其实大家都会做只是没交上，第二天起床一看还真是一血全场只有 2 解。也算光荣退役了？
+但是比赛结果一般，打ctf不如闲鱼买flag，整场比赛充斥着国粹这种脑瘫题，不过打不过闲鱼哥还是我太菜了。
+Writeups 初步分析 题目备份：https://small.fileditch.ch/s3/ssQpUZIxaIRvkfVeChBp.ps1
+一个powershell脚本，先base64后解密再执行，先上手解密base64串
+1 2  with open(&#34;p4.ps1&#34;, &#34;w&#34;) as f: f.write(base64.b64decode(code).decode())   1 2 3 4  $M=@{129693309641433576095262078804193086780=&#39;(New-ObJecT sysTEm.Io.COMpResSIoN.DEflATesTReAm( [SyStEM.iO.meMORYsTreaM] [sYSTEm.CoNVErT]::FRoMbASe64StrIng( &#34;1VhNaxxHED3Xv+iDYXZBWuwEArHJwQYTy8gS2CKHiCUHIX/koDiKyMXWf89G8s7Ux6ue7hpN7zqBZKa7qvrVq1fVs+rSt3/o7j/0/wNtH+5eaLt7/ySWktmmbThuTP06bfe1pY0grNUi9fY6tPHOBLYnkec17FuLnpHEY2RyVgsqS5T0kLM+yiyA4CTXSa3yOoO4EoWLS+U6mjtxF2K75DKYVx5LkgBWtpCjUBYE+GdMvFpoCXFswiShhd3ABXQR9mqKxxdje1RGgPmqqWXTICCR7fTEbe1HV7FJv+2yAUYpYq2Pjj....&#39; $t=Read-Host -Prompt &#34;Enter your flag&#34;; [System.Collections.Queue]$tt=([byte[]][char[]]$t|%{$_ -shr 4;$_%16}); iex($M[129693309641433576095262078804193086780])   M太长了这里就不放了，可以看到M是一个字典，对应的是混淆过的powershell脚本，每个key(一串数字)分别对应了一段混淆过的powershell的脚本，尝试解混淆。
+混淆分析 混淆方式类似如下，这里给出几个样本：
+1 2 3 4 5 6 7  (New-ObJecT sysTEm.Io.COMpResSIoN.DEflATesTReAm( [SyStEM.iO.meMORYsTreaM] [sYSTEm.CoNVErT]::FRoMbASe64StrIng( &#34;.....&#34; ) ,[SYSTeM.io.COMpRESSIoN.COmPressiOnmODe]::dECoMprEss ) | FoREaCH-objEct{New-ObJecT sySTem.Io.StReamreAder( $_ , [TexT.]]></description>
+</item><item>
+    <title>网鼎杯2022总决赛-secret 全栈CTFer的自我修养(？)</title>
+    <link>http://sh11no.github.io/wdb2022/</link>
+    <pubDate>Tue, 18 Apr 2023 19:55:39 &#43;0800</pubDate>
+    <author>作者</author>
+    <guid>http://sh11no.github.io/wdb2022/</guid>
+    <description><![CDATA[碎碎念 ​	本来没想着网鼎杯能进总决赛的，毕竟青龙组100+个队就给了12个晋级名额。结果 RHG 一开快手+强运+队友给力直接飞到前十躺进了总决赛，半决赛两个 pwn 防御也是水得不行，本想着逆向手进场观摩队友做题结果意外和 Photon 大哥合力把 pwn 基本 ak 了，只能说运气很好。
+​	总决赛基本没有逆向手的题（共同防御那个java题出来的时候我精神状态不是很稳定，exp一直挂到了比赛结束），值得复盘的也就只有这个还挺有意思的web综合题了，我还是太菜了。
+漏洞分析 ​	题目镜像丢了，别问。
+漏洞点1 ​	登录进去是一个简单的登录框，试着打了两个单引号发现似乎没有 SQL 注入，Burp 一开先抓包再考虑别的。
+​	突破口在 Response Header里的 Server: Cpython3.5，可以发现似乎是 python 的后端，应该是 Flask 框架， 试了一下没有模板注入的点，考虑__pycache__泄漏，整了半天也没访问到pycache文件夹。根据资源请求随便试了一下/static目录，发现可以访问。
+​	理论上说 py 代码应该在static上级目录的某处，一通乱试发现/static../路径可以访问上级目录，目录结构如下：
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18  | __pycache__ | __init__.cpython-35.pyc | models.cpython-35.pyc | main | __pycache__ | __init__.cpython-35.pyc | forms.]]></description>
+</item><item>
+    <title>NKCTF2023ezstack - SROP初探</title>
+    <link>http://sh11no.github.io/srop/</link>
+    <pubDate>Wed, 29 Mar 2023 20:51:20 &#43;0800</pubDate>
+    <author>作者</author>
+    <guid>http://sh11no.github.io/srop/</guid>
+    <description><![CDATA[1 2 3 4 5  Arch: amd64-64-little RELRO: Partial RELRO Stack: No canary found NX: NX enabled PIE: No PIE (0x400000)   鉴定为，没有保护。
+核心代码很短：
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23  .text:00000000004011B9 vuln proc near ; CODE XREF: main+17↓p .text:00000000004011B9 .text:00000000004011B9 buf = byte ptr -10h .text:00000000004011B9 .text:00000000004011B9 ; __unwind { .]]></description>
+</item><item>
+    <title>Hitcon2022-Checker Windows驱动文件分析</title>
+    <link>http://sh11no.github.io/hitcon2022/</link>
+    <pubDate>Thu, 01 Dec 2022 15:32:57 &#43;0800</pubDate>
+    <author>作者</author>
+    <guid>http://sh11no.github.io/hitcon2022/</guid>
+    <description><![CDATA[with Katzebin 就不传附件了
+附件有checker.exe和check_drv.sys两个文件
+checker.exe逻辑十分简单
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23  int __cdecl main(int argc, const char **argv, const char **envp) { HANDLE FileW; // rax char *v4; // rcx char OutBuffer[4]; // [rsp+40h] [rbp-18h] BYREF DWORD BytesReturned; // [rsp+44h] [rbp-14h] BYREF FileW = CreateFileW(L&#34;\\\\.\\hitcon_checker&#34;, 0xC0000000, 0, 0i64, 3u, 4u, 0i64); qword_140003620 = (__int64)FileW; if ( FileW == (HANDLE)-1i64 ) { sub_140001010(&#34;driver not found\n&#34;); exit(0); } OutBuffer[0] = 0; DeviceIoControl(FileW, 0x222080u, 0i64, 0, OutBuffer, 1u, &amp;BytesReturned, 0i64); v4 = &#34;correct\n&#34;; if ( !]]></description>
+</item><item>
+    <title>[BlockChain] Ethernaut做题笔记（更新中）</title>
+    <link>http://sh11no.github.io/blockchain/</link>
+    <pubDate>Mon, 14 Nov 2022 21:35:23 &#43;0800</pubDate>
+    <author>作者</author>
+    <guid>http://sh11no.github.io/blockchain/</guid>
+    <description><![CDATA[Before Start 其实很早就开始想学区块链安全了，但是因为环境炸了、Ropsten测试链关了和懒等等原因直到Hackergame的链上记忆大师题才开始上手实操区块链题。后来在强网拟态和N1CTF等比赛中由于不熟悉ctf区块链题的交互方式也是一直在鸽子。
+后来看wp找到了这个仓库才开始进行一个题的做。
+先从这个靶场打起
+Fallback 其实这个题是可以通过Console交互来完成的，但是我还是想试一试用神奇的Poseidon库。
+题目 目标：成为合约的owner并清空Balance
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39  contract Fallback { mapping(address =&gt; uint) public contributions; address payable public owner; constructor() public { owner = msg.sender; contributions[msg.sender] = 1000 * (1 ether); } modifier onlyOwner { require( msg.]]></description>
+</item><item>
+    <title>四川省网安技能大赛2022 个人输出复盘</title>
+    <link>http://sh11no.github.io/sichuan2022/</link>
+    <pubDate>Fri, 28 Oct 2022 21:56:09 &#43;0800</pubDate>
+    <author>作者</author>
+    <guid>http://sh11no.github.io/sichuan2022/</guid>
+    <description><![CDATA[[Reverse] AmazingMFC 一整场比赛Reverse就一个题，真是被看扁了啊.jpg
+附件备份
+经典的MFC逆向，一打开十个按钮，点一下会出base64信息提示是不是正确的flag所在位置。
+理论上是要一个个解密，但是我第一次点就是正确的位置，什么是欧皇啊（后仰）
+所以看了一眼base64解码结果是f14g here here直接跳过这一步。
+定位函数，XSPY开
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43  mfc version:140, static linked?: true, debug?: false CWnd::FromHandlePermanent = 0x0041D79C CWnd = 0x0019FE1C HWND: 0x000E0582 class:0019FE1C(CDialogEx,size=0xd0) CDialogEx:CDialog:CWnd:CCmdTarget:CObject [vtbl+0x00]GetRuntimeClass = 0x0041A3FA(AmazingMFC.]]></description>
+</item><item>
+    <title>智能合约逆向分析实战 ByteCTF2022-OhMySolidity</title>
+    <link>http://sh11no.github.io/sodility/</link>
+    <pubDate>Thu, 06 Oct 2022 16:22:03 &#43;0800</pubDate>
+    <author>作者</author>
+    <guid>http://sh11no.github.io/sodility/</guid>
+    <description><![CDATA[[Reverse] OhMySolidity 题面如下
+1 2 3 4 5 6 7 8 9 10 11 12 13 14  input: 0x608060405234801561001057600080fd5b5061066e806100206000396000f3fe608060405234801561001057600080fd5b50600436106100625760003560e01c806314edb54d1461006757806358f5382e1461009157806393eed093146101c55780639577a145146101ef578063a7f81e6a14610253578063f0407ca71461027d575b600080fd5b61006f6102a7565b604051808263ffffffff1663ffffffff16815260200191505060405180910390f35b61014a600480360360208110156100a757600080fd5b81019080803590602001906401000000008111156100c457600080fd5b8201836020820111156100d657600080fd5b803590602001918460018302840111640100000000831117156100f857600080fd5b91908080601f016020809104026020016040519081016040528093929190818152602001838380828437600081840152601f19601f8201169050808301925050505050505091929192905050506102bd565b6040518080602001828103825283818151815260200191508051906020019080838360005b8381101561018a57808201518184015260208101905061016f565b50505050905090810190601f1680156101b75780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b6101cd61056f565b604051808263ffffffff1663ffffffff16815260200191505060405180910390f35b6102516004803603608081101561020557600080fd5b81019080803563ffffffff169060200190929190803563ffffffff169060200190929190803563ffffffff169060200190929190803563ffffffff169060200190929190505050610584565b005b61025b61060d565b604051808263ffffffff1663ffffffff16815260200191505060405180910390f35b610285610623565b604051808263ffffffff1663ffffffff16815260200191505060405180910390f35b600060049054906101000a900463ffffffff1681565b606080829050600060088251816102d057fe5b06146102db57600080fd5b606081516040519080825280601f01601f1916602001820160405280156103115781602001600182028038833980820191505090505b509050600063deadbeef905060008090505b83518110156105635760008090506000809050600080905060008090505b60048160ff1610156103cd578060030360080260ff16888260ff1687018151811061036857fe5b602001015160f81c60f81b60f81c60ff1663ffffffff16901b830192508060030360080260ff168860048360ff16880101815181106103a357fe5b602001015160f81c60f81b60f81c60ff1663ffffffff16901b820191508080600101915050610341565b5060008090505b60208160ff16101561047f578584019350600060049054906101000a900463ffffffff1660058363ffffffff16901c018483016000809054906101000a900463ffffffff1660048563ffffffff16901b011818830192506000600c9054906101000a900463ffffffff1660058463ffffffff16901c01848401600060089054906101000a900463ffffffff1660048663ffffffff16901b0118188201915080806001019150506103d4565b5060008090505b60048160ff1610156105545760ff8160030360080260ff168463ffffffff16901c1660f81b878260ff168701815181106104bc57fe5b60200101907effffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff1916908160001a90535060ff8160030360080260ff168363ffffffff16901c1660f81b8760048360ff168801018151811061051857fe5b60200101907effffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff1916908160001a9053508080600101915050610486565b50505050600881019050610323565b50819350505050919050565b6000809054906101000a900463ffffffff1681565b836000806101000a81548163ffffffff021916908363ffffffff16021790555082600060046101000a81548163ffffffff021916908363ffffffff16021790555081600060086101000a81548163ffffffff021916908363ffffffff160217905550806000600c6101000a81548163ffffffff021916908363ffffffff16021790555050505050565b600060089054906101000a900463ffffffff1681565b6000600c9054906101000a900463ffffffff168156fea265627a7a72315820c500ad9e15f8594ce1140fdf04f71759a549b8a033f78b149472bb00f68975a964736f6c63430005110032 output: None input: 0x9577a1450000000000000000000000000000000000000000000000000000000012345678000000000000000000000000000000000000000000000000000000008765432100000000000000000000000000000000000000000000000000000000aabbccdd0000000000000000000000000000000000000000000000000000000044332211 output: None input(broken): 0x58f5382e... output: 0xa625e97482f83d2b7fc5125763dcbbffd8115b208c4754eee8711bdfac9e3377622bbf0cbb785e612b82c7f5143d5333   根据题目提示和开头60806040可以知道是一个Solidity字节码的逆向。Solidity语言是在区块链的智能合约部署中被广泛使用的语言之一。
+由于之前有接触过智能合约字节码逆向我们很快就找到了反编译的工具。
+Online Solidity Decompiler (ethervm.io)
+1 2 3 4 5 6 7 8 9 10 11  contract Contract { function main() { memory[0x40:0x60] = 0x80; var var0 = msg.value; if (var0) { revert(memory[0x00:0x00]); } memory[0x00:0x066e] = code[0x20:0x068e]; return memory[0x00:0x066e]; } }   反编译结果明显短于字节码长度。观察到memory[0x00:0x066e] = code[0x20:0x068e];行，推测是把0x20部分代码复制到memory内继续执行。]]></description>
+</item><item>
+    <title>『超高校级的幸运』WMCTF2022-nanoDiamond-rev 抽卡实况</title>
+    <link>http://sh11no.github.io/nanogame/</link>
+    <pubDate>Mon, 22 Aug 2022 13:46:29 &#43;0800</pubDate>
+    <author>作者</author>
+    <guid>http://sh11no.github.io/nanogame/</guid>
+    <description><![CDATA[[Crypto] nanoDiamond-rev 题目 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68  # from Crypto.]]></description>
+</item><item>
+    <title>WMCTF2022-Archgame</title>
+    <link>http://sh11no.github.io/archgame/</link>
+    <pubDate>Mon, 22 Aug 2022 13:46:20 &#43;0800</pubDate>
+    <author>作者</author>
+    <guid>http://sh11no.github.io/archgame/</guid>
+    <description><![CDATA[[Reverse] Archgame load_code处对bin文件进行了一个解密
+1 2 3  for ( i = 0LL; i &lt; size; ++i ) { g_code_data[i] ^= *((_BYTE *)&amp;global_key + (i &amp; 3)); }   round()函数有两个switch，手动修复一下，大概逻辑是这个样子。
+是一些关于unicorn虚拟机的操作，查一下unicorn引擎的文档可以得到函数作用。
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83  __int64 round() { const char *v0; // rax  const char *v1; // rax  const char *v2; // rax  int errorcode2; // eax  unsigned int roundkey; // [rsp+0h] [rbp-30h] BYREF  unsigned int errorcode1; // [rsp+4h] [rbp-2Ch]  __int64 uc_engine; // [rsp+8h] [rbp-28h] BYREF  char v8; // [rsp+10h] [rbp-20h] BYREF  __int64 v9; // [rsp+18h] [rbp-18h] BYREF  __int64 v10[2]; // [rsp+20h] [rbp-10h] BYREF  v10[1] = __readfsqword(0x28u); errorcode1 = uc_open((unsigned int)g_arch, (unsigned int)g_mode, &amp;uc_engine); //创建虚拟机实例  /* Error Handler */ errorcode1 = uc_mem_map(uc_engine, 0LL, 655360LL, 7LL); //创建从地址0开始 长度655360的内存，权限为RWX  /* Error Handler */ uc_mem_write(uc_engine, 0LL, g_code_data, 655360LL); //向内存地址0处写入bin文件解密结果  errorcode1 = uc_mem_map(uc_engine, 0x70000000LL, 0x4000LL, 7LL); //创建从地址0x70000000开始 长度0x4000的内存，权限为RWX  /* Error Handler */ uc_mem_write(uc_engine, 0x70000000LL, input_area, 0x4000LL); //向地址0x70000000写入输入的数据，长度为0x4000  errorcode2 = uc_mem_map(uc_engine, 0x20000000LL, 0x8000LL, 7LL); //创建从地址0x20000000开始 长度0x8000的内存，权限为RWX  v9 = 536903424LL; v10[0] = 1879048448LL; switch ( g_arch ) { case 1: //ARM  uc_reg_write(uc_engine, 12LL, &amp;v9); uc_reg_write(uc_engine, 10LL, v10); //写寄存器  break; case 2: // ARM-64  uc_reg_write(uc_engine, 4LL, &amp;v9); uc_reg_write(uc_engine, 2LL, v10); break; case 3: // Mips  uc_reg_write(uc_engine, 31LL, &amp;v9); uc_reg_write(uc_engine, 33LL, v10); break; case 5: // PowerPC  uc_reg_write(uc_engine, 3LL, &amp;v9); uc_reg_write(uc_engine, 74LL, v10); break; case 8: // RISCV  uc_reg_write(uc_engine, 3LL, &amp;v9); uc_reg_write(uc_engine, 2LL, v10); break; } uc_hook_add(uc_engine, (unsigned int)&amp;v8, 1008, (unsigned int)hook_mem, 0, 1, 0LL); //hook了一些非法操作，看起来像是异常处理 hook_mem 是nop函数  errorcode1 = uc_emu_start(uc_engine, 0LL, v9, 0LL, 0LL); //从地址0执行到536903424  switch ( g_arch ) { case 1u: uc_reg_read(uc_engine, 66, (__int64)&amp;roundkey); //读寄存器  break; case 2u: uc_reg_read(uc_engine, 199, (__int64)&amp;roundkey); break; case 3u: uc_reg_read(uc_engine, 4, (__int64)&amp;roundkey); break; case 5u: uc_reg_read(uc_engine, 5, (__int64)&amp;roundkey); break; case 8u: uc_reg_read(uc_engine, 11, (__int64)&amp;roundkey); break; default: break; } uc_close(uc_engine); return roundkey; }   程序的逻辑整体是把challs.]]></description>
+</item></channel>
+</rss>
