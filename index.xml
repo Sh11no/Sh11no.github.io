@@ -3,9 +3,20 @@
         <title>Shino Channel</title>
         <link>http://sh11no.github.io/</link>
         <description>这是我的全新 Hugo 网站</description>
-        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Tue, 20 Jun 2023 22:49:08 &#43;0800</lastBuildDate>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Sat, 09 Sep 2023 23:23:25 &#43;0800</lastBuildDate>
             <atom:link href="http://sh11no.github.io/index.xml" rel="self" type="application/rss+xml" />
         <item>
+    <title>Hitcon2023 Reverse wps | AK with StrawHat</title>
+    <link>http://sh11no.github.io/hitcon2023/</link>
+    <pubDate>Sat, 09 Sep 2023 23:23:25 &#43;0800</pubDate>
+    <author>作者</author>
+    <guid>http://sh11no.github.io/hitcon2023/</guid>
+    <description><![CDATA[碎碎念 应该是在 Straw Hat 队认真打的第一场国际赛事吧，可惜半天左右就把逆向全打完了（驾驶员技能发动 我一个人就够了.jpg），有些失望（但是很爽）。
+写于 2023-09-09 23:25 离比赛结束还有 1day 左右，但是目前放出的 Reverse 已经全部 AK 了，没事干了写个 Writeups 先。感觉目前放出的 Reverse 难度总体偏易，大概 CrazyArcade &lt; Full Chain - The Blade &lt; LessEQualmore 吧，这里按打题顺序简单写一下复盘。
+LessEQualmore 虚拟机的逻辑非常简单，每个指令为 3 个字长a1 a2 a3，假设存在mem[]里
+逻辑伪代码大概如下：
+1 2 3 4 5 6 7 8 9 10 11 12  if a1 &lt; 0: data = input() else: data = mem[a1] if a2 &lt; 0: output(data) else: mem[a2] = data if mem[a2] &lt;= 0: jmp a3   然后就是逆向字节码了，这个字节码非常复杂，需要考虑一种方法去除我们不需要的指令。可以运用类似编译原理中常量传播的思想，追踪所有与输入数据相关的数据位置，dump一份只和输入相关的指令：]]></description>
+</item><item>
     <title>SCTF2023 - SycGson</title>
     <link>http://sh11no.github.io/gson/</link>
     <pubDate>Tue, 20 Jun 2023 22:49:08 &#43;0800</pubDate>
@@ -103,15 +114,5 @@ Online Solidity Decompiler (ethervm.io)
     <author>作者</author>
     <guid>http://sh11no.github.io/nanogame/</guid>
     <description><![CDATA[[Crypto] nanoDiamond-rev 题目 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68  # from Crypto.]]></description>
-</item><item>
-    <title>WMCTF2022-Archgame</title>
-    <link>http://sh11no.github.io/archgame/</link>
-    <pubDate>Mon, 22 Aug 2022 13:46:20 &#43;0800</pubDate>
-    <author>作者</author>
-    <guid>http://sh11no.github.io/archgame/</guid>
-    <description><![CDATA[[Reverse] Archgame load_code处对bin文件进行了一个解密
-1 2 3  for ( i = 0LL; i &lt; size; ++i ) { g_code_data[i] ^= *((_BYTE *)&amp;global_key + (i &amp; 3)); }   round()函数有两个switch，手动修复一下，大概逻辑是这个样子。
-是一些关于unicorn虚拟机的操作，查一下unicorn引擎的文档可以得到函数作用。
-1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83  __int64 round() { const char *v0; // rax  const char *v1; // rax  const char *v2; // rax  int errorcode2; // eax  unsigned int roundkey; // [rsp+0h] [rbp-30h] BYREF  unsigned int errorcode1; // [rsp+4h] [rbp-2Ch]  __int64 uc_engine; // [rsp+8h] [rbp-28h] BYREF  char v8; // [rsp+10h] [rbp-20h] BYREF  __int64 v9; // [rsp+18h] [rbp-18h] BYREF  __int64 v10[2]; // [rsp+20h] [rbp-10h] BYREF  v10[1] = __readfsqword(0x28u); errorcode1 = uc_open((unsigned int)g_arch, (unsigned int)g_mode, &amp;uc_engine); //创建虚拟机实例  /* Error Handler */ errorcode1 = uc_mem_map(uc_engine, 0LL, 655360LL, 7LL); //创建从地址0开始 长度655360的内存，权限为RWX  /* Error Handler */ uc_mem_write(uc_engine, 0LL, g_code_data, 655360LL); //向内存地址0处写入bin文件解密结果  errorcode1 = uc_mem_map(uc_engine, 0x70000000LL, 0x4000LL, 7LL); //创建从地址0x70000000开始 长度0x4000的内存，权限为RWX  /* Error Handler */ uc_mem_write(uc_engine, 0x70000000LL, input_area, 0x4000LL); //向地址0x70000000写入输入的数据，长度为0x4000  errorcode2 = uc_mem_map(uc_engine, 0x20000000LL, 0x8000LL, 7LL); //创建从地址0x20000000开始 长度0x8000的内存，权限为RWX  v9 = 536903424LL; v10[0] = 1879048448LL; switch ( g_arch ) { case 1: //ARM  uc_reg_write(uc_engine, 12LL, &amp;v9); uc_reg_write(uc_engine, 10LL, v10); //写寄存器  break; case 2: // ARM-64  uc_reg_write(uc_engine, 4LL, &amp;v9); uc_reg_write(uc_engine, 2LL, v10); break; case 3: // Mips  uc_reg_write(uc_engine, 31LL, &amp;v9); uc_reg_write(uc_engine, 33LL, v10); break; case 5: // PowerPC  uc_reg_write(uc_engine, 3LL, &amp;v9); uc_reg_write(uc_engine, 74LL, v10); break; case 8: // RISCV  uc_reg_write(uc_engine, 3LL, &amp;v9); uc_reg_write(uc_engine, 2LL, v10); break; } uc_hook_add(uc_engine, (unsigned int)&amp;v8, 1008, (unsigned int)hook_mem, 0, 1, 0LL); //hook了一些非法操作，看起来像是异常处理 hook_mem 是nop函数  errorcode1 = uc_emu_start(uc_engine, 0LL, v9, 0LL, 0LL); //从地址0执行到536903424  switch ( g_arch ) { case 1u: uc_reg_read(uc_engine, 66, (__int64)&amp;roundkey); //读寄存器  break; case 2u: uc_reg_read(uc_engine, 199, (__int64)&amp;roundkey); break; case 3u: uc_reg_read(uc_engine, 4, (__int64)&amp;roundkey); break; case 5u: uc_reg_read(uc_engine, 5, (__int64)&amp;roundkey); break; case 8u: uc_reg_read(uc_engine, 11, (__int64)&amp;roundkey); break; default: break; } uc_close(uc_engine); return roundkey; }   程序的逻辑整体是把challs.]]></description>
 </item></channel>
 </rss>

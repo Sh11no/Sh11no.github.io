@@ -102,6 +102,14 @@
         alt="/avr.png"
         title="/avr.png" /></a></div><h1 class="home-title">Shino Channel</h1><h2 class="home-subtitle"><div id="id-3" class="typeit"></div></h2><div class="links"><a href="https://github.com/Sh11no" title="GitHub" target="_blank" rel="noopener noreffer me"><i class="fab fa-github-alt fa-fw"></i></a><a href="https://twitter.com/Akarexol" title="Twitter" target="_blank" rel="noopener noreffer me"><i class="fab fa-twitter fa-fw"></i></a><a href="https://steamcommunity.com/id/noshiko" title="Steam" target="_blank" rel="noopener noreffer me"><i class="fab fa-steam fa-fw"></i></a><a href="https://space.bilibili.com/96243678" title="bilibili" target="_blank" rel="noopener noreffer me"><i data-svg-src="/svg/icons/bilibili.min.svg"></i></a><a href="mailto:akalineblog@163.com" title="Email" rel=" me"><i class="far fa-envelope fa-fw"></i></a></div></div>
 <article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
+        <a href="/captcha/">记一次模拟登陆和验证码绕过</a>
+    </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span>&nbsp;<span class="post-publish">发布于 <time datetime="2022-02-07">2022-02-07</time></span></div><div class="content">目标需求 因为某种原因，我需要实现一个验证某组用户名和密码是否可以成功登录网站的模块。
+这里的目标网站是icoding.run.
+拟使用python requests模块伪造数据包来达成目标.
+数据包分析 使用BurpSuite截获发送的数据包.比较关键的是以下两个数据包:
+请求验证码 1 2 3 4 5 6 7 8 9 10 11 12 13 14  GET /verificationCode HTTP/1.1 Host: icoding.run Sec-Ch-Ua: &#34;Chromium&#34;;v=&#34;97&#34;, &#34; Not;A Brand&#34;;v=&#34;99&#34; Sec-Ch-Ua-Mobile: ?0 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36 Sec-Ch-Ua-Platform: &#34;Windows&#34; Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8 Sec-Fetch-Site: same-origin Sec-Fetch-Mode: no-cors Sec-Fetch-Dest: image Referer: https://icoding.run/login Accept-Encoding: gzip, deflate Accept-Language: zh-CN,zh;q=0.9 Connection: close   返回数据Headers:</div><div class="post-footer">
+        <a href="/captcha/">阅读全文</a></div>
+</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
         <a href="/api/">使用Flask&#43;nginx&#43;uwsgi在服务器上部署一个简单的API接口</a>
     </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span>&nbsp;<span class="post-publish">发布于 <time datetime="2022-02-05">2022-02-05</time></span></div><div class="content">整体架构 （图源网络）
 其中App是“应用程序”部分，负责实现功能。
@@ -175,26 +183,6 @@ http://121.41.7.149:65002/?file=php://filter/read=convert.base64-encode/resource
 看到如下内容：
 1 2 3 4 5 6 7 8 9 10 11 12 13  &lt;?php error_reporting(0); function blacklist($cmd){ $filter = &#34;(\\&lt;|\\&gt;|Fl4g|php|curl| |0x|\\\\|python|gcc|less|root|etc|pass|http|ftp|cd|tcp|udp|cat|×|flag|ph|hp|wget|type|ty|\\$\\{IFS\\}|index|\\*)&#34;; if (preg_match(&#34;/&#34;.</div><div class="post-footer">
         <a href="/cnssrecruit/">阅读全文</a></div>
-</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
-        <a href="/reverse/">Reverse学习笔记</a>
-    </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span>&nbsp;<span class="post-publish">发布于 <time datetime="2021-09-15">2021-09-15</time></span></div><div class="content">反汇编工作原理 1、基本反汇编算法  区分指令与数据，确认文件中包含代码和代码入口点的位置。 读取指令起始地址的值，查表将二进制操作码与汇编语言助记符对应起来。 格式化汇编语言并进行输出 继续反汇编下一条指令  2、如何识别反汇编起点、如何选择下一条指令、何时完成反汇编？ 书中介绍了两种算法：线性扫描反汇编与递归下降反汇编
-1.线性扫描反汇编 ​	线性扫描法通过寻找一条指令结束、另一条指令开始的地方来确定需要反汇编的指令位置。具体方法为：假设程序中标注为代码的程序段内全部是机器语言指令，则从第一个字节开始逐条反汇编。这种算法并不会通过识别分支等非线性指令来了解程序的控制流。
-​	线性扫描法的优点在于它能够完全覆盖程序的所有代码段，但其没有考虑到代码中可能混有数据。线性扫描法无法正确地将嵌入的数据与代码区分开来。
-​	GNU调试器(gdb)、微软的WinDbg调试器和odjump的反汇编引擎均采用线性扫描算法。
-2.递归下降反汇编 ​	递归下降法强调控制流的概念。控制流根据一条指令是否被另一条指令引用来决定是否对其进行反汇编。
-​	有以下几种指令：
-1.顺序流指令 ​	顺序流指令将执行权传递给下一条指令。
-2.条件分支指令 ​	当条件为真的时候修改指令指针使其指向分支目标，否则以线性模式执行指令。
-​	递归下降法会反汇编以上两条路径。分支目标指令地址被添加到稍后进行反汇编的地址列表中，推迟其反汇编过程。
-3.无条件分支指令 ​	执行权传给一条指令，但这条指令不需要紧跟在无条件分支指令后面。
-​	递归下降法会尝试确定无条件跳转的目标，但如果跳转指令的目标取决于一个运行时的值，这时使用静态分析无法确定跳转目标，将会带来麻烦。
-4.函数调用指令 ​	与无条件跳转指令相似，区别在于一旦跳转的函数执行完成，执行权将返还给紧跟在后面的指令。
-​	从被调用函数返回的时候，如果程序运行出现异常，可能导致递归下降算法的失败。函数中的代码有可能会有意篡改函数的返回地址。这样在函数完成的时候，控制权将返回到反汇编器无法返回的地址。
-5.返回指令 ​	有时递归下降算法访问了所有的路径，而函数返回指令没有提供接下来将要执行的指令的信息。此时，若程序确实正在运行，则可以从运行时栈顶部获得一个地址，从这个地址开始恢复执行指令。但反汇编器不具备访问栈的能力，因此反汇编过程会突然终止。
-​	递归下降算法具有区分代码与数据的强大能力。IDA是典型的递归下降反汇编器。
-栈帧相关 1、栈帧是什么？ ​	栈帧是在程序的运行时栈中分配的内存块，专门用于特定的函数调用。当函数被调用时，可能因为函数需要传参或是局部变量的使用而需要用到内存。编译器通过栈帧使得对函数参数和局部变量进行分配的过程对程序员透明。
-2、函数调用的详细步骤 1. 函数调用方将调用函数所需要的任何参数放入调用约定指定的位置。 2. 调用方将控制权转交给被调用的函数。 3. 如有必要，被调用的函数会配置一个栈指针，并保存调用方希望保持不变的任何寄存器值。 4. 被调用的函数为局部变量分配空间。 5. 被调用的函数执行其操作。 6. 被调用的函数完成操作，为局部变量保存的栈空间被全部释放。 7. 将3.中保存的寄存器值恢复至原样。 8. 被调用的函数将控制权还给调用方。根据调用指令，可能清除程序栈中的一个或多个参数。 9. 调用方获得控制权，并对栈进行调整，以将程序栈指针恢复到1.之前的值。  3、调用约定相关 ​	调用约定指定调用方放置函数所需参数的具体位置。调用约定可能要求将参数放置在寄存器、程序栈或寄存器和栈中。同时，在传递参数时，程序栈还需要决定被调用函数完成它的操作后，谁负责删除这些参数。</div><div class="post-footer">
-        <a href="/reverse/">阅读全文</a></div>
 </article><ul class="pagination"><li class="page-item ">
                     <span class="page-link">
                         <a href="/">1</a>
