@@ -102,6 +102,14 @@
         alt="/avr.png"
         title="/avr.png" /></a></div><h1 class="home-title">Shino Channel</h1><h2 class="home-subtitle"><div id="id-3" class="typeit"></div></h2><div class="links"><a href="https://github.com/Sh11no" title="GitHub" target="_blank" rel="noopener noreffer me"><i class="fab fa-github-alt fa-fw"></i></a><a href="https://twitter.com/Akarexol" title="Twitter" target="_blank" rel="noopener noreffer me"><i class="fab fa-twitter fa-fw"></i></a><a href="https://steamcommunity.com/id/noshiko" title="Steam" target="_blank" rel="noopener noreffer me"><i class="fab fa-steam fa-fw"></i></a><a href="https://space.bilibili.com/96243678" title="bilibili" target="_blank" rel="noopener noreffer me"><i data-svg-src="/svg/icons/bilibili.min.svg"></i></a><a href="mailto:akalineblog@163.com" title="Email" rel=" me"><i class="far fa-envelope fa-fw"></i></a></div></div>
 <article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
+        <a href="/0gn/">0ctf/tctf2023-0gn nodejs引擎魔改分析</a>
+    </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span>&nbsp;<span class="post-publish">发布于 <time datetime="2023-12-13">2023-12-13</time></span></div><div class="content">碎碎念 本文也可以改名《Shino 为什么是一个啥比》，一个首波逆向题坐牢两天没做出来（还是我太菜了）
+主要是复盘记录一下当时做题的几个思路和分析以及反思，虽然都没有成功但是也算一次经验积累，以供以后参考。
+赛时分析 js部分 解混淆 首先格式化一下js，然后简单看一下混淆的大概pattern。
+有一个函数表，类似这样（节选）
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30  var i = { &#39;kwUyT&#39;: &#39;3|6|4|2|0|1|5&#39;, &#39;ayHHB&#39;: function(H, I) { return H &amp; I; }, &#39;gqHZW&#39;: function(H, I) { return H &amp; I; }, &#39;bLOAn&#39;: function(H, I) { return H ^ I; }, &#39;NoEaD&#39;: function(H, I) { return H &amp; I; }, &#39;ZUNMN&#39;: function(H, I) { return H ^ I; }, &#39;HpUmq&#39;: function(H, I) { return H ^ I; }, &#39;GXcYX&#39;: function(H, I) { return H ^ I; }, &#39;fMkag&#39;: function(H, I, J) { return H(I, J); }, &#39;WtIoQ&#39;: function(H, I, J) { return H(I, J); } }   调用类似下面这个形式（节选）：</div><div class="post-footer">
+        <a href="/0gn/">阅读全文</a></div>
+</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
         <a href="/hitcon2023/">Hitcon2023 Reverse wps | AK with StrawHat</a>
     </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span>&nbsp;<span class="post-publish">发布于 <time datetime="2023-09-09">2023-09-09</time></span></div><div class="content">碎碎念 应该是在 Straw Hat 队认真打的第一场国际赛事吧，可惜半天左右就把逆向全打完了（驾驶员技能发动 我一个人就够了.jpg），有些失望（但是很爽）。
 写于 2023-09-09 23:25 离比赛结束还有 1day 左右，但是目前放出的 Reverse 已经全部 AK 了，没事干了写个 Writeups 先。感觉目前放出的 Reverse 难度总体偏易，大概 CrazyArcade &lt; Full Chain - The Blade &lt; LessEQualmore 吧，这里按打题顺序简单写一下复盘。
@@ -142,13 +150,6 @@ Writeups 初步分析 题目备份：https://small.fileditch.ch/s3/ssQpUZIxaIRvk
 核心代码很短：
 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23  .text:00000000004011B9 vuln proc near ; CODE XREF: main+17↓p .text:00000000004011B9 .text:00000000004011B9 buf = byte ptr -10h .text:00000000004011B9 .text:00000000004011B9 ; __unwind { .</div><div class="post-footer">
         <a href="/srop/">阅读全文</a></div>
-</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
-        <a href="/hitcon2022/">Hitcon2022-Checker Windows驱动文件分析</a>
-    </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span>&nbsp;<span class="post-publish">发布于 <time datetime="2022-12-01">2022-12-01</time></span></div><div class="content">with Katzebin 就不传附件了
-附件有checker.exe和check_drv.sys两个文件
-checker.exe逻辑十分简单
-1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23  int __cdecl main(int argc, const char **argv, const char **envp) { HANDLE FileW; // rax char *v4; // rcx char OutBuffer[4]; // [rsp+40h] [rbp-18h] BYREF DWORD BytesReturned; // [rsp+44h] [rbp-14h] BYREF FileW = CreateFileW(L&#34;\\\\.\\hitcon_checker&#34;, 0xC0000000, 0, 0i64, 3u, 4u, 0i64); qword_140003620 = (__int64)FileW; if ( FileW == (HANDLE)-1i64 ) { sub_140001010(&#34;driver not found\n&#34;); exit(0); } OutBuffer[0] = 0; DeviceIoControl(FileW, 0x222080u, 0i64, 0, OutBuffer, 1u, &amp;BytesReturned, 0i64); v4 = &#34;correct\n&#34;; if ( !</div><div class="post-footer">
-        <a href="/hitcon2022/">阅读全文</a></div>
 </article><ul class="pagination"><li class="page-item active">
                     <span class="page-link">
                         <a href="/">1</a>

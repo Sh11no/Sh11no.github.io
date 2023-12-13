@@ -102,6 +102,22 @@
         alt="/avr.png"
         title="/avr.png" /></a></div><h1 class="home-title">Shino Channel</h1><h2 class="home-subtitle"><div id="id-3" class="typeit"></div></h2><div class="links"><a href="https://github.com/Sh11no" title="GitHub" target="_blank" rel="noopener noreffer me"><i class="fab fa-github-alt fa-fw"></i></a><a href="https://twitter.com/Akarexol" title="Twitter" target="_blank" rel="noopener noreffer me"><i class="fab fa-twitter fa-fw"></i></a><a href="https://steamcommunity.com/id/noshiko" title="Steam" target="_blank" rel="noopener noreffer me"><i class="fab fa-steam fa-fw"></i></a><a href="https://space.bilibili.com/96243678" title="bilibili" target="_blank" rel="noopener noreffer me"><i data-svg-src="/svg/icons/bilibili.min.svg"></i></a><a href="mailto:akalineblog@163.com" title="Email" rel=" me"><i class="far fa-envelope fa-fw"></i></a></div></div>
 <article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
+        <a href="/cnssrecruit/">CNSS招新赛游记</a>
+    </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span>&nbsp;<span class="post-publish">发布于 <time datetime="2021-10-07">2021-10-07</time></span></div><div class="content">写在前面 好难，寄！
+军训开始我就弃赛了，所以军训开始后才上的新题我一个都没有写。这里只有前面的几个水题wp。
+其实回想了一下真的认真干过的题目就只有Re的生瓜蛋子和babyexception题，其他都是不会就摸鱼
+Web 有人专挑php的题做，我不说是谁。
+[Baby] Signin Burpsuite新手教程？抓包修改请求头的METHOD字段，然后进行一些GET、POST和修改Cookie得到flag.
+CNSS{Y0u_kn0w_GET_and_POST}
+[Baby]GitHacker 一个简单的git泄露板子题，使用GitExtract获得泄漏的git源码，在index.html.d54c93文件中看到flag。
+CNSS{Ohhhh_mY_G0d_ur3_real_G1th4ck3r}
+[Mid]BlackPage F12看到如下内容：
+1 2 3 4 5 6 7 8 9 10  &lt;?php $file = $_GET[&#34;file&#34;]; $blacklist = &#34;(**blacklist**)&#34;; if (preg_match(&#34;/&#34;.$blacklist.&#34;/is&#34;,$file) == 1){ exit(&#34;Nooo,You can&#39;t read it.&#34;); }else{ include $file; } //你能读到 mybackdoor.php 吗？ &gt;   是一个文件包含漏洞的题，利用php://filter读取mybackdoor.php源码。
+http://121.41.7.149:65002/?file=php://filter/read=convert.base64-encode/resource=mybackdoor.php
+看到如下内容：
+1 2 3 4 5 6 7 8 9 10 11 12 13  &lt;?php error_reporting(0); function blacklist($cmd){ $filter = &#34;(\\&lt;|\\&gt;|Fl4g|php|curl| |0x|\\\\|python|gcc|less|root|etc|pass|http|ftp|cd|tcp|udp|cat|×|flag|ph|hp|wget|type|ty|\\$\\{IFS\\}|index|\\*)&#34;; if (preg_match(&#34;/&#34;.</div><div class="post-footer">
+        <a href="/cnssrecruit/">阅读全文</a></div>
+</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
         <a href="/reverse/">Reverse学习笔记</a>
     </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span>&nbsp;<span class="post-publish">发布于 <time datetime="2021-09-15">2021-09-15</time></span></div><div class="content">反汇编工作原理 1、基本反汇编算法  区分指令与数据，确认文件中包含代码和代码入口点的位置。 读取指令起始地址的值，查表将二进制操作码与汇编语言助记符对应起来。 格式化汇编语言并进行输出 继续反汇编下一条指令  2、如何识别反汇编起点、如何选择下一条指令、何时完成反汇编？ 书中介绍了两种算法：线性扫描反汇编与递归下降反汇编
 1.线性扫描反汇编 ​	线性扫描法通过寻找一条指令结束、另一条指令开始的地方来确定需要反汇编的指令位置。具体方法为：假设程序中标注为代码的程序段内全部是机器语言指令，则从第一个字节开始逐条反汇编。这种算法并不会通过识别分支等非线性指令来了解程序的控制流。
