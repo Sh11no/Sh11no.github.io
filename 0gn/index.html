@@ -474,7 +474,7 @@
 <p>菜死我了，长记性了（但凡打字慢一点就搜到了，我也搜过hex</p>
 <h3 id="hook-逻辑分析">hook 逻辑分析</h3>
 <p>修改点位于<code>v8::internal::interpreter::BytecodeGenerator::VisitCall</code></p>
-<p>下载nodejsv16.18.0找到源码：src/interpreter/bytecode-generator.cc</p>
+<p>下载nodejsv16.18.0找到源码：<code>src/interpreter/bytecode-generator.cc</code></p>
 <p>在 switch case 的 2 3 8，对应源码的三种调用方法：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
@@ -489,23 +489,7 @@
 </code></pre></td></tr></table>
 </div>
 </div><p>判断函数名称中包含<code>resultchecker</code>:</p>
-<p><img
-        class="lazyload"
-        src="/svg/loading.min.svg"
-        data-src="/images/0gn-2.png"
-        data-srcset="/images/0gn-2.png, /images/0gn-2.png 1.5x, /images/0gn-2.png 2x"
-        data-sizes="auto"
-        alt="/images/0gn-2.png"
-        title="/images/0gn-2.png" /></p>
 <p>并且参数个数为2（还有一个<code>this.context</code>）：</p>
-<p><img
-        class="lazyload"
-        src="/svg/loading.min.svg"
-        data-src="/images/0gn-3.png"
-        data-srcset="/images/0gn-3.png, /images/0gn-3.png 1.5x, /images/0gn-3.png 2x"
-        data-sizes="auto"
-        alt="/images/0gn-3.png"
-        title="/images/0gn-3.png" /></p>
 <p>满足以上条件的时候执行一些额外操作。</p>
 <p>看起来操作是按位比较，每一位比较的逻辑大致如下：</p>
 <div class="highlight"><div class="chroma">
@@ -561,8 +545,8 @@
 </code></pre></td></tr></table>
 </div>
 </div><p>比较关键的是这个：<code>v8::internal::interpreter::BytecodeArrayBuilder::BinaryOperationSmiLiteral(v26,38,0x3E00000000LL,v39);</code></p>
-<p>源码：src/interpreter/bytecode-array-builder.h</p>
-<p>运算token定义：src/parsing/token.h</p>
+<p>源码：<code>src/interpreter/bytecode-array-builder.h</code></p>
+<p>运算token定义：<code>src/parsing/token.h</code></p>
 <p>操作有38、47、48三种，分别对应：</p>
 <ul>
 <li>38：BIT_XOR</li>
@@ -606,14 +590,6 @@
 </code></pre></td></tr></table>
 </div>
 </div><p>通过上面的函数表可知调用了函数 v8::internal::Runtime_TypedArrayVerify，可以看到这个函数被改动过，包含一个check逻辑</p>
-<p><img
-        class="lazyload"
-        src="/svg/loading.min.svg"
-        data-src="/images/0gn-4.png"
-        data-srcset="/images/0gn-4.png, /images/0gn-4.png 1.5x, /images/0gn-4.png 2x"
-        data-sizes="auto"
-        alt="/images/0gn-4.png"
-        title="/images/0gn-4.png" /></p>
 <p>逆向算法即可得到答案。</p>
 <p>exp（有点难调）</p>
 <div class="highlight"><div class="chroma">

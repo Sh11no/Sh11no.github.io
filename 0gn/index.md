@@ -222,7 +222,7 @@ class b {
 
 修改点位于`v8::internal::interpreter::BytecodeGenerator::VisitCall`
 
-下载nodejsv16.18.0找到源码：src/interpreter/bytecode-generator.cc
+下载nodejsv16.18.0找到源码：`src/interpreter/bytecode-generator.cc`
 
 在 switch case 的 2 3 8，对应源码的三种调用方法：
 
@@ -234,11 +234,7 @@ case Call::PRIVATE_CALL:
 
 判断函数名称中包含`resultchecker`:
 
-![](/images/0gn-2.png)
-
 并且参数个数为2（还有一个`this.context`）：
-
-![](/images/0gn-3.png)
 
 满足以上条件的时候执行一些额外操作。
 
@@ -272,9 +268,9 @@ else
 
 比较关键的是这个：`v8::internal::interpreter::BytecodeArrayBuilder::BinaryOperationSmiLiteral(v26,38,0x3E00000000LL,v39);`
 
-源码：src/interpreter/bytecode-array-builder.h
+源码：`src/interpreter/bytecode-array-builder.h`
 
-运算token定义：src/parsing/token.h
+运算token定义：`src/parsing/token.h`
 
 操作有38、47、48三种，分别对应：
 
@@ -304,8 +300,6 @@ char *__fastcall v8::internal::Runtime::FunctionForId(int a1)
 ```
 
 通过上面的函数表可知调用了函数 v8::internal::Runtime_TypedArrayVerify，可以看到这个函数被改动过，包含一个check逻辑
-
-![](/images/0gn-4.png)
 
 逆向算法即可得到答案。
 
