@@ -9,7 +9,65 @@
 
 ## 赛时分析
 
+### js部分 解混淆
 
+首先格式化一下js，然后简单看一下混淆的大概pattern。
+
+有一个函数表，类似这样（节选）
+
+```javascript
+var i = {
+		'kwUyT': '3|6|4|2|0|1|5',
+		'ayHHB': function(H, I) {
+			return H & I;
+		},
+		'gqHZW': function(H, I) {
+			return H & I;
+		},
+		'bLOAn': function(H, I) {
+			return H ^ I;
+		},
+		'NoEaD': function(H, I) {
+			return H & I;
+		},
+		'ZUNMN': function(H, I) {
+			return H ^ I;
+		},
+		'HpUmq': function(H, I) {
+			return H ^ I;
+		},
+		'GXcYX': function(H, I) {
+			return H ^ I;
+		},
+		'fMkag': function(H, I, J) {
+			return H(I, J);
+		},
+		'WtIoQ': function(H, I, J) {
+			return H(I, J);
+		}
+}
+```
+
+调用类似下面这个形式（节选）：
+
+```javascript
+function o(H, I, J, K, L, M, N) {
+		H = i['fMkag'](j, H, i['WtIoQ'](j, i['WtIoQ'](j, i['NkvbM'](i['wJaTT'](I, J), i['wJaTT'](~I, K)), L), N));
+		return i['TXoAD'](j, i['Hhvlr'](H << M, H >>> i['rJNAG'](0x20, M)), I);
+	}
+```
+
+这里解混淆的思路是显然的，通过正则或手动将被混淆的函数名直接替换为对应的操作。如：
+
+```javascript
+'bLOAn': function(H, I) {
+	return H ^ I;
+}
+```
+
+搜索代码中全部的`'bLOAn'`替换为`^`，可以获得完整可读的代码逻辑。
+
+这里通过常量识别可以发现是一个md5，没有任何魔改，哈希结果对应的即为默认输入`flag{00000000000000000000000000000000}`。但是输出结果为`Wrong!`，可以判断是nodejs被魔改。
 
 ### nodejs 魔改点初步定位
 
@@ -146,4 +204,163 @@ class b {
 
 在最后一步的尝试中我们确实知道了是在 Bytecode 的相关方法内进行了魔改，但是直到比赛结束也没有找到这个方法。
 
+## 复盘
+
+### 为什么说 Shino 是一个啥比
+
+接下来揭秘一下我为什么没有找到可见字符串。
+
+![](/images/0gn-1.png)
+
+划重点：这种短字符串常量会被编译优化为上面这个样子，所以如果在 hex 里搜索`resultch`（8位）是可以搜到的，但是`resultchecker`不行。
+
+菜死我了，长记性了（但凡打字慢一点就搜到了，我也搜过hex
+
+### hook 逻辑分析
+
+修改点位于`v8::internal::interpreter::BytecodeGenerator::VisitCall`
+
+下载nodejsv16.18.0找到源码：`src/interpreter/bytecode-generator.cc`
+
+在 switch case 的 2 3 8，对应源码的三种调用方法：
+
+```c++
+case Call::NAMED_PROPERTY_CALL:
+case Call::KEYED_PROPERTY_CALL:
+case Call::PRIVATE_CALL:
+```
+
+判断函数名称中包含`resultchecker`:
+
+![](/images/0gn-2.png)
+
+并且参数个数为2（还有一个`this.context`）：
+
+![](/images/0gn-3.png)
+
+满足以上条件的时候执行一些额外操作。
+
+看起来操作是按位比较，每一位比较的逻辑大致如下：
+
+```c++
+v33 = v8::internal::interpreter::BytecodeRegisterAllocator::NewRegister(v916);
+v8::internal::interpreter::BytecodeArrayBuilder::LoadLiteral(v26, 0LL);
+v8::internal::interpreter::BytecodeArrayBuilder::StoreAccumulatorInRegister(v26, v33);
+v36 = v8::internal::FeedbackVectorSpec::AddSlot(*(_QWORD *)(a1 + 504) + 56LL, 8LL, v34, v35);
+v8::internal::interpreter::BytecodeArrayBuilder::LoadKeyedProperty(v26, v32, v36);
+v39 = v8::internal::FeedbackVectorSpec::AddSlot(*(_QWORD *)(a1 + 504) + 56LL, 15LL, v37, v38);
+v8::internal::interpreter::BytecodeArrayBuilder::BinaryOperationSmiLiteral(
+    (__int64)v26,
+    38,
+    0x3E00000000LL,
+    v39);
+v42 = *(_QWORD *)(a1 + 528);
+v43 = *(_BYTE *)(v42 + 121) & 1;
+if ( (*(_BYTE *)(v42 + 121) & 1) != 0 )
+{
+    v44 = *(_QWORD *)(a1 + 504);
+    v45 = 13LL;
+}
+else
+{
+    v44 = *(_QWORD *)(a1 + 504);
+    v45 = 3LL;
+}
+```
+
+比较关键的是这个：`v8::internal::interpreter::BytecodeArrayBuilder::BinaryOperationSmiLiteral(v26,38,0x3E00000000LL,v39);`
+
+源码：`src/interpreter/bytecode-array-builder.h`
+
+运算token定义：`src/parsing/token.h`
+
+操作有38、47、48三种，分别对应：
+
+- 38：BIT_XOR
+- 47：ADD
+- 48：SUB
+
+算法流程为修改输入之后调用以下逻辑，以下逻辑执行完毕后修改回去。
+
+```c++
+v449 = v8::internal::FeedbackVectorSpec::AddSlot(v447 + 56, v448, v443, v444);
+v8::internal::interpreter::BytecodeArrayBuilder::StoreKeyedProperty(v26, v32, v33, v449, v446);
+v8::internal::interpreter::BytecodeArrayBuilder::LoadLiteral(v26, 0x6A8838CF00000000LL);
+v8::internal::interpreter::BytecodeArrayBuilder::StoreAccumulatorInRegister(v26, v921);
+v8::internal::interpreter::BytecodeArrayBuilder::CallRuntime(v26, 475LL, params_count);
+v922 = v8::internal::interpreter::BytecodeRegisterAllocator::NewRegister(v916);
+v8::internal::interpreter::BytecodeArrayBuilder::StoreAccumulatorInRegister(v26, v922);
+```
+
+调用了 475 号 Runtime 函数，参考https://zhuanlan.zhihu.com/p/431621841
+
+```c++
+char *__fastcall v8::internal::Runtime::FunctionForId(int a1)
+{
+  return (char *)&unk_555E3A49FD00 + 32 * a1; 
+}
+```
+
+通过上面的函数表可知调用了函数 v8::internal::Runtime_TypedArrayVerify，可以看到这个函数被改动过，包含一个check逻辑
+
+![](/images/0gn-4.png)
+
+逆向算法即可得到答案。
+
+exp（有点难调）
+
+```python
+cip = [0x28, 0xA5, 0xA9, 0xCD, 0x34, 0x0A, 0xB9, 0xB2, 0xF2, 0x54, 
+  0xE5, 0x56, 0x68, 0x41, 0xFD, 0xEE, 0x1A, 0xE8, 0x33, 0xB3, 
+  0x25, 0x8A, 0x97, 0xB9, 0xD0, 0xAC, 0xCD, 0xF0, 0x85, 0xBA, 
+  0x07, 0xEB]
+op = [38, 47, 47, 47, 47, 48, 48, 47, 48, 48, 48, 48, 48, 38, 47, 48, 47, 38, 48, 47, 38, 47, 38, 48, 47, 48, 38, 47, 38, 38, 47, 48]
+data = [0x3e, 0x64, 0x5c, 0x22, 0xe7, 0x7a, 0x17, 0xa2, 0xa2, 0xd2, 0xef, 0xb9, 0x76, 0x63, 0x11, 0x1c, 0xe2, 0x0b, 0x48, 0x2d, 0x87, 0xb7, 0x46, 0x07, 0xf2, 0x1a, 0xc4, 0x81, 0x3a, 0x87, 0x76, 0x6e]
+
+def convert(x, i):
+	x = (x+0x100-i)&0xFF
+	if op[i] == 38:
+		return chr((x^data[i])&0xff)
+	if op[i] == 47:
+		return chr((x+0x100-data[i])&0xff)
+	if op[i] == 48:
+		return chr((x+data[i])&0xff)
+def long_to_arr(x):
+	return [x&0xff, (x>>8)&0xff, (x>>16)&0xff, (x>>24)&0xff]
+def arr_to_long(x):
+	return x[0]+(x[1]<<8)+(x[2]<<16)+(x[3]<<24)
+
+def tea(v46, v47, v44_LO, v44_HI):
+	v42 = 0x5e9a8211
+	v43 = 0x1c108262	
+	v45 = 0xF4DCA6E0
+	while v45 != 0:
+		v47 += 0x100000000
+		v47 -= ((v45 + v46)&0xFFFFFFFF) ^ ((v43 + ((v46 >> 5)&0xFFFFFFFF))&0xFFFFFFFF) ^ ((v42 + ((v46 << 4)&0xFFFFFFFF))&0xFFFFFFFF)
+		v47 &= 0xFFFFFFFF
+
+		v46 += 0x100000000
+		v46 -= ((v47 + v45)&0xFFFFFFFF) ^ ((v43 + ((v47 >> 5)&0xFFFFFFFF))&0xFFFFFFFF) ^ ((v42 + ((v47 << 4)&0xFFFFFFFF))&0xFFFFFFFF)
+		v46 &= 0xFFFFFFFF
+
+		v45 += 0x68591AC9
+		v45 &= 0xFFFFFFFF
+	v46 ^= v44_LO
+	v47 ^= v44_HI
+	return v46, v47
+
+v40 = 0x6a8838cf
+v44_HI = v40 ^ 0xA14BC8DF
+v44_LO = v40 ^ 0x6527B8CF
+
+for i in range(0, 32, 8):
+	a, b = tea(arr_to_long(cip[i:i+4]), arr_to_long(cip[i+4:i+8]), v44_LO, v44_HI)
+	v44_LO = arr_to_long(cip[i:i+4])
+	v44_HI = arr_to_long(cip[i+4:i+8])
+	arr = long_to_arr(a) + long_to_arr(b)
+	for j in range(8):
+		print(convert(arr[j], i+j), end="")
+```
+
+`flag{97170f6727bc6757e69eb04c045478be}`
 
