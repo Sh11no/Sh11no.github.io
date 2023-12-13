@@ -7,10 +7,7 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
         <title>0ctf/tctf2023-0gn nodejs引擎魔改分析 - Shino Channel</title><meta name="Description" content="这是我的全新 Hugo 网站"><meta property="og:title" content="0ctf/tctf2023-0gn nodejs引擎魔改分析" />
 <meta property="og:description" content="碎碎念 本文也可以改名《Shino 为什么是一个啥比》，一个首波逆向题坐牢两天没做出来（还是我太菜了）
-主要是复盘记录一下当时做题的几个思路和分析以及反思，虽然都没有成功但是也算一次经验积累，以供以后参考。
-赛时分析 js部分 解混淆 首先格式化一下js，然后简单看一下混淆的大概pattern。
-有一个函数表，类似这样（节选）
-1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30  var i = { &#39;kwUyT&#39;: &#39;3|6|4|2|0|1|5&#39;, &#39;ayHHB&#39;: function(H, I) { return H &amp; I; }, &#39;gqHZW&#39;: function(H, I) { return H &amp; I; }, &#39;bLOAn&#39;: function(H, I) { return H ^ I; }, &#39;NoEaD&#39;: function(H, I) { return H &amp; I; }, &#39;ZUNMN&#39;: function(H, I) { return H ^ I; }, &#39;HpUmq&#39;: function(H, I) { return H ^ I; }, &#39;GXcYX&#39;: function(H, I) { return H ^ I; }, &#39;fMkag&#39;: function(H, I, J) { return H(I, J); }, &#39;WtIoQ&#39;: function(H, I, J) { return H(I, J); } }   调用类似下面这个形式（节选）：" />
+主要是复盘记录一下当时做题的几个思路和分析以及反思，虽然都没有成功但是也算一次经验积累，以供以后参考。" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="http://sh11no.github.io/0gn/" /><meta property="og:image" content="http://sh11no.github.io/logo.png"/><meta property="article:section" content="posts" />
 <meta property="article:published_time" content="2023-12-13T20:24:36+08:00" />
@@ -21,10 +18,7 @@
 
 <meta name="twitter:title" content="0ctf/tctf2023-0gn nodejs引擎魔改分析"/>
 <meta name="twitter:description" content="碎碎念 本文也可以改名《Shino 为什么是一个啥比》，一个首波逆向题坐牢两天没做出来（还是我太菜了）
-主要是复盘记录一下当时做题的几个思路和分析以及反思，虽然都没有成功但是也算一次经验积累，以供以后参考。
-赛时分析 js部分 解混淆 首先格式化一下js，然后简单看一下混淆的大概pattern。
-有一个函数表，类似这样（节选）
-1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30  var i = { &#39;kwUyT&#39;: &#39;3|6|4|2|0|1|5&#39;, &#39;ayHHB&#39;: function(H, I) { return H &amp; I; }, &#39;gqHZW&#39;: function(H, I) { return H &amp; I; }, &#39;bLOAn&#39;: function(H, I) { return H ^ I; }, &#39;NoEaD&#39;: function(H, I) { return H &amp; I; }, &#39;ZUNMN&#39;: function(H, I) { return H ^ I; }, &#39;HpUmq&#39;: function(H, I) { return H ^ I; }, &#39;GXcYX&#39;: function(H, I) { return H ^ I; }, &#39;fMkag&#39;: function(H, I, J) { return H(I, J); }, &#39;WtIoQ&#39;: function(H, I, J) { return H(I, J); } }   调用类似下面这个形式（节选）："/>
+主要是复盘记录一下当时做题的几个思路和分析以及反思，虽然都没有成功但是也算一次经验积累，以供以后参考。"/>
 <meta name="application-name" content="LoveIt">
 <meta name="apple-mobile-web-app-title" content="LoveIt"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -37,7 +31,7 @@
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "http:\/\/sh11no.github.io\/0gn\/"
-        },"genre": "posts","wordcount":  548 ,
+        },"genre": "posts","wordcount":  4 ,
         "url": "http:\/\/sh11no.github.io\/0gn\/","datePublished": "2023-12-13T20:24:36+08:00","dateModified": "2023-12-13T20:24:36+08:00","publisher": {
             "@type": "Organization",
             "name": ""},"author": {
@@ -114,8 +108,8 @@
             <div class="toc-content" id="toc-content-auto"></div>
         </div><article class="page single"><h1 class="single-title animated flipInX">0ctf/tctf2023-0gn nodejs引擎魔改分析</h1><div class="post-meta">
             <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2023-12-13">2023-12-13</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 548 字&nbsp;
-                <i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 3 分钟&nbsp;</div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2023-12-13">2023-12-13</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 4 字&nbsp;
+                <i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 1 分钟&nbsp;</div>
         </div><div class="details toc" id="toc-static"  kept="true">
                 <div class="details-summary toc-title">
                     <span>目录</span>
@@ -124,335 +118,11 @@
                 <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
   <ul>
     <li><a href="#碎碎念">碎碎念</a></li>
-    <li><a href="#赛时分析">赛时分析</a>
-      <ul>
-        <li><a href="#js部分-解混淆">js部分 解混淆</a></li>
-        <li><a href="#nodejs-魔改点初步定位">nodejs 魔改点初步定位</a></li>
-        <li><a href="#hook-时机和条件定位">hook 时机和条件定位</a></li>
-        <li><a href="#hook-函数定位">hook 函数定位</a></li>
-      </ul>
-    </li>
   </ul>
 </nav></div>
             </div><div class="content" id="content"><h2 id="碎碎念">碎碎念</h2>
 <p>本文也可以改名《Shino 为什么是一个啥比》，一个首波逆向题坐牢两天没做出来（还是我太菜了）</p>
 <p>主要是复盘记录一下当时做题的几个思路和分析以及反思，虽然都没有成功但是也算一次经验积累，以供以后参考。</p>
-<h2 id="赛时分析">赛时分析</h2>
-<h3 id="js部分-解混淆">js部分 解混淆</h3>
-<p>首先格式化一下js，然后简单看一下混淆的大概pattern。</p>
-<p>有一个函数表，类似这样（节选）</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span><span class="lnt">18
-</span><span class="lnt">19
-</span><span class="lnt">20
-</span><span class="lnt">21
-</span><span class="lnt">22
-</span><span class="lnt">23
-</span><span class="lnt">24
-</span><span class="lnt">25
-</span><span class="lnt">26
-</span><span class="lnt">27
-</span><span class="lnt">28
-</span><span class="lnt">29
-</span><span class="lnt">30
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="p">{</span>
-		<span class="s1">&#39;kwUyT&#39;</span><span class="o">:</span> <span class="s1">&#39;3|6|4|2|0|1|5&#39;</span><span class="p">,</span>
-		<span class="s1">&#39;ayHHB&#39;</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">H</span><span class="p">,</span> <span class="nx">I</span><span class="p">)</span> <span class="p">{</span>
-			<span class="k">return</span> <span class="nx">H</span> <span class="o">&amp;</span> <span class="nx">I</span><span class="p">;</span>
-		<span class="p">},</span>
-		<span class="s1">&#39;gqHZW&#39;</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">H</span><span class="p">,</span> <span class="nx">I</span><span class="p">)</span> <span class="p">{</span>
-			<span class="k">return</span> <span class="nx">H</span> <span class="o">&amp;</span> <span class="nx">I</span><span class="p">;</span>
-		<span class="p">},</span>
-		<span class="s1">&#39;bLOAn&#39;</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">H</span><span class="p">,</span> <span class="nx">I</span><span class="p">)</span> <span class="p">{</span>
-			<span class="k">return</span> <span class="nx">H</span> <span class="o">^</span> <span class="nx">I</span><span class="p">;</span>
-		<span class="p">},</span>
-		<span class="s1">&#39;NoEaD&#39;</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">H</span><span class="p">,</span> <span class="nx">I</span><span class="p">)</span> <span class="p">{</span>
-			<span class="k">return</span> <span class="nx">H</span> <span class="o">&amp;</span> <span class="nx">I</span><span class="p">;</span>
-		<span class="p">},</span>
-		<span class="s1">&#39;ZUNMN&#39;</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">H</span><span class="p">,</span> <span class="nx">I</span><span class="p">)</span> <span class="p">{</span>
-			<span class="k">return</span> <span class="nx">H</span> <span class="o">^</span> <span class="nx">I</span><span class="p">;</span>
-		<span class="p">},</span>
-		<span class="s1">&#39;HpUmq&#39;</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">H</span><span class="p">,</span> <span class="nx">I</span><span class="p">)</span> <span class="p">{</span>
-			<span class="k">return</span> <span class="nx">H</span> <span class="o">^</span> <span class="nx">I</span><span class="p">;</span>
-		<span class="p">},</span>
-		<span class="s1">&#39;GXcYX&#39;</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">H</span><span class="p">,</span> <span class="nx">I</span><span class="p">)</span> <span class="p">{</span>
-			<span class="k">return</span> <span class="nx">H</span> <span class="o">^</span> <span class="nx">I</span><span class="p">;</span>
-		<span class="p">},</span>
-		<span class="s1">&#39;fMkag&#39;</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">H</span><span class="p">,</span> <span class="nx">I</span><span class="p">,</span> <span class="nx">J</span><span class="p">)</span> <span class="p">{</span>
-			<span class="k">return</span> <span class="nx">H</span><span class="p">(</span><span class="nx">I</span><span class="p">,</span> <span class="nx">J</span><span class="p">);</span>
-		<span class="p">},</span>
-		<span class="s1">&#39;WtIoQ&#39;</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">H</span><span class="p">,</span> <span class="nx">I</span><span class="p">,</span> <span class="nx">J</span><span class="p">)</span> <span class="p">{</span>
-			<span class="k">return</span> <span class="nx">H</span><span class="p">(</span><span class="nx">I</span><span class="p">,</span> <span class="nx">J</span><span class="p">);</span>
-		<span class="p">}</span>
-<span class="p">}</span>
-</code></pre></td></tr></table>
-</div>
-</div><p>调用类似下面这个形式（节选）：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">o</span><span class="p">(</span><span class="nx">H</span><span class="p">,</span> <span class="nx">I</span><span class="p">,</span> <span class="nx">J</span><span class="p">,</span> <span class="nx">K</span><span class="p">,</span> <span class="nx">L</span><span class="p">,</span> <span class="nx">M</span><span class="p">,</span> <span class="nx">N</span><span class="p">)</span> <span class="p">{</span>
-		<span class="nx">H</span> <span class="o">=</span> <span class="nx">i</span><span class="p">[</span><span class="s1">&#39;fMkag&#39;</span><span class="p">](</span><span class="nx">j</span><span class="p">,</span> <span class="nx">H</span><span class="p">,</span> <span class="nx">i</span><span class="p">[</span><span class="s1">&#39;WtIoQ&#39;</span><span class="p">](</span><span class="nx">j</span><span class="p">,</span> <span class="nx">i</span><span class="p">[</span><span class="s1">&#39;WtIoQ&#39;</span><span class="p">](</span><span class="nx">j</span><span class="p">,</span> <span class="nx">i</span><span class="p">[</span><span class="s1">&#39;NkvbM&#39;</span><span class="p">](</span><span class="nx">i</span><span class="p">[</span><span class="s1">&#39;wJaTT&#39;</span><span class="p">](</span><span class="nx">I</span><span class="p">,</span> <span class="nx">J</span><span class="p">),</span> <span class="nx">i</span><span class="p">[</span><span class="s1">&#39;wJaTT&#39;</span><span class="p">](</span><span class="o">~</span><span class="nx">I</span><span class="p">,</span> <span class="nx">K</span><span class="p">)),</span> <span class="nx">L</span><span class="p">),</span> <span class="nx">N</span><span class="p">));</span>
-		<span class="k">return</span> <span class="nx">i</span><span class="p">[</span><span class="s1">&#39;TXoAD&#39;</span><span class="p">](</span><span class="nx">j</span><span class="p">,</span> <span class="nx">i</span><span class="p">[</span><span class="s1">&#39;Hhvlr&#39;</span><span class="p">](</span><span class="nx">H</span> <span class="o">&lt;&lt;</span> <span class="nx">M</span><span class="p">,</span> <span class="nx">H</span> <span class="o">&gt;&gt;&gt;</span> <span class="nx">i</span><span class="p">[</span><span class="s1">&#39;rJNAG&#39;</span><span class="p">](</span><span class="mh">0x20</span><span class="p">,</span> <span class="nx">M</span><span class="p">)),</span> <span class="nx">I</span><span class="p">);</span>
-	<span class="p">}</span>
-</code></pre></td></tr></table>
-</div>
-</div><p>这里解混淆的思路是显然的，通过正则或手动将被混淆的函数名直接替换为对应的操作。如：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-javascript" data-lang="javascript"><span class="s1">&#39;bLOAn&#39;</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">H</span><span class="p">,</span> <span class="nx">I</span><span class="p">)</span> <span class="p">{</span>
-	<span class="k">return</span> <span class="nx">H</span> <span class="o">^</span> <span class="nx">I</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></td></tr></table>
-</div>
-</div><p>搜索代码中全部的<code>'bLOAn'</code>替换为<code>^</code>，可以获得完整可读的代码逻辑。</p>
-<p>这里通过常量识别可以发现是一个md5，没有任何魔改，哈希结果对应的即为默认输入<code>flag{00000000000000000000000000000000}</code>。但是输出结果为<code>Wrong!</code>，可以判断是nodejs被魔改。</p>
-<blockquote>
-<p>这里由于我 md5 见得不多（由于哈希算法不可逆一般不会在逆向中出现）硬是看了半天，经队友@Mason 提醒才看出来是 md5 算法，最丢人的一集</p>
-</blockquote>
-<h3 id="nodejs-魔改点初步定位">nodejs 魔改点初步定位</h3>
-<p>尝试进行黑盒测试来猜测 nodejs 的魔改位置。我们先看一下整体 js 进行 flagcheck 的流程：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span><span class="lnt">18
-</span><span class="lnt">19
-</span><span class="lnt">20
-</span><span class="lnt">21
-</span><span class="lnt">22
-</span><span class="lnt">23
-</span><span class="lnt">24
-</span><span class="lnt">25
-</span><span class="lnt">26
-</span><span class="lnt">27
-</span><span class="lnt">28
-</span><span class="lnt">29
-</span><span class="lnt">30
-</span><span class="lnt">31
-</span><span class="lnt">32
-</span><span class="lnt">33
-</span><span class="lnt">34
-</span><span class="lnt">35
-</span><span class="lnt">36
-</span><span class="lnt">37
-</span><span class="lnt">38
-</span><span class="lnt">39
-</span><span class="lnt">40
-</span><span class="lnt">41
-</span><span class="lnt">42
-</span><span class="lnt">43
-</span><span class="lnt">44
-</span><span class="lnt">45
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">a</span> <span class="p">{</span>
-	<span class="kr">static</span><span class="p">[</span><span class="s1">&#39;resultchecker&#39;</span><span class="p">](</span><span class="nx">c</span><span class="p">)</span> <span class="p">{</span>
-		<span class="kd">var</span> <span class="nx">d</span> <span class="o">=</span> <span class="p">{</span>
-			<span class="s1">&#39;vZhID&#39;</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">f</span><span class="p">,</span> <span class="nx">g</span><span class="p">)</span> <span class="p">{</span>
-				<span class="k">return</span> <span class="nx">f</span><span class="p">(</span><span class="nx">g</span><span class="p">);</span>
-			<span class="p">},</span>
-			<span class="s1">&#39;EVeqn&#39;</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">f</span><span class="p">,</span> <span class="nx">g</span><span class="p">)</span> <span class="p">{</span>
-				<span class="k">return</span> <span class="nx">f</span> <span class="o">==</span> <span class="nx">g</span><span class="p">;</span>
-			<span class="p">},</span>
-			<span class="s1">&#39;TgcSD&#39;</span><span class="o">:</span> <span class="s1">&#39;cd9e459ea708a948d5c2f5a6ca8838cf&#39;</span>
-		<span class="p">};</span>
-		<span class="kd">var</span> <span class="nx">e</span> <span class="o">=</span> <span class="nx">d</span><span class="p">[</span><span class="s1">&#39;vZhID&#39;</span><span class="p">](</span><span class="nx">MMM</span><span class="p">,</span> <span class="nx">c</span><span class="p">);</span> <span class="c1">//md5
-</span><span class="c1"></span>		<span class="k">if</span> <span class="p">(</span><span class="nx">d</span><span class="p">[</span><span class="s1">&#39;EVeqn&#39;</span><span class="p">](</span><span class="nx">e</span><span class="p">,</span> <span class="nx">d</span><span class="p">[</span><span class="s1">&#39;TgcSD&#39;</span><span class="p">]))</span> <span class="p">{</span>
-			<span class="k">return</span> <span class="mh">0x0</span><span class="p">;</span> <span class="c1">//pos1
-</span><span class="c1"></span>		<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-			<span class="k">return</span> <span class="o">-</span><span class="mh">0x1</span><span class="p">;</span>
-		<span class="p">}</span>
-	<span class="p">}</span>
-	<span class="kr">static</span><span class="p">[</span><span class="s1">&#39;flagchecker&#39;</span><span class="p">]()</span> <span class="p">{</span>
-		<span class="k">if</span> <span class="p">(</span><span class="nx">c</span><span class="p">[</span><span class="s1">&#39;==&#39;</span><span class="p">](</span><span class="nx">process</span><span class="p">[</span><span class="s1">&#39;argv&#39;</span><span class="p">][</span><span class="s1">&#39;length&#39;</span><span class="p">],</span> <span class="mh">0x3</span><span class="p">))</span> <span class="p">{</span>
-			<span class="kd">var</span> <span class="nx">d</span> <span class="o">=</span> <span class="nx">process</span><span class="p">[</span><span class="s1">&#39;argv&#39;</span><span class="p">][</span><span class="mh">0x2</span><span class="p">];</span>
-			<span class="nx">console</span><span class="p">[</span><span class="s1">&#39;log&#39;</span><span class="p">](</span><span class="nx">c</span><span class="p">[</span><span class="s1">&#39;your_input_is&#39;</span><span class="p">],</span> <span class="nx">d</span><span class="p">);</span>
-		<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-			<span class="k">return</span> <span class="o">-</span><span class="mh">0x1</span><span class="p">;</span>
-		<span class="p">}</span>
-		<span class="k">if</span> <span class="p">(</span><span class="nx">c</span><span class="p">[</span><span class="s1">&#39;!=&#39;</span><span class="p">](</span><span class="nx">d</span><span class="p">[</span><span class="s1">&#39;length&#39;</span><span class="p">],</span> <span class="mh">0x26</span><span class="p">))</span> <span class="p">{</span>
-			<span class="k">return</span> <span class="o">-</span><span class="mh">0x1</span><span class="p">;</span>
-		<span class="p">}</span>
-		<span class="c1">//flag 格式 check 省略
-</span><span class="c1"></span>		<span class="kd">var</span> <span class="nx">e</span> <span class="o">=</span> <span class="nx">d</span><span class="p">[</span><span class="s1">&#39;slice&#39;</span><span class="p">](</span><span class="mh">0x5</span><span class="p">,</span> <span class="nx">c</span><span class="p">[</span><span class="s1">&#39;+&#39;</span><span class="p">](</span><span class="mh">0x5</span><span class="p">,</span> <span class="mh">0x20</span><span class="p">));</span>
-		<span class="nx">e</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Buffer</span><span class="p">[</span><span class="s1">&#39;from&#39;</span><span class="p">](</span><span class="nx">e</span><span class="p">);</span>
-		<span class="k">if</span> <span class="p">(</span><span class="nx">a</span><span class="p">[</span><span class="s1">&#39;resultchecker&#39;</span><span class="p">](</span><span class="nx">e</span><span class="p">)</span> <span class="o">!=</span> <span class="mh">0x0</span><span class="p">)</span> <span class="p">{</span>
-			<span class="k">return</span> <span class="o">-</span><span class="mh">0x1</span><span class="p">;</span> <span class="c1">//pos2
-</span><span class="c1"></span>		<span class="p">}</span>
-		<span class="k">return</span> <span class="mh">0x0</span><span class="p">;</span>
-	<span class="p">}</span>
-<span class="p">}</span>
-<span class="kd">function</span> <span class="nx">b</span><span class="p">()</span> <span class="p">{</span>
-	<span class="k">if</span> <span class="p">(</span><span class="nx">a</span><span class="p">[</span><span class="s1">&#39;flagchecker&#39;</span><span class="p">]()</span> <span class="o">==</span> <span class="mh">0x0</span><span class="p">)</span> <span class="p">{</span>
-		<span class="nx">console</span><span class="p">[</span><span class="s1">&#39;log&#39;</span><span class="p">](</span><span class="s1">&#39;Right!&#39;</span><span class="p">);</span>
-	<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-		<span class="nx">console</span><span class="p">[</span><span class="s1">&#39;log&#39;</span><span class="p">](</span><span class="s1">&#39;Wrong!&#39;</span><span class="p">);</span> <span class="c1">//pos3
-</span><span class="c1"></span>	<span class="p">}</span>
-<span class="p">}</span>
-<span class="nx">b</span><span class="p">();</span>
-</code></pre></td></tr></table>
-</div>
-</div><p>这里我们先假设 nodejs 没有对被运行的 js 进行完整性校验，即我们可以用他的引擎运行任意的脚本进行测试。如果测试中可以触发<code>Right!</code>则可以判定不存在这种可能。</p>
-<p>通过在脚本中进行<code>console.log</code>，可以发现输入 flag 为 <code>flag{00000000000000000000000000000000}</code> 时，得到的执行路径是 pos1-&gt;pos2-&gt;pos3 （在上面代码中标出）</p>
-<p>这里可以发现<code>resultchecker</code>的执行到<code>return 0x0</code>，但是主函数得到的返回值却是<code>-0x1</code>矛盾。</p>
-<p>我们来思考一下几种可能性并且用我们观察到的现象来验证一下：</p>
-<ul>
-<li><code>resultchecker</code>中的某些运算符被重载或常量被替换：
-<ul>
-<li>尝试在 pos1 处输出 e 和密文，发现他们没被更改，且<code>==</code>正常工作（返回true），否定这种可能性</li>
-</ul>
-</li>
-<li><code>resultchecker</code>被替换：
-<ul>
-<li>在 pos1 处添加的输出语句能被执行，说明<code>resultchecker</code>内的逻辑有被执行，否定这种可能性</li>
-</ul>
-</li>
-<li><code>resultchecker</code>被某种方式 hook （可能的）</li>
-<li><code>Return</code>或其相关的字节码解析操作被改写（可能的）</li>
-</ul>
-<p>注意到上面的3、4操作本质上是相同的。</p>
-<h3 id="hook-时机和条件定位">hook 时机和条件定位</h3>
-<p>一般来说 hook 一个函数必须要先找到这个函数。虽然我不会 js，但是这些方法一般是通用的。寻找函数的方法大概如下（可能我经验不足接触得较少）：</p>
-<ul>
-<li>函数名称</li>
-<li>函数签名</li>
-<li>函数偏移</li>
-<li>函数特征（一般是特征字符串的引用）</li>
-</ul>
-<p>简单进行一下测试：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span><span class="lnt">18
-</span><span class="lnt">19
-</span><span class="lnt">20
-</span><span class="lnt">21
-</span><span class="lnt">22
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">a</span> <span class="p">{</span>
-    <span class="kr">static</span> <span class="nx">resultchecker</span><span class="p">(</span><span class="nx">c</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">//result: -1
-</span><span class="c1"></span>    <span class="p">}</span>
-    <span class="kr">static</span> <span class="nx">resultche2ker</span><span class="p">(</span><span class="nx">c</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">//result: 0
-</span><span class="c1"></span>    <span class="p">}</span>
-    <span class="kr">static</span> <span class="nx">aaaresultcheckeraaa</span><span class="p">(</span><span class="nx">c</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">//result: -1
-</span><span class="c1"></span>    <span class="p">}</span>
-    <span class="kr">static</span> <span class="nx">resultchecker</span><span class="p">(</span><span class="nx">c</span><span class="p">,</span> <span class="nx">c</span><span class="p">)</span> <span class="p">{</span> <span class="c1">//实际上这里是分两次测试的，为了好看写在一起，下同
-</span><span class="c1"></span>        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">//result: 0
-</span><span class="c1"></span>    <span class="p">}</span>
-    <span class="kr">static</span> <span class="nx">resultchecker</span><span class="p">(</span><span class="nx">c</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="mi">114514</span><span class="p">;</span> <span class="c1">//result: 114514
-</span><span class="c1"></span>    <span class="p">}</span>
-<span class="p">}</span>
-<span class="kr">class</span> <span class="nx">b</span> <span class="p">{</span>
-    <span class="kr">static</span> <span class="nx">resultchecker</span><span class="p">(</span><span class="nx">c</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">//result: -1
-</span><span class="c1"></span>    <span class="p">}</span>
-<span class="p">}</span>
-</code></pre></td></tr></table>
-</div>
-</div><p>可以得出函数触发 hook 的条件为：</p>
-<ul>
-<li>函数名中包含<code>resultchecker</code>字符串</li>
-<li>返回0或-1（这里-1无法被验证）</li>
-<li>只传入一个参数</li>
-</ul>
-<p>这里很明显是通过函数名称来定位的函数，同时因为 hook 是否触发与返回值有关，因此 hook 时机一定在 return  之后。</p>
-<h3 id="hook-函数定位">hook 函数定位</h3>
-<p>由于没有发现可见字符串<code>resultchecker</code>（详见“复盘”节《为什么说 Shino 是一个啥比》），尝试通过以下方法进行  hook 函数定位。这里就是记录一下，实际上没有能跑通的方法。</p>
-<p>由于我对 nodejs 内核没有任何的了解，所以我的调试方法是添加<code>console.log</code>语句并且监控<code>write</code>系统调用（只要有输出必定有调用）来在 js 函数内部添加断点。</p>
-<p>由于我的 Cheat Engine 爆炸了，并且没有合适的时机进行 Attach （这里我觉得是我技不如人），所以没有先把程序跑起来再在内存中搜可见字符串这种操作（这里我觉得是我技不如人，我觉得这个方法应该是可行的，等师傅们教我）</p>
-<ul>
-<li>调用链 diff （忘了hook时机在 return 之后，弱智了）</li>
-<li>Bindiff
-<ul>
-<li>实际上由于题目的 nodejs 的编译环境和官方的完全不一样，导入的模块也不一样，可以说结果没有一点相同的</li>
-</ul>
-</li>
-<li>跟踪输入下读写断点
-<ul>
-<li>在 String 的 New 方法里找输入（没找到）</li>
-<li>在 Argument Parse 的相关方法里找输入（没找到）</li>
-<li>或者说我连上面那两个方法都没找到，好吧（其实我的ida完全不能完整加载这个node的binary（太大了），所以我没法进行函数搜索或者等等操作，一搜索就会卡死，该换电脑了）</li>
-</ul>
-</li>
-<li>跟踪字节码编译或 log 执行的字节码
-<ul>
-<li>这种情况仅限于 hook 代码也在 js 层，事实上 hook 代码是在引擎里的，所以这里的相关尝试都失败了</li>
-</ul>
-</li>
-<li>针对字节码魔改：
-<ul>
-<li>diff 字节码表，使用 nodejs 自带的 log 来记录字节码记录顺序</li>
-</ul>
-</li>
-</ul>
-<p>在最后一步的尝试中我们确实知道了是在 Bytecode 的相关方法内进行了魔改，但是直到比赛结束也没有找到这个方法。</p>
 </div><div class="post-footer" id="post-footer">
     <div class="post-info">
         <div class="post-info-line">
