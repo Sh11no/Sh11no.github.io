@@ -11,7 +11,54 @@
 
 ### js部分 解混淆
 
-这里hugo编译不了
+首先格式化一下js，然后简单看一下混淆的大概pattern。
+
+有一个函数表，类似这样（节选）
+
+```javascript
+var i = {
+		'kwUyT': '3|6|4|2|0|1|5',
+		'ayHHB': function(H, I) {
+			return H & I;
+		},
+		'gqHZW': function(H, I) {
+			return H & I;
+		},
+		'bLOAn': function(H, I) {
+			return H ^ I;
+		},
+		'NoEaD': function(H, I) {
+			return H & I;
+		},
+		'ZUNMN': function(H, I) {
+			return H ^ I;
+		},
+		'HpUmq': function(H, I) {
+			return H ^ I;
+		},
+		'GXcYX': function(H, I) {
+			return H ^ I;
+		},
+		'fMkag': function(H, I, J) {
+			return H(I, J);
+		},
+		'WtIoQ': function(H, I, J) {
+			return H(I, J);
+		}
+}
+```
+
+这里解混淆的思路是显然的，通过正则或手动将被混淆的函数名直接替换为对应的操作。如：
+
+```javascript
+'bLOAn': function(H, I) {
+	return H ^ I;
+}
+```
+
+搜索代码中全部的`'bLOAn'`替换为`^`，可以获得完整可读的代码逻辑。
+
+这里通过常量识别可以发现是一个md5，没有任何魔改，哈希结果对应的即为默认输入`flag{00000000000000000000000000000000}`。但是输出结果为`Wrong!`，可以判断是nodejs被魔改。
 
 ### nodejs 魔改点初步定位
 

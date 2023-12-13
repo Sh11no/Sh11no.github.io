@@ -11,9 +11,9 @@
     <guid>http://sh11no.github.io/0gn/</guid>
     <description><![CDATA[碎碎念 本文也可以改名《Shino 为什么是一个啥比》，一个首波逆向题坐牢两天没做出来（还是我太菜了）
 主要是复盘记录一下当时做题的几个思路和分析以及反思，虽然都没有成功但是也算一次经验积累，以供以后参考。
-赛时分析 js部分 解混淆 这里hugo编译不了
-nodejs 魔改点初步定位 尝试进行黑盒测试来猜测 nodejs 的魔改位置。我们先看一下整体 js 进行 flagcheck 的流程：
-1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45  class a { static[&#39;resultchecker&#39;](c) { var d = { &#39;vZhID&#39;: function(f, g) { return f(g); }, &#39;EVeqn&#39;: function(f, g) { return f == g; }, &#39;TgcSD&#39;: &#39;cd9e459ea708a948d5c2f5a6ca8838cf&#39; }; var e = d[&#39;vZhID&#39;](MMM, c); //md5 	if (d[&#39;EVeqn&#39;](e, d[&#39;TgcSD&#39;])) { return 0x0; //pos1 	} else { return -0x1; } } static[&#39;flagchecker&#39;]() { if (c[&#39;==&#39;](process[&#39;argv&#39;][&#39;length&#39;], 0x3)) { var d = process[&#39;argv&#39;][0x2]; console[&#39;log&#39;](c[&#39;your_input_is&#39;], d); } else { return -0x1; } if (c[&#39;!]]></description>
+赛时分析 js部分 解混淆 首先格式化一下js，然后简单看一下混淆的大概pattern。
+有一个函数表，类似这样（节选）
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30  var i = { &#39;kwUyT&#39;: &#39;3|6|4|2|0|1|5&#39;, &#39;ayHHB&#39;: function(H, I) { return H &amp; I; }, &#39;gqHZW&#39;: function(H, I) { return H &amp; I; }, &#39;bLOAn&#39;: function(H, I) { return H ^ I; }, &#39;NoEaD&#39;: function(H, I) { return H &amp; I; }, &#39;ZUNMN&#39;: function(H, I) { return H ^ I; }, &#39;HpUmq&#39;: function(H, I) { return H ^ I; }, &#39;GXcYX&#39;: function(H, I) { return H ^ I; }, &#39;fMkag&#39;: function(H, I, J) { return H(I, J); }, &#39;WtIoQ&#39;: function(H, I, J) { return H(I, J); } }   这里解混淆的思路是显然的，通过正则或手动将被混淆的函数名直接替换为对应的操作。如：]]></description>
 </item><item>
     <title>Hitcon2023 Reverse wps | AK with StrawHat</title>
     <link>http://sh11no.github.io/hitcon2023/</link>
