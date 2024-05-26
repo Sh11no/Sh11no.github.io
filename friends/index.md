@@ -3,13 +3,15 @@
 
  笑死，根本没有朋友。
 
-哦，有两个：
+哦，有 `friendlist.length()` 个：
 
-<a href = "http://xukafy.github.io"> XuKaFy's Blog </a>
+- <a href = "http://xukafy.github.io"> XuKaFy </a>死了
+- <a href = "https://icys.top/"> icy</a>
 
-<a href = "https://icys.top/"> icy</a>
-
-<a href = "https://timlzh.com/"> Timlzh </a>
+- <a href = "https://timlzh.com/"> Timlzh </a>
+- <a href = "https://yaossg.com/"> Yaossg </a>
+- <a href = "https://fanllspd.com/">Fanllspd</a>
+- <a href = "https://anff33.github.io">Anff33 </a>
 
 搞快来私聊我交换友链，乌乌
 
