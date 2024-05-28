@@ -102,6 +102,10 @@
         alt="/avr.png"
         title="/avr.png" /></a></div><h1 class="home-title">Shino Channel</h1><h2 class="home-subtitle"><div id="id-3" class="typeit"></div></h2><div class="links"><a href="https://github.com/Sh11no" title="GitHub" target="_blank" rel="noopener noreffer me"><i class="fab fa-github-alt fa-fw"></i></a><a href="https://twitter.com/Akarexol" title="Twitter" target="_blank" rel="noopener noreffer me"><i class="fab fa-twitter fa-fw"></i></a><a href="https://steamcommunity.com/id/noshiko" title="Steam" target="_blank" rel="noopener noreffer me"><i class="fab fa-steam fa-fw"></i></a><a href="https://space.bilibili.com/96243678" title="bilibili" target="_blank" rel="noopener noreffer me"><i data-svg-src="/svg/icons/bilibili.min.svg"></i></a><a href="mailto:akalineblog@163.com" title="Email" rel=" me"><i class="far fa-envelope fa-fw"></i></a></div></div>
 <article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
+        <a href="/templates/">板子 (ver.诗乃)</a>
+    </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span>&nbsp;<span class="post-publish">发布于 <time datetime="2022-03-09">2022-03-09</time></span></div><div class="content">Tarjan&amp;Topo 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29  void tarjan(int u) { dfn[u] = low[u] = ++tim; ins[u] = 1; stac[++top] = u; for(int v, i = h[u]; ~i; i = e[i].next) if(!dfn[(v = e[i].to)]) { tarjan(v); low[u] = min(low[u], low[v]); } else if(ins[v]) low[u] = min(low[u], low[v]); if(low[u] == dfn[u]) { int y; while(y = stac[top--]) { sd[y] = u; ins[y] = 0; if(u == y) break; p[u] += p[y]; } } } void topo() { queue &lt;int&gt; q; for(int i = 1; i &lt;= n; ++i) if(sd[i] == i &amp;&amp; !</div><div class="post-footer">
+        <a href="/templates/">阅读全文</a></div>
+</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
         <a href="/d3ctf2022/">D3CTF2022wp-BadW3ter &amp; d3bug</a>
     </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span>&nbsp;<span class="post-publish">发布于 <time datetime="2022-03-05">2022-03-05</time></span></div><div class="content">BadW3ter 当时打题目名字的时候也没有多想，后来发现Water拼错了，笑死。
 文件名后面的md5码可以解出来Sh1n0，是我为了混淆题目文件名随便弄的和题目没有关系（一般会去解文件名吗，还是个md5）
@@ -178,16 +182,6 @@ Flask Flask是一个轻量级的Python web应用框架，在架构中协助我�
 如果你和我一样使用Ubuntu，直接执行以下命令吧：
 1  wget -O install.sh http://download.bt.cn/install/install-ubuntu_6.0.sh &amp;&amp; sudo bash install.sh   执行完成后在服务器上执行bt来配置用户名和密码。</div><div class="post-footer">
         <a href="/bot/">阅读全文</a></div>
-</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
-        <a href="/go/">Go语言乱学速成学习笔记</a>
-    </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span>&nbsp;<span class="post-publish">发布于 <time datetime="2021-10-18">2021-10-18</time></span></div><div class="content">本文基于C++、python语言基础学习.
-基本 示例
-1 2 3 4 5  package main import &#34;fmt&#34; func main() { fmt.Println(&#34;Hello, World!&#34;) }   1、当标识符（包括常量、变量、类型、函数名、结构字段等等）以一个大写字母开头，如：Group1，那么使用这种形式的标识符的对象就可以被外部包的代码所使用（客户端程序需要先导入这个包），这被称为导出（像面向对象语言中的 public）；标识符如果以小写字母开头，则对包外是不可见的，但是他们在整个包的内部是可见并且可用的（像面向对象语言中的 protected ）
-2、大括号不准换行，一行代表一个语句结束，没有分号。
-3、标识符、注释规则与cpp相同。
-4、变量类型：数字、字符串、布尔。
-语法相关 变量相关 变量声明 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27  //var v_name type //Example: var a string = &#34;ABCD&#34; var b, c int = 1, 2 //var v_name //Example: var d int // 初始值为0 var e string //初始值为&#34;&#34; //var v_name = value var f = true var g = 0 //自动判断变量类型 // v_name = value intVal := 1 //相当于: var intVal int intVal = 1 //这种结构只能在函数体中出现。 /*var( v_name1 type1 v_name2 type2 )*/ //Example: var ( a int b bool )   函数内变量不允许声明但不使用</div><div class="post-footer">
-        <a href="/go/">阅读全文</a></div>
 </article><ul class="pagination"><li class="page-item ">
                     <span class="page-link">
                         <a href="/">1</a>
@@ -207,6 +201,10 @@ Flask Flask是一个轻量级的Python web应用框架，在架构中协助我�
                 </li><li class="page-item ">
                     <span class="page-link">
                         <a href="/page/5/">5</a>
+                    </span>
+                </li><li class="page-item ">
+                    <span class="page-link">
+                        <a href="/page/6/">6</a>
                     </span>
                 </li></ul></div></div>
             </main><footer class="footer">

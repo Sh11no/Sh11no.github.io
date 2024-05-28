@@ -102,6 +102,26 @@
         alt="/avr.png"
         title="/avr.png" /></a></div><h1 class="home-title">Shino Channel</h1><h2 class="home-subtitle"><div id="id-3" class="typeit"></div></h2><div class="links"><a href="https://github.com/Sh11no" title="GitHub" target="_blank" rel="noopener noreffer me"><i class="fab fa-github-alt fa-fw"></i></a><a href="https://twitter.com/Akarexol" title="Twitter" target="_blank" rel="noopener noreffer me"><i class="fab fa-twitter fa-fw"></i></a><a href="https://steamcommunity.com/id/noshiko" title="Steam" target="_blank" rel="noopener noreffer me"><i class="fab fa-steam fa-fw"></i></a><a href="https://space.bilibili.com/96243678" title="bilibili" target="_blank" rel="noopener noreffer me"><i data-svg-src="/svg/icons/bilibili.min.svg"></i></a><a href="mailto:akalineblog@163.com" title="Email" rel=" me"><i class="far fa-envelope fa-fw"></i></a></div></div>
 <article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
+        <a href="/chromium/">Chromium 内核 hook 抓包实战记录</a>
+    </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span>&nbsp;<span class="post-publish">发布于 <time datetime="2024-05-28">2024-05-28</time></span></div><div class="content">前言 最近正好做到了针对安卓某 APP 内置浏览器抓包相关的东西，顺手记录一下。
+目前已有的抓包解决方式可以参考 r0capture 的这个图：
+https://github.com/r0ysue/r0capture/blob/main/pic/summary2.jpg
+其中最为方便的是 HOOK 抓包，不需要配置或导入证书即可获得数据。网络上现有的传统的解决方案为寻找 SSL 库里的 SSL_read 和 SSL_write 函数进行 hook 抓包。这种方法确实可以实现通杀且可以抓到数据，即使是在集成了自定义 SSL 库的内置浏览器中 API 定位也相对简单，但还是存在以下缺陷：
+ 数据包碎片化：由于 hook 的位置较为底层，网络通信较为紊乱，这种方式抓取的流量一般需要借助流量分析软件（如 wireshark）进行进一步分析，在 HTTP2.0 协议的加成下，多个会话的流量占用同一个 TCP 连接进行传输，这使得读写流量的拼接更为复杂繁琐，这对于需要实时批量获取数据的场景是致命的。 无法实现篡改：由于上面的数据包碎片化问题，在攻击者视角下，运用该方法 hook 获取发送的数据包时无法实现实时的数据包篡改和伪造。  针对上述场景，针对内置浏览器使用的 chromium 内核进行了粗略的分析，考虑在浏览器较为上层的位置截取完整的包数据。
+Chromium 网络栈 这里首先需要拿出一个经典的八股面试题：在浏览器输入URL 地址回车后，发生了什么？
+我们并不关心无聊的八股答案，这里我们主要关注的是 Chromium 具体如何发送一个 HTTP 请求。
+这里有一篇文章，懒得复读了：
+https://www.cnblogs.com/bigben0123/p/12650519.html
+虽然这篇文章完全忽略了对 Cache 相关的操作，但是正好我们也不关心那部分内容。
+我们的目的是抓到完整的、全量的请求，所以我们需要找一个请求过程中符合以下条件的时机：
+ 请求已经被构建好 请求还没有被交给具体的传输流  前者会导致我们无法获取完整的请求，而后者会导致请求已经根据请求协议被分流，我们只能拿到某种特定协议下的请求包而丢失其他请求。
+由于确认第一点十分麻烦，所以我们期望找到的是满足第二点的最下层位置，即请求被交给传输流的前一刻。
+经过几小时的坐牢我定位到了类 HttpNetworkTransaction。
+https://source.chromium.org/chromium/chromium/src/+/main:net/http/http_network_transaction.cc?q=HttpNetworkTransaction&ss=chromium%2Fchromium
+这里我们比较关注的是 HttpNetworkTransaction 发送请求的流程：
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 104 105 106 107 108 109 110  int HttpNetworkTransaction::DoLoop(int result) { DCHECK(next_state_ !</div><div class="post-footer">
+        <a href="/chromium/">阅读全文</a></div>
+</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
         <a href="/0gn/">0ctf/tctf2023-0gn nodejs引擎魔改分析</a>
     </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span>&nbsp;<span class="post-publish">发布于 <time datetime="2023-12-13">2023-12-13</time></span></div><div class="content">碎碎念 本文也可以改名《Shino 为什么是一个啥比》，一个首波逆向题坐牢两天没做出来（还是我太菜了）
 主要是复盘记录一下当时做题的几个思路和分析以及反思，虽然都没有成功但是也算一次经验积累，以供以后参考。
@@ -144,12 +164,6 @@ Writeups 初步分析 题目备份：https://small.fileditch.ch/s3/ssQpUZIxaIRvk
 ​	理论上说 py 代码应该在static上级目录的某处，一通乱试发现/static../路径可以访问上级目录，目录结构如下：
 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18  | __pycache__ | __init__.cpython-35.pyc | models.cpython-35.pyc | main | __pycache__ | __init__.cpython-35.pyc | forms.</div><div class="post-footer">
         <a href="/wdb2022/">阅读全文</a></div>
-</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
-        <a href="/srop/">NKCTF2023ezstack - SROP初探</a>
-    </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span>&nbsp;<span class="post-publish">发布于 <time datetime="2023-03-29">2023-03-29</time></span></div><div class="content">1 2 3 4 5  Arch: amd64-64-little RELRO: Partial RELRO Stack: No canary found NX: NX enabled PIE: No PIE (0x400000)   鉴定为，没有保护。
-核心代码很短：
-1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23  .text:00000000004011B9 vuln proc near ; CODE XREF: main+17↓p .text:00000000004011B9 .text:00000000004011B9 buf = byte ptr -10h .text:00000000004011B9 .text:00000000004011B9 ; __unwind { .</div><div class="post-footer">
-        <a href="/srop/">阅读全文</a></div>
 </article><ul class="pagination"><li class="page-item active">
                     <span class="page-link">
                         <a href="/">1</a>
@@ -166,7 +180,7 @@ Writeups 初步分析 题目备份：https://small.fileditch.ch/s3/ssQpUZIxaIRvk
                     <span class="page-link" aria-hidden="true">&hellip;</span>
                 </li><li class="page-item ">
                     <span class="page-link">
-                        <a href="/page/5/">5</a>
+                        <a href="/page/6/">6</a>
                     </span>
                 </li></ul></div></div>
             </main><footer class="footer">

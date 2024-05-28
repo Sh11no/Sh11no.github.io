@@ -12,6 +12,7 @@
 - <a href = "https://yaossg.com/"> Yaossg </a>
 - <a href = "https://fanllspd.com/">Fanllspd</a>
 - <a href = "https://anff33.github.io">Anff33 </a>
+- <a href="https://cyril07.wiki"> Cyril </a>
 
 搞快来私聊我交换友链，乌乌
 

@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+        <title>Chromium 内核 hook 抓包实战记录 - Shino Channel</title><meta name="Description" content="这是我的全新 Hugo 网站"><meta property="og:title" content="Chromium 内核 hook 抓包实战记录" />
+<meta property="og:description" content="前言 最近正好做到了针对安卓某 APP 内置浏览器抓包相关的东西，顺手记录一下。
+目前已有的抓包解决方式可以参考 r0capture 的这个图：
+https://github.com/r0ysue/r0capture/blob/main/pic/summary2.jpg
+其中最为方便的是 HOOK 抓包，不需要配置或导入证书即可获得数据。网络上现有的传统的解决方案为寻找 SSL 库里的 SSL_read 和 SSL_write 函数进行 hook 抓包。这种方法确实可以实现通杀且可以抓到数据，即使是在集成了自定义 SSL 库的内置浏览器中 API 定位也相对简单，但还是存在以下缺陷：
+ 数据包碎片化：由于 hook 的位置较为底层，网络通信较为紊乱，这种方式抓取的流量一般需要借助流量分析软件（如 wireshark）进行进一步分析，在 HTTP2.0 协议的加成下，多个会话的流量占用同一个 TCP 连接进行传输，这使得读写流量的拼接更为复杂繁琐，这对于需要实时批量获取数据的场景是致命的。 无法实现篡改：由于上面的数据包碎片化问题，在攻击者视角下，运用该方法 hook 获取发送的数据包时无法实现实时的数据包篡改和伪造。  针对上述场景，针对内置浏览器使用的 chromium 内核进行了粗略的分析，考虑在浏览器较为上层的位置截取完整的包数据。
+Chromium 网络栈 这里首先需要拿出一个经典的八股面试题：在浏览器输入URL 地址回车后，发生了什么？
+我们并不关心无聊的八股答案，这里我们主要关注的是 Chromium 具体如何发送一个 HTTP 请求。
+这里有一篇文章，懒得复读了：
+https://www.cnblogs.com/bigben0123/p/12650519.html
+虽然这篇文章完全忽略了对 Cache 相关的操作，但是正好我们也不关心那部分内容。
+我们的目的是抓到完整的、全量的请求，所以我们需要找一个请求过程中符合以下条件的时机：
+ 请求已经被构建好 请求还没有被交给具体的传输流  前者会导致我们无法获取完整的请求，而后者会导致请求已经根据请求协议被分流，我们只能拿到某种特定协议下的请求包而丢失其他请求。
+由于确认第一点十分麻烦，所以我们期望找到的是满足第二点的最下层位置，即请求被交给传输流的前一刻。
+经过几小时的坐牢我定位到了类 HttpNetworkTransaction。
+https://source.chromium.org/chromium/chromium/src/&#43;/main:net/http/http_network_transaction.cc?q=HttpNetworkTransaction&ss=chromium%2Fchromium
+这里我们比较关注的是 HttpNetworkTransaction 发送请求的流程：
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 104 105 106 107 108 109 110  int HttpNetworkTransaction::DoLoop(int result) { DCHECK(next_state_ !" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://sh11no.github.io/chromium/" /><meta property="og:image" content="http://sh11no.github.io/logo.png"/><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2024-05-28T22:47:38+08:00" />
+<meta property="article:modified_time" content="2024-05-28T22:47:38+08:00" />
+
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="http://sh11no.github.io/logo.png"/>
+
+<meta name="twitter:title" content="Chromium 内核 hook 抓包实战记录"/>
+<meta name="twitter:description" content="前言 最近正好做到了针对安卓某 APP 内置浏览器抓包相关的东西，顺手记录一下。
+目前已有的抓包解决方式可以参考 r0capture 的这个图：
+https://github.com/r0ysue/r0capture/blob/main/pic/summary2.jpg
+其中最为方便的是 HOOK 抓包，不需要配置或导入证书即可获得数据。网络上现有的传统的解决方案为寻找 SSL 库里的 SSL_read 和 SSL_write 函数进行 hook 抓包。这种方法确实可以实现通杀且可以抓到数据，即使是在集成了自定义 SSL 库的内置浏览器中 API 定位也相对简单，但还是存在以下缺陷：
+ 数据包碎片化：由于 hook 的位置较为底层，网络通信较为紊乱，这种方式抓取的流量一般需要借助流量分析软件（如 wireshark）进行进一步分析，在 HTTP2.0 协议的加成下，多个会话的流量占用同一个 TCP 连接进行传输，这使得读写流量的拼接更为复杂繁琐，这对于需要实时批量获取数据的场景是致命的。 无法实现篡改：由于上面的数据包碎片化问题，在攻击者视角下，运用该方法 hook 获取发送的数据包时无法实现实时的数据包篡改和伪造。  针对上述场景，针对内置浏览器使用的 chromium 内核进行了粗略的分析，考虑在浏览器较为上层的位置截取完整的包数据。
+Chromium 网络栈 这里首先需要拿出一个经典的八股面试题：在浏览器输入URL 地址回车后，发生了什么？
+我们并不关心无聊的八股答案，这里我们主要关注的是 Chromium 具体如何发送一个 HTTP 请求。
+这里有一篇文章，懒得复读了：
+https://www.cnblogs.com/bigben0123/p/12650519.html
+虽然这篇文章完全忽略了对 Cache 相关的操作，但是正好我们也不关心那部分内容。
+我们的目的是抓到完整的、全量的请求，所以我们需要找一个请求过程中符合以下条件的时机：
+ 请求已经被构建好 请求还没有被交给具体的传输流  前者会导致我们无法获取完整的请求，而后者会导致请求已经根据请求协议被分流，我们只能拿到某种特定协议下的请求包而丢失其他请求。
+由于确认第一点十分麻烦，所以我们期望找到的是满足第二点的最下层位置，即请求被交给传输流的前一刻。
+经过几小时的坐牢我定位到了类 HttpNetworkTransaction。
+https://source.chromium.org/chromium/chromium/src/&#43;/main:net/http/http_network_transaction.cc?q=HttpNetworkTransaction&ss=chromium%2Fchromium
+这里我们比较关注的是 HttpNetworkTransaction 发送请求的流程：
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 104 105 106 107 108 109 110  int HttpNetworkTransaction::DoLoop(int result) { DCHECK(next_state_ !"/>
+<meta name="application-name" content="LoveIt">
+<meta name="apple-mobile-web-app-title" content="LoveIt"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="http://sh11no.github.io/chromium/" /><link rel="prev" href="http://sh11no.github.io/0gn/" /><link rel="stylesheet" href="/lib/normalize/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"><link rel="stylesheet" href="/lib/animate/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "Chromium 内核 hook 抓包实战记录",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/sh11no.github.io\/chromium\/"
+        },"genre": "posts","wordcount":  2278 ,
+        "url": "http:\/\/sh11no.github.io\/chromium\/","datePublished": "2024-05-28T22:47:38+08:00","dateModified": "2024-05-28T22:47:38+08:00","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "Shino"
+            },"description": ""
+    }
+    </script></head>
+    <body header-desktop="fixed" header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('dark' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'dark' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Shino Channel"><span id="id-1" class="typeit"></span></a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="https://www.youtube.com/@anoofficialchannel" title="喵喵小链接" rel="noopener noreffer" target="_blank">             </a><a class="menu-item" href="http://www.nu1l.com/" rel="noopener noreffer" target="_blank"> Nu1L </a><a class="menu-item" href="http://blog.cnss.io/" rel="noopener noreffer" target="_blank"> CNSS </a><a class="menu-item" href="/friends/"> Friends </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Shino Channel"><span id="id-2" class="typeit"></span></a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="https://www.youtube.com/@anoofficialchannel" title="喵喵小链接" rel="noopener noreffer" target="_blank">           </a><a class="menu-item" href="http://www.nu1l.com/" title="" rel="noopener noreffer" target="_blank">Nu1L</a><a class="menu-item" href="http://blog.cnss.io/" title="" rel="noopener noreffer" target="_blank">CNSS</a><a class="menu-item" href="/friends/" title="">Friends</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw"></i>
+            </a></div>
+    </div>
+</header>
+<div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+</div>
+<div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+</div>
+<main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animated flipInX">Chromium 内核 hook 抓包实战记录</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2024-05-28">2024-05-28</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 2278 字&nbsp;
+                <i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 11 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  kept="true">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#前言">前言</a></li>
+    <li><a href="#chromium-网络栈">Chromium 网络栈</a></li>
+    <li><a href="#requestbody-获取">RequestBody 获取</a></li>
+    <li><a href="#requestheader-获取">RequestHeader 获取</a></li>
+    <li><a href="#request-组装">Request 组装</a></li>
+    <li><a href="#responseheaders-获取">ResponseHeaders 获取</a></li>
+    <li><a href="#responsebody-获取">ResponseBody 获取</a></li>
+    <li><a href="#定位和实现">定位和实现</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="前言">前言</h2>
+<p>最近正好做到了针对安卓某 APP 内置浏览器抓包相关的东西，顺手记录一下。</p>
+<p>目前已有的抓包解决方式可以参考 r0capture 的这个图：</p>
+<p><a href="https://github.com/r0ysue/r0capture/blob/main/pic/summary2.jpg" target="_blank" rel="noopener noreffer">https://github.com/r0ysue/r0capture/blob/main/pic/summary2.jpg</a></p>
+<p>其中最为方便的是 HOOK 抓包，不需要配置或导入证书即可获得数据。网络上现有的传统的解决方案为寻找 SSL 库里的 SSL_read 和 SSL_write 函数进行 hook 抓包。这种方法确实可以实现通杀且可以抓到数据，即使是在集成了自定义 SSL 库的内置浏览器中 API 定位也相对简单，但还是存在以下缺陷：</p>
+<ul>
+<li>数据包碎片化：由于 hook 的位置较为底层，网络通信较为紊乱，这种方式抓取的流量一般需要借助流量分析软件（如 wireshark）进行进一步分析，在 HTTP2.0 协议的加成下，多个会话的流量占用同一个 TCP 连接进行传输，这使得读写流量的拼接更为复杂繁琐，这对于需要实时批量获取数据的场景是致命的。</li>
+<li>无法实现篡改：由于上面的数据包碎片化问题，在攻击者视角下，运用该方法 hook 获取发送的数据包时无法实现实时的数据包篡改和伪造。</li>
+</ul>
+<p>针对上述场景，针对内置浏览器使用的 chromium 内核进行了粗略的分析，考虑在浏览器较为上层的位置截取完整的包数据。</p>
+<h2 id="chromium-网络栈">Chromium 网络栈</h2>
+<p>这里首先需要拿出一个经典的八股面试题：<em>在浏览器输入URL 地址回车后，发生了什么？</em></p>
+<p>我们并不关心无聊的八股答案，这里我们主要关注的是 Chromium 具体如何发送一个 HTTP 请求。</p>
+<p>这里有一篇文章，懒得复读了：</p>
+<p><a href="https://www.cnblogs.com/bigben0123/p/12650519.html" target="_blank" rel="noopener noreffer">https://www.cnblogs.com/bigben0123/p/12650519.html</a></p>
+<p>虽然这篇文章完全忽略了对 Cache 相关的操作，但是正好我们也不关心那部分内容。</p>
+<p>我们的目的是抓到完整的、全量的请求，所以我们需要找一个请求过程中符合以下条件的时机：</p>
+<ul>
+<li>请求已经被构建好</li>
+<li>请求还没有被交给具体的传输流</li>
+</ul>
+<p>前者会导致我们无法获取完整的请求，而后者会导致请求已经根据请求协议被分流，我们只能拿到某种特定协议下的请求包而丢失其他请求。</p>
+<p>由于确认第一点十分麻烦，所以我们期望找到的是满足第二点的最下层位置，即请求被交给传输流的前一刻。</p>
+<p>经过几小时的坐牢我定位到了类 HttpNetworkTransaction。</p>
+<p><a href="https://source.chromium.org/chromium/chromium/src/&#43;/main:net/http/http_network_transaction.cc?q=HttpNetworkTransaction&amp;ss=chromium%2Fchromium" target="_blank" rel="noopener noreffer">https://source.chromium.org/chromium/chromium/src/+/main:net/http/http_network_transaction.cc?q=HttpNetworkTransaction&ss=chromium%2Fchromium</a></p>
+<p>这里我们比较关注的是 HttpNetworkTransaction 发送请求的流程：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">  1
+</span><span class="lnt">  2
+</span><span class="lnt">  3
+</span><span class="lnt">  4
+</span><span class="lnt">  5
+</span><span class="lnt">  6
+</span><span class="lnt">  7
+</span><span class="lnt">  8
+</span><span class="lnt">  9
+</span><span class="lnt"> 10
+</span><span class="lnt"> 11
+</span><span class="lnt"> 12
+</span><span class="lnt"> 13
+</span><span class="lnt"> 14
+</span><span class="lnt"> 15
+</span><span class="lnt"> 16
+</span><span class="lnt"> 17
+</span><span class="lnt"> 18
+</span><span class="lnt"> 19
+</span><span class="lnt"> 20
+</span><span class="lnt"> 21
+</span><span class="lnt"> 22
+</span><span class="lnt"> 23
+</span><span class="lnt"> 24
+</span><span class="lnt"> 25
+</span><span class="lnt"> 26
+</span><span class="lnt"> 27
+</span><span class="lnt"> 28
+</span><span class="lnt"> 29
+</span><span class="lnt"> 30
+</span><span class="lnt"> 31
+</span><span class="lnt"> 32
+</span><span class="lnt"> 33
+</span><span class="lnt"> 34
+</span><span class="lnt"> 35
+</span><span class="lnt"> 36
+</span><span class="lnt"> 37
+</span><span class="lnt"> 38
+</span><span class="lnt"> 39
+</span><span class="lnt"> 40
+</span><span class="lnt"> 41
+</span><span class="lnt"> 42
+</span><span class="lnt"> 43
+</span><span class="lnt"> 44
+</span><span class="lnt"> 45
+</span><span class="lnt"> 46
+</span><span class="lnt"> 47
+</span><span class="lnt"> 48
+</span><span class="lnt"> 49
+</span><span class="lnt"> 50
+</span><span class="lnt"> 51
+</span><span class="lnt"> 52
+</span><span class="lnt"> 53
+</span><span class="lnt"> 54
+</span><span class="lnt"> 55
+</span><span class="lnt"> 56
+</span><span class="lnt"> 57
+</span><span class="lnt"> 58
+</span><span class="lnt"> 59
+</span><span class="lnt"> 60
+</span><span class="lnt"> 61
+</span><span class="lnt"> 62
+</span><span class="lnt"> 63
+</span><span class="lnt"> 64
+</span><span class="lnt"> 65
+</span><span class="lnt"> 66
+</span><span class="lnt"> 67
+</span><span class="lnt"> 68
+</span><span class="lnt"> 69
+</span><span class="lnt"> 70
+</span><span class="lnt"> 71
+</span><span class="lnt"> 72
+</span><span class="lnt"> 73
+</span><span class="lnt"> 74
+</span><span class="lnt"> 75
+</span><span class="lnt"> 76
+</span><span class="lnt"> 77
+</span><span class="lnt"> 78
+</span><span class="lnt"> 79
+</span><span class="lnt"> 80
+</span><span class="lnt"> 81
+</span><span class="lnt"> 82
+</span><span class="lnt"> 83
+</span><span class="lnt"> 84
+</span><span class="lnt"> 85
+</span><span class="lnt"> 86
+</span><span class="lnt"> 87
+</span><span class="lnt"> 88
+</span><span class="lnt"> 89
+</span><span class="lnt"> 90
+</span><span class="lnt"> 91
+</span><span class="lnt"> 92
+</span><span class="lnt"> 93
+</span><span class="lnt"> 94
+</span><span class="lnt"> 95
+</span><span class="lnt"> 96
+</span><span class="lnt"> 97
+</span><span class="lnt"> 98
+</span><span class="lnt"> 99
+</span><span class="lnt">100
+</span><span class="lnt">101
+</span><span class="lnt">102
+</span><span class="lnt">103
+</span><span class="lnt">104
+</span><span class="lnt">105
+</span><span class="lnt">106
+</span><span class="lnt">107
+</span><span class="lnt">108
+</span><span class="lnt">109
+</span><span class="lnt">110
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="kt">int</span> <span class="n">HttpNetworkTransaction</span><span class="o">::</span><span class="n">DoLoop</span><span class="p">(</span><span class="kt">int</span> <span class="n">result</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">DCHECK</span><span class="p">(</span><span class="n">next_state_</span> <span class="o">!=</span> <span class="n">STATE_NONE</span><span class="p">);</span>
+
+  <span class="kt">int</span> <span class="n">rv</span> <span class="o">=</span> <span class="n">result</span><span class="p">;</span>
+  <span class="k">do</span> <span class="p">{</span>
+    <span class="n">State</span> <span class="n">state</span> <span class="o">=</span> <span class="n">next_state_</span><span class="p">;</span>
+    <span class="n">next_state_</span> <span class="o">=</span> <span class="n">STATE_NONE</span><span class="p">;</span>
+    <span class="k">switch</span> <span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">case</span> <span class="nl">STATE_NOTIFY_BEFORE_CREATE_STREAM</span><span class="p">:</span>
+        <span class="n">DCHECK_EQ</span><span class="p">(</span><span class="n">OK</span><span class="p">,</span> <span class="n">rv</span><span class="p">);</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">DoNotifyBeforeCreateStream</span><span class="p">();</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="nl">STATE_CREATE_STREAM</span><span class="p">:</span>
+        <span class="n">DCHECK_EQ</span><span class="p">(</span><span class="n">OK</span><span class="p">,</span> <span class="n">rv</span><span class="p">);</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">DoCreateStream</span><span class="p">();</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="nl">STATE_CREATE_STREAM_COMPLETE</span><span class="p">:</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">DoCreateStreamComplete</span><span class="p">(</span><span class="n">rv</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="nl">STATE_INIT_STREAM</span><span class="p">:</span>
+        <span class="n">DCHECK_EQ</span><span class="p">(</span><span class="n">OK</span><span class="p">,</span> <span class="n">rv</span><span class="p">);</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">DoInitStream</span><span class="p">();</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="nl">STATE_INIT_STREAM_COMPLETE</span><span class="p">:</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">DoInitStreamComplete</span><span class="p">(</span><span class="n">rv</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="nl">STATE_CONNECTED_CALLBACK</span><span class="p">:</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">DoConnectedCallback</span><span class="p">();</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="nl">STATE_CONNECTED_CALLBACK_COMPLETE</span><span class="p">:</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">DoConnectedCallbackComplete</span><span class="p">(</span><span class="n">rv</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="nl">STATE_GENERATE_PROXY_AUTH_TOKEN</span><span class="p">:</span>
+        <span class="n">DCHECK_EQ</span><span class="p">(</span><span class="n">OK</span><span class="p">,</span> <span class="n">rv</span><span class="p">);</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">DoGenerateProxyAuthToken</span><span class="p">();</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="nl">STATE_GENERATE_PROXY_AUTH_TOKEN_COMPLETE</span><span class="p">:</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">DoGenerateProxyAuthTokenComplete</span><span class="p">(</span><span class="n">rv</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="nl">STATE_GENERATE_SERVER_AUTH_TOKEN</span><span class="p">:</span>
+        <span class="n">DCHECK_EQ</span><span class="p">(</span><span class="n">OK</span><span class="p">,</span> <span class="n">rv</span><span class="p">);</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">DoGenerateServerAuthToken</span><span class="p">();</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="nl">STATE_GENERATE_SERVER_AUTH_TOKEN_COMPLETE</span><span class="p">:</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">DoGenerateServerAuthTokenComplete</span><span class="p">(</span><span class="n">rv</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="nl">STATE_INIT_REQUEST_BODY</span><span class="p">:</span>
+        <span class="n">DCHECK_EQ</span><span class="p">(</span><span class="n">OK</span><span class="p">,</span> <span class="n">rv</span><span class="p">);</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">DoInitRequestBody</span><span class="p">();</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="nl">STATE_INIT_REQUEST_BODY_COMPLETE</span><span class="p">:</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">DoInitRequestBodyComplete</span><span class="p">(</span><span class="n">rv</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="nl">STATE_BUILD_REQUEST</span><span class="p">:</span>
+        <span class="n">DCHECK_EQ</span><span class="p">(</span><span class="n">OK</span><span class="p">,</span> <span class="n">rv</span><span class="p">);</span>
+        <span class="n">net_log_</span><span class="p">.</span><span class="n">BeginEvent</span><span class="p">(</span><span class="n">NetLogEventType</span><span class="o">::</span><span class="n">HTTP_TRANSACTION_SEND_REQUEST</span><span class="p">);</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">DoBuildRequest</span><span class="p">();</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="nl">STATE_BUILD_REQUEST_COMPLETE</span><span class="p">:</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">DoBuildRequestComplete</span><span class="p">(</span><span class="n">rv</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="nl">STATE_SEND_REQUEST</span><span class="p">:</span>
+        <span class="n">DCHECK_EQ</span><span class="p">(</span><span class="n">OK</span><span class="p">,</span> <span class="n">rv</span><span class="p">);</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">DoSendRequest</span><span class="p">();</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="nl">STATE_SEND_REQUEST_COMPLETE</span><span class="p">:</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">DoSendRequestComplete</span><span class="p">(</span><span class="n">rv</span><span class="p">);</span>
+        <span class="n">net_log_</span><span class="p">.</span><span class="n">EndEventWithNetErrorCode</span><span class="p">(</span>
+            <span class="n">NetLogEventType</span><span class="o">::</span><span class="n">HTTP_TRANSACTION_SEND_REQUEST</span><span class="p">,</span> <span class="n">rv</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="nl">STATE_READ_HEADERS</span><span class="p">:</span>
+        <span class="n">DCHECK_EQ</span><span class="p">(</span><span class="n">OK</span><span class="p">,</span> <span class="n">rv</span><span class="p">);</span>
+        <span class="n">net_log_</span><span class="p">.</span><span class="n">BeginEvent</span><span class="p">(</span><span class="n">NetLogEventType</span><span class="o">::</span><span class="n">HTTP_TRANSACTION_READ_HEADERS</span><span class="p">);</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">DoReadHeaders</span><span class="p">();</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="nl">STATE_READ_HEADERS_COMPLETE</span><span class="p">:</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">DoReadHeadersComplete</span><span class="p">(</span><span class="n">rv</span><span class="p">);</span>
+        <span class="n">net_log_</span><span class="p">.</span><span class="n">EndEventWithNetErrorCode</span><span class="p">(</span>
+            <span class="n">NetLogEventType</span><span class="o">::</span><span class="n">HTTP_TRANSACTION_READ_HEADERS</span><span class="p">,</span> <span class="n">rv</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="nl">STATE_READ_BODY</span><span class="p">:</span>
+        <span class="n">DCHECK_EQ</span><span class="p">(</span><span class="n">OK</span><span class="p">,</span> <span class="n">rv</span><span class="p">);</span>
+        <span class="n">net_log_</span><span class="p">.</span><span class="n">BeginEvent</span><span class="p">(</span><span class="n">NetLogEventType</span><span class="o">::</span><span class="n">HTTP_TRANSACTION_READ_BODY</span><span class="p">);</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">DoReadBody</span><span class="p">();</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="nl">STATE_READ_BODY_COMPLETE</span><span class="p">:</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">DoReadBodyComplete</span><span class="p">(</span><span class="n">rv</span><span class="p">);</span>
+        <span class="n">net_log_</span><span class="p">.</span><span class="n">EndEventWithNetErrorCode</span><span class="p">(</span>
+            <span class="n">NetLogEventType</span><span class="o">::</span><span class="n">HTTP_TRANSACTION_READ_BODY</span><span class="p">,</span> <span class="n">rv</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="nl">STATE_DRAIN_BODY_FOR_AUTH_RESTART</span><span class="p">:</span>
+        <span class="n">DCHECK_EQ</span><span class="p">(</span><span class="n">OK</span><span class="p">,</span> <span class="n">rv</span><span class="p">);</span>
+        <span class="n">net_log_</span><span class="p">.</span><span class="n">BeginEvent</span><span class="p">(</span>
+            <span class="n">NetLogEventType</span><span class="o">::</span><span class="n">HTTP_TRANSACTION_DRAIN_BODY_FOR_AUTH_RESTART</span><span class="p">);</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">DoDrainBodyForAuthRestart</span><span class="p">();</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="nl">STATE_DRAIN_BODY_FOR_AUTH_RESTART_COMPLETE</span><span class="p">:</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">DoDrainBodyForAuthRestartComplete</span><span class="p">(</span><span class="n">rv</span><span class="p">);</span>
+        <span class="n">net_log_</span><span class="p">.</span><span class="n">EndEventWithNetErrorCode</span><span class="p">(</span>
+            <span class="n">NetLogEventType</span><span class="o">::</span><span class="n">HTTP_TRANSACTION_DRAIN_BODY_FOR_AUTH_RESTART</span><span class="p">,</span> <span class="n">rv</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">default</span><span class="o">:</span>
+        <span class="n">NOTREACHED_IN_MIGRATION</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;bad state&#34;</span><span class="p">;</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">ERR_FAILED</span><span class="p">;</span>
+        <span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="n">rv</span> <span class="o">!=</span> <span class="n">ERR_IO_PENDING</span> <span class="o">&amp;&amp;</span> <span class="n">next_state_</span> <span class="o">!=</span> <span class="n">STATE_NONE</span><span class="p">);</span>
+
+  <span class="k">return</span> <span class="n">rv</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>这个流程根据状态包含了所有请求的流程，在不发生错误或重连的情况下你可以认为流程是顺序进行的（其实并不。</p>
+<h2 id="requestbody-获取">RequestBody 获取</h2>
+<p>由于我们的目标是一个浏览器而不是一个网络库，在实现上 chromium 也没有必要在某个地方存储明文的整个网络请求，更多的是将 Headers、Body 等数据分散地组合在结构体里，将这些东西交给具体的传输流进行组装和传输。</p>
+<p>在这种情况下，RequestBody 是我们最容易获取的字段。和其他我们需要的字段相比，RequestBody 直接来自前端应用。如果一个请求由 Chromium 进行创建，那么他一定是一个不含 Body 的 GET 请求，一般用于请求资源，这类资源一定不含邮 RequestBody。因此，当 RequestBody 存在的场合，该请求一定由前端主动发出，也就是说 RequestBody 的生成一定在 Chromium 之外，在进入 Chromium 时已经被<strong>完整传入</strong>。</p>
+<p>在 Chromium 中，具体表现为存在一个类 UploadDataStream 在请求被创建开始时即被传入，一直层层下传到底层传输。</p>
+<p>很遗憾，在我认为应该有 Body 信息的地方没有该信息。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="kt">int</span> <span class="n">HttpNetworkTransaction</span><span class="o">::</span><span class="n">DoInitRequestBody</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">next_state_</span> <span class="o">=</span> <span class="n">STATE_INIT_REQUEST_BODY_COMPLETE</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">rv</span> <span class="o">=</span> <span class="n">OK</span><span class="p">;</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">request_</span><span class="o">-&gt;</span><span class="n">upload_data_stream</span><span class="p">)</span>
+    <span class="n">rv</span> <span class="o">=</span> <span class="n">request_</span><span class="o">-&gt;</span><span class="n">upload_data_stream</span><span class="o">-&gt;</span><span class="n">Init</span><span class="p">(</span>
+        <span class="n">base</span><span class="o">::</span><span class="n">BindOnce</span><span class="p">(</span><span class="o">&amp;</span><span class="n">HttpNetworkTransaction</span><span class="o">::</span><span class="n">OnIOComplete</span><span class="p">,</span>
+                       <span class="n">base</span><span class="o">::</span><span class="n">Unretained</span><span class="p">(</span><span class="k">this</span><span class="p">)),</span>
+        <span class="n">net_log_</span><span class="p">);</span>
+  <span class="k">return</span> <span class="n">rv</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>已知该 upload_data_stream 在传入 HttpNetworkTransaction 时就已经携带了我们想要的信息，或者我们想要的信息可以通过该结构读取。在实现具体的 hook 时，主动从一个 stream 里读数据是一个糟糕的选择：首先需要进一步分析这个数据流的工作方式，其次不能保证这个读行为是否会把数据取走导致 chromium 自己获取不到这部分数据。</p>
+<p>因此，我们转而关注在传输流发送请求的时候如何使用这个 data_stream。</p>
+<p>虽然前文说根据协议不同会走不同的传输流，但是他们对这个结构体的操作一定是相同的。这里选用最基础的 HTTP/1.1 协议进行分析。随机选取一个受害者类  HttpStreamParser。https://source.chromium.org/chromium/chromium/src/+/main:net/http/http_stream_parser.cc</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="kt">int</span> <span class="n">HttpStreamParser</span><span class="o">::</span><span class="n">DoLoop</span><span class="p">(</span><span class="kt">int</span> <span class="n">result</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">do</span> <span class="p">{</span>
+    <span class="n">DCHECK_NE</span><span class="p">(</span><span class="n">ERR_IO_PENDING</span><span class="p">,</span> <span class="n">result</span><span class="p">);</span>
+    <span class="n">DCHECK_NE</span><span class="p">(</span><span class="n">STATE_DONE</span><span class="p">,</span> <span class="n">io_state_</span><span class="p">);</span>
+    <span class="n">DCHECK_NE</span><span class="p">(</span><span class="n">STATE_NONE</span><span class="p">,</span> <span class="n">io_state_</span><span class="p">);</span>
+    <span class="n">State</span> <span class="n">state</span> <span class="o">=</span> <span class="n">io_state_</span><span class="p">;</span>
+    <span class="n">io_state_</span> <span class="o">=</span> <span class="n">STATE_NONE</span><span class="p">;</span>
+    <span class="k">switch</span> <span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">case</span> <span class="nl">STATE_SEND_HEADERS</span><span class="p">:</span>
+        <span class="n">DCHECK_EQ</span><span class="p">(</span><span class="n">OK</span><span class="p">,</span> <span class="n">result</span><span class="p">);</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">DoSendHeaders</span><span class="p">();</span>
+        <span class="n">DCHECK_NE</span><span class="p">(</span><span class="n">STATE_NONE</span><span class="p">,</span> <span class="n">io_state_</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="nl">STATE_SEND_HEADERS_COMPLETE</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">DoSendHeadersComplete</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
+        <span class="n">DCHECK_NE</span><span class="p">(</span><span class="n">STATE_NONE</span><span class="p">,</span> <span class="n">io_state_</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="nl">STATE_SEND_BODY</span><span class="p">:</span>
+        <span class="n">DCHECK_EQ</span><span class="p">(</span><span class="n">OK</span><span class="p">,</span> <span class="n">result</span><span class="p">);</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">DoSendBody</span><span class="p">();</span>
+        <span class="n">DCHECK_NE</span><span class="p">(</span><span class="n">STATE_NONE</span><span class="p">,</span> <span class="n">io_state_</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="nl">STATE_SEND_BODY_COMPLETE</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">DoSendBodyComplete</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
+        <span class="n">DCHECK_NE</span><span class="p">(</span><span class="n">STATE_NONE</span><span class="p">,</span> <span class="n">io_state_</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="nl">STATE_SEND_REQUEST_READ_BODY_COMPLETE</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">DoSendRequestReadBodyComplete</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
+        <span class="n">DCHECK_NE</span><span class="p">(</span><span class="n">STATE_NONE</span><span class="p">,</span> <span class="n">io_state_</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="nl">STATE_SEND_REQUEST_COMPLETE</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">DoSendRequestComplete</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="nl">STATE_READ_HEADERS</span><span class="p">:</span>
+        <span class="n">net_log_</span><span class="p">.</span><span class="n">BeginEvent</span><span class="p">(</span><span class="n">NetLogEventType</span><span class="o">::</span><span class="n">HTTP_STREAM_PARSER_READ_HEADERS</span><span class="p">);</span>
+        <span class="n">DCHECK_GE</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">DoReadHeaders</span><span class="p">();</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="nl">STATE_READ_HEADERS_COMPLETE</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">DoReadHeadersComplete</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
+        <span class="n">net_log_</span><span class="p">.</span><span class="n">EndEventWithNetErrorCode</span><span class="p">(</span>
+            <span class="n">NetLogEventType</span><span class="o">::</span><span class="n">HTTP_STREAM_PARSER_READ_HEADERS</span><span class="p">,</span> <span class="n">result</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="nl">STATE_READ_BODY</span><span class="p">:</span>
+        <span class="n">DCHECK_GE</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">DoReadBody</span><span class="p">();</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="nl">STATE_READ_BODY_COMPLETE</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">DoReadBodyComplete</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">default</span><span class="o">:</span>
+        <span class="n">NOTREACHED_IN_MIGRATION</span><span class="p">();</span>
+        <span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="n">result</span> <span class="o">!=</span> <span class="n">ERR_IO_PENDING</span> <span class="o">&amp;&amp;</span>
+           <span class="p">(</span><span class="n">io_state_</span> <span class="o">!=</span> <span class="n">STATE_DONE</span> <span class="o">&amp;&amp;</span> <span class="n">io_state_</span> <span class="o">!=</span> <span class="n">STATE_NONE</span><span class="p">));</span>
+
+  <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>关心的 SendBody</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="kt">int</span> <span class="n">HttpStreamParser</span><span class="o">::</span><span class="n">DoSendBody</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">request_body_send_buf_</span><span class="o">-&gt;</span><span class="n">BytesRemaining</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">io_state_</span> <span class="o">=</span> <span class="n">STATE_SEND_BODY_COMPLETE</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">stream_socket_</span><span class="o">-&gt;</span><span class="n">Write</span><span class="p">(</span>
+        <span class="n">request_body_send_buf_</span><span class="p">.</span><span class="n">get</span><span class="p">(),</span> <span class="n">request_body_send_buf_</span><span class="o">-&gt;</span><span class="n">BytesRemaining</span><span class="p">(),</span>
+        <span class="n">io_callback_</span><span class="p">,</span> <span class="n">NetworkTrafficAnnotationTag</span><span class="p">(</span><span class="n">traffic_annotation_</span><span class="p">));</span>
+  <span class="p">}</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="n">upload_data_stream_</span><span class="o">-&gt;</span><span class="n">is_chunked</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="n">sent_last_chunk_</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// Finished sending the request.
+</span><span class="c1"></span>    <span class="n">io_state_</span> <span class="o">=</span> <span class="n">STATE_SEND_REQUEST_COMPLETE</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">OK</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="n">request_body_read_buf_</span><span class="o">-&gt;</span><span class="n">Clear</span><span class="p">();</span>
+  <span class="n">io_state_</span> <span class="o">=</span> <span class="n">STATE_SEND_REQUEST_READ_BODY_COMPLETE</span><span class="p">;</span>
+  <span class="k">return</span> <span class="n">upload_data_stream_</span><span class="o">-&gt;</span><span class="n">Read</span><span class="p">(</span>
+      <span class="n">request_body_read_buf_</span><span class="p">.</span><span class="n">get</span><span class="p">(),</span> <span class="n">request_body_read_buf_</span><span class="o">-&gt;</span><span class="n">capacity</span><span class="p">(),</span>
+      <span class="n">base</span><span class="o">::</span><span class="n">BindOnce</span><span class="p">(</span><span class="o">&amp;</span><span class="n">HttpStreamParser</span><span class="o">::</span><span class="n">OnIOComplete</span><span class="p">,</span>
+                     <span class="n">weak_ptr_factory_</span><span class="p">.</span><span class="n">GetWeakPtr</span><span class="p">()));</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>可以发现当一个传输流准备发送 RequestBody 时，会先调用 UploadDataStream::Read 读取 RequestBody 再进行上传。这里产生了我们的第一个受害者函数：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="kt">int</span> <span class="n">UploadDataStream</span><span class="o">::</span><span class="n">Read</span><span class="p">(</span><span class="n">IOBuffer</span><span class="o">*</span> <span class="n">buf</span><span class="p">,</span>
+                           <span class="kt">int</span> <span class="n">buf_len</span><span class="p">,</span>
+                           <span class="n">CompletionOnceCallback</span> <span class="n">callback</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">DCHECK</span><span class="p">(</span><span class="o">!</span><span class="n">callback</span><span class="p">.</span><span class="n">is_null</span><span class="p">()</span> <span class="o">||</span> <span class="n">IsInMemory</span><span class="p">());</span>
+  <span class="n">DCHECK</span><span class="p">(</span><span class="n">initialized_successfully_</span><span class="p">);</span>
+  <span class="n">DCHECK_GT</span><span class="p">(</span><span class="n">buf_len</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+
+  <span class="n">net_log_</span><span class="p">.</span><span class="n">BeginEvent</span><span class="p">(</span><span class="n">NetLogEventType</span><span class="o">::</span><span class="n">UPLOAD_DATA_STREAM_READ</span><span class="p">,</span>
+                      <span class="p">[</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">{</span> <span class="k">return</span> <span class="nf">CreateReadInfoParams</span><span class="p">(</span><span class="n">current_position_</span><span class="p">);</span> <span class="p">});</span>
+
+  <span class="kt">int</span> <span class="n">result</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">is_eof_</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">ReadInternal</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">buf_len</span><span class="p">);</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="n">result</span> <span class="o">==</span> <span class="n">ERR_IO_PENDING</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">DCHECK</span><span class="p">(</span><span class="o">!</span><span class="n">IsInMemory</span><span class="p">());</span>
+    <span class="n">callback_</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">callback</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="n">OnReadCompleted</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>hook 该函数，当该函数被调用时读取 IOBuffer 即可拿到 RequestBody。</p>
+<h2 id="requestheader-获取">RequestHeader 获取</h2>
+<p>还是从 DoLoop 开始分析：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span><span class="lnt">75
+</span><span class="lnt">76
+</span><span class="lnt">77
+</span><span class="lnt">78
+</span><span class="lnt">79
+</span><span class="lnt">80
+</span><span class="lnt">81
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="kt">int</span> <span class="n">HttpNetworkTransaction</span><span class="o">::</span><span class="n">DoBuildRequest</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">next_state_</span> <span class="o">=</span> <span class="n">STATE_BUILD_REQUEST_COMPLETE</span><span class="p">;</span>
+  <span class="n">headers_valid_</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+
+  <span class="c1">// This is constructed lazily (instead of within our Start method), so that
+</span><span class="c1"></span>  <span class="c1">// we have proxy info available.
+</span><span class="c1"></span>  <span class="k">if</span> <span class="p">(</span><span class="n">request_headers_</span><span class="p">.</span><span class="n">IsEmpty</span><span class="p">())</span> <span class="p">{</span>
+    <span class="kt">bool</span> <span class="n">using_http_proxy_without_tunnel</span> <span class="o">=</span> <span class="n">UsingHttpProxyWithoutTunnel</span><span class="p">();</span>
+    <span class="k">return</span> <span class="nf">BuildRequestHeaders</span><span class="p">(</span><span class="n">using_http_proxy_without_tunnel</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="k">return</span> <span class="n">OK</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="kt">int</span> <span class="n">HttpNetworkTransaction</span><span class="o">::</span><span class="n">BuildRequestHeaders</span><span class="p">(</span>
+    <span class="kt">bool</span> <span class="n">using_http_proxy_without_tunnel</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">request_headers_</span><span class="p">.</span><span class="n">SetHeader</span><span class="p">(</span><span class="n">HttpRequestHeaders</span><span class="o">::</span><span class="n">kHost</span><span class="p">,</span>
+                             <span class="n">GetHostAndOptionalPort</span><span class="p">(</span><span class="n">request_</span><span class="o">-&gt;</span><span class="n">url</span><span class="p">));</span>
+
+  <span class="c1">// For compat with HTTP/1.0 servers and proxies:
+</span><span class="c1"></span>  <span class="k">if</span> <span class="p">(</span><span class="n">using_http_proxy_without_tunnel</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">request_headers_</span><span class="p">.</span><span class="n">SetHeader</span><span class="p">(</span><span class="n">HttpRequestHeaders</span><span class="o">::</span><span class="n">kProxyConnection</span><span class="p">,</span>
+                               <span class="s">&#34;keep-alive&#34;</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="n">request_headers_</span><span class="p">.</span><span class="n">SetHeader</span><span class="p">(</span><span class="n">HttpRequestHeaders</span><span class="o">::</span><span class="n">kConnection</span><span class="p">,</span> <span class="s">&#34;keep-alive&#34;</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="c1">// Add a content length header?
+</span><span class="c1"></span>  <span class="k">if</span> <span class="p">(</span><span class="n">request_</span><span class="o">-&gt;</span><span class="n">upload_data_stream</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">request_</span><span class="o">-&gt;</span><span class="n">upload_data_stream</span><span class="o">-&gt;</span><span class="n">is_chunked</span><span class="p">())</span> <span class="p">{</span>
+      <span class="n">request_headers_</span><span class="p">.</span><span class="n">SetHeader</span><span class="p">(</span>
+          <span class="n">HttpRequestHeaders</span><span class="o">::</span><span class="n">kTransferEncoding</span><span class="p">,</span> <span class="s">&#34;chunked&#34;</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="n">request_headers_</span><span class="p">.</span><span class="n">SetHeader</span><span class="p">(</span>
+          <span class="n">HttpRequestHeaders</span><span class="o">::</span><span class="n">kContentLength</span><span class="p">,</span>
+          <span class="n">base</span><span class="o">::</span><span class="n">NumberToString</span><span class="p">(</span><span class="n">request_</span><span class="o">-&gt;</span><span class="n">upload_data_stream</span><span class="o">-&gt;</span><span class="n">size</span><span class="p">()));</span>
+    <span class="p">}</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="nf">if</span> <span class="p">(</span><span class="n">request_</span><span class="o">-&gt;</span><span class="n">method</span> <span class="o">==</span> <span class="s">&#34;POST&#34;</span> <span class="o">||</span> <span class="n">request_</span><span class="o">-&gt;</span><span class="n">method</span> <span class="o">==</span> <span class="s">&#34;PUT&#34;</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// An empty POST/PUT request still needs a content length.  As for HEAD,
+</span><span class="c1"></span>    <span class="c1">// IE and Safari also add a content length header.  Presumably it is to
+</span><span class="c1"></span>    <span class="c1">// support sending a HEAD request to an URL that only expects to be sent a
+</span><span class="c1"></span>    <span class="c1">// POST or some other method that normally would have a message body.
+</span><span class="c1"></span>    <span class="c1">// Firefox (40.0) does not send the header, and RFC 7230 &amp; 7231
+</span><span class="c1"></span>    <span class="c1">// specify that it should not be sent due to undefined behavior.
+</span><span class="c1"></span>    <span class="n">request_headers_</span><span class="p">.</span><span class="n">SetHeader</span><span class="p">(</span><span class="n">HttpRequestHeaders</span><span class="o">::</span><span class="n">kContentLength</span><span class="p">,</span> <span class="s">&#34;0&#34;</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="c1">// Honor load flags that impact proxy caches.
+</span><span class="c1"></span>  <span class="k">if</span> <span class="p">(</span><span class="n">request_</span><span class="o">-&gt;</span><span class="n">load_flags</span> <span class="o">&amp;</span> <span class="n">LOAD_BYPASS_CACHE</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">request_headers_</span><span class="p">.</span><span class="n">SetHeader</span><span class="p">(</span><span class="n">HttpRequestHeaders</span><span class="o">::</span><span class="n">kPragma</span><span class="p">,</span> <span class="s">&#34;no-cache&#34;</span><span class="p">);</span>
+    <span class="n">request_headers_</span><span class="p">.</span><span class="n">SetHeader</span><span class="p">(</span><span class="n">HttpRequestHeaders</span><span class="o">::</span><span class="n">kCacheControl</span><span class="p">,</span> <span class="s">&#34;no-cache&#34;</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="nf">if</span> <span class="p">(</span><span class="n">request_</span><span class="o">-&gt;</span><span class="n">load_flags</span> <span class="o">&amp;</span> <span class="n">LOAD_VALIDATE_CACHE</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">request_headers_</span><span class="p">.</span><span class="n">SetHeader</span><span class="p">(</span><span class="n">HttpRequestHeaders</span><span class="o">::</span><span class="n">kCacheControl</span><span class="p">,</span> <span class="s">&#34;max-age=0&#34;</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="n">ShouldApplyProxyAuth</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="n">HaveAuth</span><span class="p">(</span><span class="n">HttpAuth</span><span class="o">::</span><span class="n">AUTH_PROXY</span><span class="p">))</span>
+    <span class="n">auth_controllers_</span><span class="p">[</span><span class="n">HttpAuth</span><span class="o">::</span><span class="n">AUTH_PROXY</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">AddAuthorizationHeader</span><span class="p">(</span>
+        <span class="o">&amp;</span><span class="n">request_headers_</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">ShouldApplyServerAuth</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="n">HaveAuth</span><span class="p">(</span><span class="n">HttpAuth</span><span class="o">::</span><span class="n">AUTH_SERVER</span><span class="p">))</span>
+    <span class="n">auth_controllers_</span><span class="p">[</span><span class="n">HttpAuth</span><span class="o">::</span><span class="n">AUTH_SERVER</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">AddAuthorizationHeader</span><span class="p">(</span>
+        <span class="o">&amp;</span><span class="n">request_headers_</span><span class="p">);</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="n">net</span><span class="o">::</span><span class="n">features</span><span class="o">::</span><span class="n">kIpPrivacyAddHeaderToProxiedRequests</span><span class="p">.</span><span class="n">Get</span><span class="p">()</span> <span class="o">&amp;&amp;</span>
+      <span class="n">proxy_info_</span><span class="p">.</span><span class="n">is_for_ip_protection</span><span class="p">())</span> <span class="p">{</span>
+    <span class="n">CHECK</span><span class="p">(</span><span class="o">!</span><span class="n">proxy_info_</span><span class="p">.</span><span class="n">is_direct</span><span class="p">()</span> <span class="o">||</span>
+          <span class="n">net</span><span class="o">::</span><span class="n">features</span><span class="o">::</span><span class="n">kIpPrivacyDirectOnly</span><span class="p">.</span><span class="n">Get</span><span class="p">());</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">proxy_info_</span><span class="p">.</span><span class="n">is_direct</span><span class="p">())</span> <span class="p">{</span>
+      <span class="n">request_headers_</span><span class="p">.</span><span class="n">SetHeader</span><span class="p">(</span><span class="s">&#34;IP-Protection&#34;</span><span class="p">,</span> <span class="s">&#34;1&#34;</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+
+  <span class="n">request_headers_</span><span class="p">.</span><span class="n">MergeFrom</span><span class="p">(</span><span class="n">request_</span><span class="o">-&gt;</span><span class="n">extra_headers</span><span class="p">);</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="n">modify_headers_callbacks_</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">modify_headers_callbacks_</span><span class="p">.</span><span class="n">Run</span><span class="p">(</span><span class="o">&amp;</span><span class="n">request_headers_</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="n">response_</span><span class="p">.</span><span class="n">did_use_http_auth</span> <span class="o">=</span>
+      <span class="n">request_headers_</span><span class="p">.</span><span class="n">HasHeader</span><span class="p">(</span><span class="n">HttpRequestHeaders</span><span class="o">::</span><span class="n">kAuthorization</span><span class="p">)</span> <span class="o">||</span>
+      <span class="n">request_headers_</span><span class="p">.</span><span class="n">HasHeader</span><span class="p">(</span><span class="n">HttpRequestHeaders</span><span class="o">::</span><span class="n">kProxyAuthorization</span><span class="p">);</span>
+  <span class="k">return</span> <span class="n">OK</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>其实这里很明显了，我们的下一个受害者函数是 HttpRequestHeaders::SetHeader。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="kt">void</span> <span class="n">HttpRequestHeaders</span><span class="o">::</span><span class="n">SetHeader</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span> <span class="n">key</span><span class="p">,</span>
+                                   <span class="n">std</span><span class="o">::</span><span class="n">string_view</span> <span class="n">value</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">SetHeader</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">(</span><span class="n">value</span><span class="p">));</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><h2 id="request-组装">Request 组装</h2>
+<p>在前文我们获取了所有的 Request 信息，但是这两个信息获取的位置可以说是毫不相关，甚至所有的 RequestHeaders 都是碎片。我们需要一个方法把这些信息组装起来。</p>
+<p>这里有一个好东西：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="kt">int</span> <span class="n">HttpNetworkTransaction</span><span class="o">::</span><span class="n">Start</span><span class="p">(</span><span class="k">const</span> <span class="n">HttpRequestInfo</span><span class="o">*</span> <span class="n">request_info</span><span class="p">,</span>
+                                  <span class="n">CompletionOnceCallback</span> <span class="n">callback</span><span class="p">,</span>
+                                  <span class="k">const</span> <span class="n">NetLogWithSource</span><span class="o">&amp;</span> <span class="n">net_log</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">request_info</span><span class="o">-&gt;</span><span class="n">load_flags</span> <span class="o">&amp;</span> <span class="n">LOAD_ONLY_FROM_CACHE</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ERR_CACHE_MISS</span><span class="p">;</span>
+
+  <span class="n">DCHECK</span><span class="p">(</span><span class="n">request_info</span><span class="o">-&gt;</span><span class="n">traffic_annotation</span><span class="p">.</span><span class="n">is_valid</span><span class="p">());</span>
+  <span class="n">DCHECK</span><span class="p">(</span><span class="n">request_info</span><span class="o">-&gt;</span><span class="n">IsConsistent</span><span class="p">());</span>
+  <span class="n">net_log_</span> <span class="o">=</span> <span class="n">net_log</span><span class="p">;</span>
+  <span class="n">request_</span> <span class="o">=</span> <span class="n">request_info</span><span class="p">;</span>
+  <span class="n">url_</span> <span class="o">=</span> <span class="n">request_</span><span class="o">-&gt;</span><span class="n">url</span><span class="p">;</span>
+  <span class="n">network_anonymization_key_</span> <span class="o">=</span> <span class="n">request_</span><span class="o">-&gt;</span><span class="n">network_anonymization_key</span><span class="p">;</span>
+<span class="cp">#if BUILDFLAG(ENABLE_REPORTING)
+</span><span class="cp"></span>  <span class="c1">// Store values for later use in NEL report generation.
+</span><span class="c1"></span>  <span class="n">request_method_</span> <span class="o">=</span> <span class="n">request_</span><span class="o">-&gt;</span><span class="n">method</span><span class="p">;</span>
+  <span class="n">request_</span><span class="o">-&gt;</span><span class="n">extra_headers</span><span class="p">.</span><span class="n">GetHeader</span><span class="p">(</span><span class="n">HttpRequestHeaders</span><span class="o">::</span><span class="n">kReferer</span><span class="p">,</span>
+                                    <span class="o">&amp;</span><span class="n">request_referrer_</span><span class="p">);</span>
+  <span class="n">request_</span><span class="o">-&gt;</span><span class="n">extra_headers</span><span class="p">.</span><span class="n">GetHeader</span><span class="p">(</span><span class="n">HttpRequestHeaders</span><span class="o">::</span><span class="n">kUserAgent</span><span class="p">,</span>
+                                    <span class="o">&amp;</span><span class="n">request_user_agent_</span><span class="p">);</span>
+  <span class="n">request_reporting_upload_depth_</span> <span class="o">=</span> <span class="n">request_</span><span class="o">-&gt;</span><span class="n">reporting_upload_depth</span><span class="p">;</span>
+  <span class="n">start_timeticks_</span> <span class="o">=</span> <span class="n">base</span><span class="o">::</span><span class="n">TimeTicks</span><span class="o">::</span><span class="n">Now</span><span class="p">();</span>
+<span class="cp">#endif  </span><span class="c1">// BUILDFLAG(ENABLE_REPORTING)
+</span><span class="c1"></span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">request_</span><span class="o">-&gt;</span><span class="n">idempotency</span> <span class="o">==</span> <span class="n">IDEMPOTENT</span> <span class="o">||</span>
+      <span class="p">(</span><span class="n">request_</span><span class="o">-&gt;</span><span class="n">idempotency</span> <span class="o">==</span> <span class="n">DEFAULT_IDEMPOTENCY</span> <span class="o">&amp;&amp;</span>
+       <span class="n">HttpUtil</span><span class="o">::</span><span class="n">IsMethodSafe</span><span class="p">(</span><span class="n">request_info</span><span class="o">-&gt;</span><span class="n">method</span><span class="p">)))</span> <span class="p">{</span>
+    <span class="n">can_send_early_data_</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="n">request_</span><span class="o">-&gt;</span><span class="n">load_flags</span> <span class="o">&amp;</span> <span class="n">LOAD_PREFETCH</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">response_</span><span class="p">.</span><span class="n">unused_since_prefetch</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="n">request_</span><span class="o">-&gt;</span><span class="n">load_flags</span> <span class="o">&amp;</span> <span class="n">LOAD_RESTRICTED_PREFETCH</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">DCHECK</span><span class="p">(</span><span class="n">response_</span><span class="p">.</span><span class="n">unused_since_prefetch</span><span class="p">);</span>
+    <span class="n">response_</span><span class="p">.</span><span class="n">restricted_prefetch</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="n">next_state_</span> <span class="o">=</span> <span class="n">STATE_NOTIFY_BEFORE_CREATE_STREAM</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">rv</span> <span class="o">=</span> <span class="n">DoLoop</span><span class="p">(</span><span class="n">OK</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">rv</span> <span class="o">==</span> <span class="n">ERR_IO_PENDING</span><span class="p">)</span>
+    <span class="n">callback_</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">callback</span><span class="p">);</span>
+
+  <span class="c1">// This always returns ERR_IO_PENDING because DoCreateStream() does, but
+</span><span class="c1"></span>  <span class="c1">// GenerateNetworkErrorLoggingReportIfError() should be called here if any
+</span><span class="c1"></span>  <span class="c1">// other net::Error can be returned.
+</span><span class="c1"></span>  <span class="n">DCHECK_EQ</span><span class="p">(</span><span class="n">rv</span><span class="p">,</span> <span class="n">ERR_IO_PENDING</span><span class="p">);</span>
+  <span class="k">return</span> <span class="n">rv</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>众所周知，在实际的类方法调用时，会隐藏地传入第一个参数 this，表示当前的类对象地址。而 HttpNetworkTransaction 类中将上述两个类实例当作了成员变量，我们只需要在该类被创建时建立上述两个类实例到 HttpNetworkTransaction 的连接映射，即可将他们组合到一起。这个类也可以帮助我们组合后续的 Response。</p>
+<p>请求的 url 和请求的 method 也在此处入参获取。</p>
+<h2 id="responseheaders-获取">ResponseHeaders 获取</h2>
+<p>Request 是散装的，Response 总应该是完整读取的吧？</p>
+<p>其实不然，Chromium 在读取完 ResponseHeaders 之后，才会通知上层，由上层再主动下来读取 ResponseBody。</p>
+<p>但是确实，我们可以一次性获得完整的 ResponseHeader。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="kt">int</span> <span class="n">HttpNetworkTransaction</span><span class="o">::</span><span class="n">DoReadHeaders</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">next_state_</span> <span class="o">=</span> <span class="n">STATE_READ_HEADERS_COMPLETE</span><span class="p">;</span>
+  <span class="k">return</span> <span class="n">stream_</span><span class="o">-&gt;</span><span class="n">ReadResponseHeaders</span><span class="p">(</span><span class="n">io_callback_</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>stream 随使用的请求协议而变化，这不是很好，我们不如关心 ResponseHeader 的解析逻辑。</p>
+<p>在 HttpNetworkTransaction 类成员里，我们看到了类成员 HttpResponseInfo 的成员 HttpResponseHeaders 的构造函数。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span><span class="lnt">75
+</span><span class="lnt">76
+</span><span class="lnt">77
+</span><span class="lnt">78
+</span><span class="lnt">79
+</span><span class="lnt">80
+</span><span class="lnt">81
+</span><span class="lnt">82
+</span><span class="lnt">83
+</span><span class="lnt">84
+</span><span class="lnt">85
+</span><span class="lnt">86
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="n">HttpResponseHeaders</span><span class="o">::</span><span class="n">HttpResponseHeaders</span><span class="p">(</span>
+    <span class="n">BuilderPassKey</span><span class="p">,</span>
+    <span class="n">HttpVersion</span> <span class="n">version</span><span class="p">,</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string_view</span> <span class="n">status</span><span class="p">,</span>
+    <span class="n">base</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;&gt;</span> <span class="n">headers</span><span class="p">)</span>
+    <span class="o">:</span> <span class="n">http_version_</span><span class="p">(</span><span class="n">version</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// This must match the behaviour of Parse(). We don&#39;t use Parse() because
+</span><span class="c1"></span>  <span class="c1">// avoiding the overhead of parsing is the point of this constructor.
+</span><span class="c1"></span>
+  <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">formatted_status</span><span class="p">;</span>
+  <span class="n">formatted_status</span><span class="p">.</span><span class="n">reserve</span><span class="p">(</span><span class="n">status</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">);</span>  <span class="c1">// ParseStatus() may add a space
+</span><span class="c1"></span>  <span class="n">response_code_</span> <span class="o">=</span> <span class="n">ParseStatus</span><span class="p">(</span><span class="n">status</span><span class="p">,</span> <span class="n">formatted_status</span><span class="p">);</span>
+
+  <span class="c1">// First calculate how big the output will be so that we can allocate the
+</span><span class="c1"></span>  <span class="c1">// right amount of memory.
+</span><span class="c1"></span>  <span class="n">size_t</span> <span class="n">expected_size</span> <span class="o">=</span> <span class="mi">8</span><span class="p">;</span>  <span class="c1">// &#34;HTTP/x.x&#34;
+</span><span class="c1"></span>  <span class="n">expected_size</span> <span class="o">+=</span> <span class="n">formatted_status</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+  <span class="n">expected_size</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>  <span class="c1">// &#34;\\0&#34;
+</span><span class="c1"></span>  <span class="n">size_t</span> <span class="n">expected_parsed_size</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+  <span class="c1">// Track which headers (by index) have a comma in the value. Since bools are
+</span><span class="c1"></span>  <span class="c1">// only 1 byte, we can afford to put 100 of them on the stack and avoid
+</span><span class="c1"></span>  <span class="c1">// allocating more memory 99.9% of the time.
+</span><span class="c1"></span>  <span class="n">absl</span><span class="o">::</span><span class="n">InlinedVector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="p">,</span> <span class="mi">100</span><span class="o">&gt;</span> <span class="n">header_contains_comma</span><span class="p">;</span>
+  <span class="k">for</span> <span class="p">(</span><span class="k">const</span> <span class="k">auto</span><span class="o">&amp;</span> <span class="p">[</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">]</span> <span class="o">:</span> <span class="n">headers</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">expected_size</span> <span class="o">+=</span> <span class="n">key</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+    <span class="n">expected_size</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>  <span class="c1">// &#34;:&#34;
+</span><span class="c1"></span>    <span class="n">expected_size</span> <span class="o">+=</span> <span class="n">value</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+    <span class="n">expected_size</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>  <span class="c1">// &#34;\\0&#34;
+</span><span class="c1"></span>    <span class="c1">// It&#39;s okay if we over-estimate the size of `parsed_`, so treat all &#39;,&#39;
+</span><span class="c1"></span>    <span class="c1">// characters as if they might split the value to avoid parsing the value
+</span><span class="c1"></span>    <span class="c1">// carefully here.
+</span><span class="c1"></span>    <span class="k">const</span> <span class="n">size_t</span> <span class="n">comma_count</span> <span class="o">=</span> <span class="n">base</span><span class="o">::</span><span class="n">ranges</span><span class="o">::</span><span class="n">count</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="sc">&#39;,&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="n">expected_parsed_size</span> <span class="o">+=</span> <span class="n">comma_count</span><span class="p">;</span>
+    <span class="n">header_contains_comma</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">comma_count</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="n">expected_size</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>  <span class="c1">// &#34;\\0&#34;
+</span><span class="c1"></span>  <span class="n">raw_headers_</span><span class="p">.</span><span class="n">reserve</span><span class="p">(</span><span class="n">expected_size</span><span class="p">);</span>
+  <span class="n">parsed_</span><span class="p">.</span><span class="n">reserve</span><span class="p">(</span><span class="n">expected_parsed_size</span><span class="p">);</span>
+
+  <span class="c1">// Now fill in the output.
+</span><span class="c1"></span>  <span class="k">const</span> <span class="kt">uint16_t</span> <span class="n">major</span> <span class="o">=</span> <span class="n">version</span><span class="p">.</span><span class="n">major_value</span><span class="p">();</span>
+  <span class="k">const</span> <span class="kt">uint16_t</span> <span class="n">minor</span> <span class="o">=</span> <span class="n">version</span><span class="p">.</span><span class="n">minor_value</span><span class="p">();</span>
+  <span class="n">CHECK_LE</span><span class="p">(</span><span class="n">major</span><span class="p">,</span> <span class="mi">9</span><span class="p">);</span>
+  <span class="n">CHECK_LE</span><span class="p">(</span><span class="n">minor</span><span class="p">,</span> <span class="mi">9</span><span class="p">);</span>
+  <span class="n">raw_headers_</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#34;HTTP/&#34;</span><span class="p">);</span>
+  <span class="n">raw_headers_</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="sc">&#39;0&#39;</span> <span class="o">+</span> <span class="n">major</span><span class="p">);</span>
+  <span class="n">raw_headers_</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="sc">&#39;.&#39;</span><span class="p">);</span>
+  <span class="n">raw_headers_</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="sc">&#39;0&#39;</span> <span class="o">+</span> <span class="n">minor</span><span class="p">);</span>
+  <span class="n">raw_headers_</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">formatted_status</span><span class="p">);</span>
+  <span class="n">raw_headers_</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="err">&#39;\\</span><span class="mi">0</span><span class="err">&#39;</span><span class="p">);</span>
+  <span class="c1">// It is vital that `raw_headers_` iterators are not invalidated after this
+</span><span class="c1"></span>  <span class="c1">// point.
+</span><span class="c1"></span>  <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="k">const</span> <span class="n">data_at_start</span> <span class="o">=</span> <span class="n">raw_headers_</span><span class="p">.</span><span class="n">data</span><span class="p">();</span>
+  <span class="n">size_t</span> <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="k">for</span> <span class="p">(</span><span class="k">const</span> <span class="k">auto</span><span class="o">&amp;</span> <span class="p">[</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">]</span> <span class="o">:</span> <span class="n">headers</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">CheckDoesNotHaveEmbeddedNulls</span><span class="p">(</span><span class="n">key</span><span class="p">);</span>
+    <span class="n">CheckDoesNotHaveEmbeddedNulls</span><span class="p">(</span><span class="n">value</span><span class="p">);</span>
+    <span class="c1">// Because std::string iterators are random-access, end() has to point to
+</span><span class="c1"></span>    <span class="c1">// the position where the next character will be appended.
+</span><span class="c1"></span>    <span class="k">const</span> <span class="k">auto</span> <span class="n">name_begin</span> <span class="o">=</span> <span class="n">raw_headers_</span><span class="p">.</span><span class="n">cend</span><span class="p">();</span>
+    <span class="n">raw_headers_</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">);</span>
+    <span class="k">const</span> <span class="k">auto</span> <span class="n">name_end</span> <span class="o">=</span> <span class="n">raw_headers_</span><span class="p">.</span><span class="n">cend</span><span class="p">();</span>
+    <span class="n">raw_headers_</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="sc">&#39;:&#39;</span><span class="p">);</span>
+    <span class="k">auto</span> <span class="n">values_begin</span> <span class="o">=</span> <span class="n">raw_headers_</span><span class="p">.</span><span class="n">cend</span><span class="p">();</span>
+    <span class="n">raw_headers_</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">);</span>
+    <span class="k">auto</span> <span class="n">values_end</span> <span class="o">=</span> <span class="n">raw_headers_</span><span class="p">.</span><span class="n">cend</span><span class="p">();</span>
+    <span class="n">raw_headers_</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="err">&#39;\\</span><span class="mi">0</span><span class="err">&#39;</span><span class="p">);</span>
+    <span class="c1">// The HTTP/2 standard disallows header values starting or ending with
+</span><span class="c1"></span>    <span class="c1">// whitespace (RFC 9113 8.2.1). Hopefully the same is also true of HTTP/3.
+</span><span class="c1"></span>    <span class="c1">// TODO(crbug.com/40282642): Validate that our implementations
+</span><span class="c1"></span>    <span class="c1">// actually enforce this constraint and change this TrimLWS() to a DCHECK.
+</span><span class="c1"></span>    <span class="n">HttpUtil</span><span class="o">::</span><span class="n">TrimLWS</span><span class="p">(</span><span class="o">&amp;</span><span class="n">values_begin</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">values_end</span><span class="p">);</span>
+    <span class="n">AddHeader</span><span class="p">(</span><span class="n">name_begin</span><span class="p">,</span> <span class="n">name_end</span><span class="p">,</span> <span class="n">values_begin</span><span class="p">,</span> <span class="n">values_end</span><span class="p">,</span>
+              <span class="n">header_contains_comma</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">?</span> <span class="n">ContainsCommas</span><span class="o">::</span><span class="nl">kYes</span>
+                                           <span class="p">:</span> <span class="n">ContainsCommas</span><span class="o">::</span><span class="n">kNo</span><span class="p">);</span>
+    <span class="o">++</span><span class="n">index</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="n">raw_headers_</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="err">&#39;\\</span><span class="mi">0</span><span class="err">&#39;</span><span class="p">);</span>
+  <span class="n">CHECK_EQ</span><span class="p">(</span><span class="n">expected_size</span><span class="p">,</span> <span class="n">raw_headers_</span><span class="p">.</span><span class="n">size</span><span class="p">());</span>
+  <span class="n">CHECK_EQ</span><span class="p">(</span><span class="n">data_at_start</span><span class="p">,</span> <span class="n">raw_headers_</span><span class="p">.</span><span class="n">data</span><span class="p">());</span>
+  <span class="n">DCHECK_LE</span><span class="p">(</span><span class="n">parsed_</span><span class="p">.</span><span class="n">size</span><span class="p">(),</span> <span class="n">expected_parsed_size</span><span class="p">);</span>
+
+  <span class="n">DCHECK_EQ</span><span class="p">(</span><span class="err">&#39;\\</span><span class="mi">0</span><span class="err">&#39;</span><span class="p">,</span> <span class="n">raw_headers_</span><span class="p">[</span><span class="n">raw_headers_</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">-</span> <span class="mi">2</span><span class="p">]);</span>
+  <span class="n">DCHECK_EQ</span><span class="p">(</span><span class="err">&#39;\\</span><span class="mi">0</span><span class="err">&#39;</span><span class="p">,</span> <span class="n">raw_headers_</span><span class="p">[</span><span class="n">raw_headers_</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]);</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>可以发现该类在构造时把整个 header 传入了 raw_headers_，这是一个 string 变量，也就是说我们可以在 Headers 被读取完之后的任意时机直接从 HttpNetworkTransaction 的 this 地址找到这些信息。</p>
+<h2 id="responsebody-获取">ResponseBody 获取</h2>
+<p>这里的难点本来在于如何确定 ResponseBody 已经被全部读取完成，但是 chromium 的垃圾回收帮我们解决了这一难题：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="kt">int</span> <span class="n">HttpNetworkTransaction</span><span class="o">::</span><span class="n">DoReadBody</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">DCHECK</span><span class="p">(</span><span class="n">read_buf_</span><span class="p">.</span><span class="n">get</span><span class="p">());</span>
+  <span class="n">DCHECK_GT</span><span class="p">(</span><span class="n">read_buf_len_</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+  <span class="n">DCHECK</span><span class="p">(</span><span class="n">stream_</span> <span class="o">!=</span> <span class="k">nullptr</span><span class="p">);</span>
+
+  <span class="n">next_state_</span> <span class="o">=</span> <span class="n">STATE_READ_BODY_COMPLETE</span><span class="p">;</span>
+  <span class="k">return</span> <span class="n">stream_</span><span class="o">-&gt;</span><span class="n">ReadResponseBody</span><span class="p">(</span>
+      <span class="n">read_buf_</span><span class="p">.</span><span class="n">get</span><span class="p">(),</span> <span class="n">read_buf_len_</span><span class="p">,</span> <span class="n">io_callback_</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="n">HttpNetworkTransaction</span><span class="o">::</span><span class="n">DoReadBodyComplete</span><span class="p">(</span><span class="kt">int</span> <span class="n">result</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// We are done with the Read call.
+</span><span class="c1"></span>  <span class="kt">bool</span> <span class="n">done</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">result</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">DCHECK_NE</span><span class="p">(</span><span class="n">ERR_IO_PENDING</span><span class="p">,</span> <span class="n">result</span><span class="p">);</span>
+    <span class="n">done</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="c1">// Clean up connection if we are done.
+</span><span class="c1"></span>  <span class="k">if</span> <span class="p">(</span><span class="n">done</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// Note: Just because IsResponseBodyComplete is true, we&#39;re not
+</span><span class="c1"></span>    <span class="c1">// necessarily &#34;done&#34;.  We&#39;re only &#34;done&#34; when it is the last
+</span><span class="c1"></span>    <span class="c1">// read on this HttpNetworkTransaction, which will be signified
+</span><span class="c1"></span>    <span class="c1">// by a zero-length read.
+</span><span class="c1"></span>    <span class="c1">// TODO(mbelshe): The keep-alive property is really a property of
+</span><span class="c1"></span>    <span class="c1">//    the stream.  No need to compute it here just to pass back
+</span><span class="c1"></span>    <span class="c1">//    to the stream&#39;s Close function.
+</span><span class="c1"></span>    <span class="kt">bool</span> <span class="n">keep_alive</span> <span class="o">=</span>
+        <span class="n">stream_</span><span class="o">-&gt;</span><span class="n">IsResponseBodyComplete</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="n">stream_</span><span class="o">-&gt;</span><span class="n">CanReuseConnection</span><span class="p">();</span>
+
+    <span class="n">stream_</span><span class="o">-&gt;</span><span class="n">Close</span><span class="p">(</span><span class="o">!</span><span class="n">keep_alive</span><span class="p">);</span>
+    <span class="c1">// Note: we don&#39;t reset the stream here.  We&#39;ve closed it, but we still
+</span><span class="c1"></span>    <span class="c1">// need it around so that callers can call methods such as
+</span><span class="c1"></span>    <span class="c1">// GetUploadProgress() and have them be meaningful.
+</span><span class="c1"></span>    <span class="c1">// TODO(mbelshe): This means we closed the stream here, and we close it
+</span><span class="c1"></span>    <span class="c1">// again in ~HttpNetworkTransaction.  Clean that up.
+</span><span class="c1"></span>
+    <span class="c1">// The next Read call will return 0 (EOF).
+</span><span class="c1"></span>
+    <span class="c1">// This transaction was successful. If it had been retried because of an
+</span><span class="c1"></span>    <span class="c1">// error with an alternative service, mark that alternative service broken.
+</span><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">enable_alternative_services_</span> <span class="o">&amp;&amp;</span>
+        <span class="n">retried_alternative_service_</span><span class="p">.</span><span class="n">protocol</span> <span class="o">!=</span> <span class="n">kProtoUnknown</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">HistogramBrokenAlternateProtocolLocation</span><span class="p">(</span>
+          <span class="n">BROKEN_ALTERNATE_PROTOCOL_LOCATION_HTTP_NETWORK_TRANSACTION</span><span class="p">);</span>
+      <span class="n">session_</span><span class="o">-&gt;</span><span class="n">http_server_properties</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">MarkAlternativeServiceBroken</span><span class="p">(</span>
+          <span class="n">retried_alternative_service_</span><span class="p">,</span> <span class="n">network_anonymization_key_</span><span class="p">);</span>
+    <span class="p">}</span>
+
+<span class="cp">#if BUILDFLAG(ENABLE_REPORTING)
+</span><span class="cp"></span>    <span class="n">GenerateNetworkErrorLoggingReport</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
+<span class="cp">#endif  </span><span class="c1">// BUILDFLAG(ENABLE_REPORTING)
+</span><span class="c1"></span>  <span class="p">}</span>
+
+  <span class="c1">// Clear these to avoid leaving around old state.
+</span><span class="c1"></span>  <span class="n">read_buf_</span> <span class="o">=</span> <span class="k">nullptr</span><span class="p">;</span>
+  <span class="n">read_buf_len_</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+  <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>body 被读入 read_buf ，在读入结束后该指针会被清空。</p>
+<p>也就是说，我们 hook HttpNetworkTransaction::DoReadBodyComplete，在该函数进入之前存下 read_buf 指针，在该函数退出之后若该指针被清空，则说明读取已完成，这时候我们可以从先前存下的指针位置读取完整的 Body。</p>
+<p>为了减少工作量，在这个阶段所有的 ResponseHeader 一定已经被全部读取完成，我们可以在该函数的 hook 逻辑中顺手打印。</p>
+<h2 id="定位和实现">定位和实现</h2>
+<p>到这里我们的实现思路已经很明显了：</p>
+<ul>
+<li>Hook 函数 HttpNetworkTransaction::Start
+<ul>
+<li>从入参获取 url 和 method。</li>
+<li>建立 HttpRequestHeaders -&gt; HttpNetworkTransaction 映射。</li>
+<li>建立 UploadDataStream -&gt; HttpNetworkTransaction 映射。</li>
+</ul>
+</li>
+<li>Hook 函数 UploadDataStream::Read
+<ul>
+<li>读取入参 IOBuffer，获取 RequestBody。</li>
+<li>根据前面建立的映射，将 RequestBody 关联到 HttpNetworkTransaction 。</li>
+</ul>
+</li>
+<li>Hook 函数 HttpRequestHeaders::SetHeader
+<ul>
+<li>读取入参 key 和 value。</li>
+<li>将本次添加的 Header 关联到 HttpNetworkTransaction。</li>
+</ul>
+</li>
+<li>Hook 函数 HttpNetworkTransaction::DoReadBodyComplete
+<ul>
+<li>判断请求是否完成，若未完成则继续接收。</li>
+<li>根据调用前缓存的 read_buf_ 获取 ResponseBody
+<ul>
+<li>根据 content encoding 进行解压（如 gzip）</li>
+</ul>
+</li>
+<li>寻找 HttpNetworkTransaction-&gt;responseinfo-&gt;responseheaders-&gt;raw_headers_ 获取完整的 RequestHeaders</li>
+</ul>
+</li>
+</ul>
+<p>具体上述类成员偏移和函数偏移确定方式不公开，相信各位读者都有自己的理解。</p>
+<p>项目代码：如果你想要，那你就得自己来写。</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2024-05-28</span>
+            </div>
+            <div class="post-info-license"></div>
+        </div>
+        <div class="post-info-line">
+            <div class="post-info-md"><span>
+                            <a class="link-to-markdown" href="/chromium/index.md" target="_blank">阅读原始文档</a>
+                        </span></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="http://sh11no.github.io/chromium/" data-title="Chromium 内核 hook 抓包实战记录" data-via="Akarexol"><i class="fab fa-twitter fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Facebook" data-sharer="facebook" data-url="http://sh11no.github.io/chromium/"><i class="fab fa-facebook-square fa-fw"></i></a><a href="javascript:void(0);" title="分享到 WhatsApp" data-sharer="whatsapp" data-url="http://sh11no.github.io/chromium/" data-title="Chromium 内核 hook 抓包实战记录" data-web><i class="fab fa-whatsapp fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Line" data-sharer="line" data-url="http://sh11no.github.io/chromium/" data-title="Chromium 内核 hook 抓包实战记录"><i data-svg-src="/lib/simple-icons/icons/line.min.svg"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="http://sh11no.github.io/chromium/" data-title="Chromium 内核 hook 抓包实战记录"><i class="fab fa-weibo fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Myspace" data-sharer="myspace" data-url="http://sh11no.github.io/chromium/" data-title="Chromium 内核 hook 抓包实战记录" data-description=""><i data-svg-src="/lib/simple-icons/icons/myspace.min.svg"></i></a><a href="javascript:void(0);" title="分享到 Blogger" data-sharer="blogger" data-url="http://sh11no.github.io/chromium/" data-title="Chromium 内核 hook 抓包实战记录" data-description=""><i class="fab fa-blogger fa-fw"></i></a><a href="javascript:void(0);" title="分享到 Evernote" data-sharer="evernote" data-url="http://sh11no.github.io/chromium/" data-title="Chromium 内核 hook 抓包实战记录"><i class="fab fa-evernote fa-fw"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/0gn/" class="prev" rel="prev" title="0ctf/tctf2023-0gn nodejs引擎魔改分析"><i class="fas fa-angle-left fa-fw"></i>0ctf/tctf2023-0gn nodejs引擎魔改分析</a></div>
+</div>
+<div id="comments"></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.87.0">Hugo</a> 强力驱动 | 主题 - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.10"><i class="far fa-kiss-wink-heart fa-fw"></i> LoveIt</a>
+                </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2019 - 2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">Shino</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw"></i>
+            </a>
+        </div><link rel="stylesheet" href="/lib/katex/katex.min.css"><link rel="stylesheet" href="/lib/katex/copy-tex.min.css"><script type="text/javascript" src="/lib/smooth-scroll/smooth-scroll.min.js"></script><script type="text/javascript" src="/lib/autocomplete/autocomplete.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="/lib/lazysizes/lazysizes.min.js"></script><script type="text/javascript" src="/lib/clipboard/clipboard.min.js"></script><script type="text/javascript" src="/lib/sharer/sharer.min.js"></script><script type="text/javascript" src="/lib/typeit/typeit.min.js"></script><script type="text/javascript" src="/lib/katex/katex.min.js"></script><script type="text/javascript" src="/lib/katex/auto-render.min.js"></script><script type="text/javascript" src="/lib/katex/copy-tex.min.js"></script><script type="text/javascript" src="/lib/katex/mhchem.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":100},"comment":{},"data":{"id-1":"Shino","id-2":"Shino"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"$$","right":"$$"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"},{"display":false,"left":"$","right":"$"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"lunr"},"typeit":{"cursorChar":"|","cursorSpeed":1000,"data":{"id-1":["id-1"],"id-2":["id-2"]},"duration":-1,"speed":100}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
