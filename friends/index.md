@@ -7,6 +7,7 @@
 
 - <a href = "http://xukafy.github.io"> XuKaFy </a>死了
 - 但<a href="https://hurrison.com/"> Hurrison </a>还活着
+- Casio3
 - <a href = "https://icys.top/"> icy</a>
 
 - <a href = "https://timlzh.com/"> Timlzh </a>
