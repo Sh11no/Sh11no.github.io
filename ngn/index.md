@@ -16,6 +16,7 @@
 - 龙之信条2 [10/10]
 - 审判之逝：湮灭的记忆 [10/10]
 - Fire Emblem：Engage [10/10]
+- 月姬 [10/10]
 - Life is strange [9/10]
 - 烟火 [9/10]
 - Memories Off 8 [9/10]
