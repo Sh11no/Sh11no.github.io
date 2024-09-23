@@ -6,10 +6,11 @@
 哦，有 `friendlist.length()` 个：
 
 - <a href = "http://xukafy.github.io"> XuKaFy </a>死了
-- 但<a href="https://hurrison.com/"> Hurrison </a>还活着
+- <a href="https://hurrison.com/"> Hurrison </a>
 - Casio3
+- [Boogipop](https://www.boogipop.com)
 - <a href="https://deepunk.icu"> Deepunk </a>
-- leukocyte 没有给我博客链接，自行社工
+- [leukocyte](https://wleukocytec.github.io)
 - <a href = "https://icys.top/"> icy</a>
 
 - <a href = "https://timlzh.com/"> Timlzh </a>

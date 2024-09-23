@@ -102,6 +102,16 @@
         alt="/avr.png"
         title="/avr.png" /></a></div><h1 class="home-title">Shino Channel</h1><h2 class="home-subtitle"><div id="id-3" class="typeit"></div></h2><div class="links"><a href="https://github.com/Sh11no" title="GitHub" target="_blank" rel="noopener noreffer me"><i class="fab fa-github-alt fa-fw"></i></a><a href="https://twitter.com/Akarexol" title="Twitter" target="_blank" rel="noopener noreffer me"><i class="fab fa-twitter fa-fw"></i></a><a href="https://steamcommunity.com/id/noshiko" title="Steam" target="_blank" rel="noopener noreffer me"><i class="fab fa-steam fa-fw"></i></a><a href="https://space.bilibili.com/96243678" title="bilibili" target="_blank" rel="noopener noreffer me"><i data-svg-src="/svg/icons/bilibili.min.svg"></i></a><a href="mailto:akalineblog@163.com" title="Email" rel=" me"><i class="far fa-envelope fa-fw"></i></a></div></div>
 <article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
+        <a href="/wdb2022/">网鼎杯2022总决赛-secret 全栈CTFer的自我修养(？)</a>
+    </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span>&nbsp;<span class="post-publish">发布于 <time datetime="2023-04-18">2023-04-18</time></span></div><div class="content">碎碎念 ​	本来没想着网鼎杯能进总决赛的，毕竟青龙组100+个队就给了12个晋级名额。结果 RHG 一开快手+强运+队友给力直接飞到前十躺进了总决赛，半决赛两个 pwn 防御也是水得不行，本想着逆向手进场观摩队友做题结果意外和 Photon 大哥合力把 pwn 基本 ak 了，只能说运气很好。
+​	总决赛基本没有逆向手的题（共同防御那个java题出来的时候我精神状态不是很稳定，exp一直挂到了比赛结束），值得复盘的也就只有这个还挺有意思的web综合题了，我还是太菜了。
+漏洞分析 ​	题目镜像丢了，别问。
+漏洞点1 ​	登录进去是一个简单的登录框，试着打了两个单引号发现似乎没有 SQL 注入，Burp 一开先抓包再考虑别的。
+​	突破口在 Response Header里的 Server: Cpython3.5，可以发现似乎是 python 的后端，应该是 Flask 框架， 试了一下没有模板注入的点，考虑__pycache__泄漏，整了半天也没访问到pycache文件夹。根据资源请求随便试了一下/static目录，发现可以访问。
+​	理论上说 py 代码应该在static上级目录的某处，一通乱试发现/static../路径可以访问上级目录，目录结构如下：
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18  | __pycache__ | __init__.cpython-35.pyc | models.cpython-35.pyc | main | __pycache__ | __init__.cpython-35.pyc | forms.</div><div class="post-footer">
+        <a href="/wdb2022/">阅读全文</a></div>
+</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
         <a href="/srop/">NKCTF2023ezstack - SROP初探</a>
     </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span>&nbsp;<span class="post-publish">发布于 <time datetime="2023-03-29">2023-03-29</time></span></div><div class="content">1 2 3 4 5  Arch: amd64-64-little RELRO: Partial RELRO Stack: No canary found NX: NX enabled PIE: No PIE (0x400000)   鉴定为，没有保护。
 核心代码很短：
@@ -141,10 +151,6 @@ Fallback 其实这个题是可以通过Console交互来完成的，但是我还�
 Online Solidity Decompiler (ethervm.io)
 1 2 3 4 5 6 7 8 9 10 11  contract Contract { function main() { memory[0x40:0x60] = 0x80; var var0 = msg.value; if (var0) { revert(memory[0x00:0x00]); } memory[0x00:0x066e] = code[0x20:0x068e]; return memory[0x00:0x066e]; } }   反编译结果明显短于字节码长度。观察到memory[0x00:0x066e] = code[0x20:0x068e];行，推测是把0x20部分代码复制到memory内继续执行。</div><div class="post-footer">
         <a href="/sodility/">阅读全文</a></div>
-</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
-        <a href="/nanogame/">『超高校级的幸运』WMCTF2022-nanoDiamond-rev 抽卡实况</a>
-    </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span>&nbsp;<span class="post-publish">发布于 <time datetime="2022-08-22">2022-08-22</time></span></div><div class="content">[Crypto] nanoDiamond-rev 题目 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68  # from Crypto.</div><div class="post-footer">
-        <a href="/nanogame/">阅读全文</a></div>
 </article><ul class="pagination"><li class="page-item ">
                     <span class="page-link">
                         <a href="/">1</a>

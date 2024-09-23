@@ -102,6 +102,32 @@
         alt="/avr.png"
         title="/avr.png" /></a></div><h1 class="home-title">Shino Channel</h1><h2 class="home-subtitle"><div id="id-3" class="typeit"></div></h2><div class="links"><a href="https://github.com/Sh11no" title="GitHub" target="_blank" rel="noopener noreffer me"><i class="fab fa-github-alt fa-fw"></i></a><a href="https://twitter.com/Akarexol" title="Twitter" target="_blank" rel="noopener noreffer me"><i class="fab fa-twitter fa-fw"></i></a><a href="https://steamcommunity.com/id/noshiko" title="Steam" target="_blank" rel="noopener noreffer me"><i class="fab fa-steam fa-fw"></i></a><a href="https://space.bilibili.com/96243678" title="bilibili" target="_blank" rel="noopener noreffer me"><i data-svg-src="/svg/icons/bilibili.min.svg"></i></a><a href="mailto:akalineblog@163.com" title="Email" rel=" me"><i class="far fa-envelope fa-fw"></i></a></div></div>
 <article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
+        <a href="/bot/">使用Nonebot2和Gocq搭建QQ机器人并部署到服务器</a>
+    </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span>&nbsp;<span class="post-publish">发布于 <time datetime="2021-11-08">2021-11-08</time></span></div><div class="content">配置机器人 QQ机器人的基本架构 这里引用一个看到过的例子：
+在一个餐馆中，你点了一盘菜。此时会发生什么事情呢？
+ 1、服务员接受你点的菜
+2、服务员把你点的菜告诉大厨
+3、大厨进行一个烹饪
+4、服务员把菜端到你桌上
+ 在一个QQ机器人中，go-cqhttp就类似于一个服务员，负责接收消息、把消息传达给nonebot2、发送消息。而nonebot2 就相当于一个大厨，负责“思考”对消息该做出什么反应。
+那么go-cqhttp如何将消息传达给nonebot2呢？
+这里我们使用的是反向websocket连接：go-cqhttp会主动寻找nonebot2的程序，并将消息通过websocket推送给nonebot2。当然，如果你只是想要做出一个QQ机器人，你可以不需要深入了解该通信方式。
+准备 我们需要：一个云服务器，nonebot2，go-cqhttp
+由于nonebot2是基于python3.7+的，所以我们还需要配置一个python。
+我推荐在服务器上执行命令前先使用sudo -i切换到管理员账户来避免一些麻烦
+安装系统镜像&amp;python 首先你需要一个云服务器，并安装系统镜像。我这里选用的是Ubuntu20.07系统镜像，因为Ubuntu20.07自带一个Python3.8.10，可以省去python的配置步骤。
+这一步按理来说是可以一键完成的，起码腾讯云和阿里云都有一键安装的入口。
+安装nonebot2 执行以下命令：
+1 2  pip3 install nb-cli pip3 install nonebot-adapter-cqhttp   如果找不到库的话，可以试试换源：
+1 2  pip3 install nb-cli -i https://pypi.org/simple pip3 install nonebot-adapter-cqhttp -i https://pypi.org/simple   安装go-cqhttp 下载go-cqhttp 在go-cqhttp的Release页面找到go-cqhttp_linux_386.tar.gz并下载。
+或者直接点击这里下载。
+这里下载的是适用于Linux的32位go-cqhttp，如果你是64位，请找到并下载go-cqhttp_linux_amd64.tar.gz
+将go-cqhttp上传至服务器 这里使用宝塔Linux面板辅助上传。宝塔yyds。
+这是宝塔官网，可以在上面找到对应系统镜像的安装脚本：https://www.bt.cn/download/linux.html
+如果你和我一样使用Ubuntu，直接执行以下命令吧：
+1  wget -O install.sh http://download.bt.cn/install/install-ubuntu_6.0.sh &amp;&amp; sudo bash install.sh   执行完成后在服务器上执行bt来配置用户名和密码。</div><div class="post-footer">
+        <a href="/bot/">阅读全文</a></div>
+</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
         <a href="/go/">Go语言乱学速成学习笔记</a>
     </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span>&nbsp;<span class="post-publish">发布于 <time datetime="2021-10-18">2021-10-18</time></span></div><div class="content">本文基于C++、python语言基础学习.
 基本 示例
@@ -164,11 +190,6 @@ Web 0x01 第一次冒险 ​	按照网页提示操作，最后结合提示在coo
     </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span>&nbsp;<span class="post-publish">发布于 <time datetime="2021-08-20">2021-08-20</time></span></div><div class="content">Hello，world！
 让我看看blog行不行</div><div class="post-footer">
         <a href="/helloworld/">阅读全文</a></div>
-</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
-        <a href="/ngn/">NGN</a>
-    </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw"></i>Shino</a></span>&nbsp;<span class="post-publish">发布于 <time datetime="2020-02-10">2020-02-10</time></span></div><div class="content">shiNo Game Awards 记录和评分一下玩过的游戏，仅收录通关或深度体验过且觉得好玩的游戏 (只是有趣程度不同，垃圾不会上榜)。
- OCTOPATH TRAVELER 2 [10/10] Persona3 Reload [10/10] Hifi-Rush [10/10] 十三机兵防卫圈 [10/10] FINAL FANTASY VII Remake [10/10] Celeste [10/10] CHAOS;CHILD [10/10] 弹丸论破2 [10/10] 龙之信条2 [10/10] 审判之逝：湮灭的记忆 [10/10] Fire Emblem：Engage [10/10] 月姬 [10/10] Life is strange [9/10] 烟火 [9/10] Memories Off 8 [9/10] Elden Ring [9/10] Persona5 Royal [9/10] Baldur&rsquo;s Gate 3 [9/10] Trine 5: A Clockwork Conspiracy [9/10] Marvel&rsquo;s Guardians of the Galaxy [9/10] Final Fantasy VII: Rebirth [8/10] 装甲核心6境界天火 [8/10] Rimworld [8/10] Ghost Trick: Phantom Detetective [8/10] Spiderman 2 [8/10] 魔法使之夜 [8/10] 9-nine [8/10] Superliminal [8/10] 恋爱绮谭 1&amp;2 [8/10] Splatoon 3 [8/10] Superliminal [8/10] Life is strange: True colors [7/10] Xenoblade 3 [7/10] Stella Blade [7/10] Star Ocean: the second story R [7/10] 莱莎的炼金工房：常暗女王与秘密藏身处 [7/10] 莱莎的炼金工房3 [7/10] 塞尔达传说：荒野之息 [7/10] 审判之眼：死神的遗言 [7/10] FINAL FANTASY XV [7/10] 弹丸论破V3 [6/10] 苍之彼方的四重奏 [6/10] 对马岛之鬼 [6/10] 浪人崛起 [6/10] Death Stranding [6/10] VA-11 Hall-A [6/10] AI 梦境档案: nirvanA Initiative [6/10] 双人成行 [6/10] Phigros [6/10] Memories Off 7：勾指起誓的记忆 [6/10] 绯红结系 [6/10] Fate/Samurai Remnant [6/10] 极限竞速：地平线4 [6/10] 永远消失的幻想乡 [6/10] BLUE REFLECTION：帝 [6/10] 人格解体 [6/10] 苏菲的炼金工房2 [6/10] Xenoblade 2 [6/10] Persona 5 Tacica [6/10] Wolong [6/10] AI 梦境档案 [6/10] Granblue Fantasy Versus: Rising [6/10] Persona4 Golden [6/10] Slay the Spire [6/10] 莱莎的炼金工房2 [5/10] Riddle Joker [5/10] CODE VEIN [5/10] 超侦探事件簿：雾雨迷宫 [5/10] 真女神转生5复仇 [5/10] Palworld [5/10] 千恋万花 [5/10] 魔女的夜宴 [5/10] Since Memories: 星穹之下 [5/10] 星光咖啡馆与死神之蝶 [5/10] Fire Emblem：风花雪月 [5/10] Tales of Arise [5/10] Parquet [5/10] 主播女孩重度依赖 [5/10] Sea of stars [5/10] Dark Souls III [5/10] Phoenotopia Awakening [5/10] 宝可梦：紫 [5/10] 歧路旅人 [4/10] LOOPERS [4/10] 人类一败涂地 [4/10] 尼尔机械纪元 [4/10] Monster Hunter Stories 2: Wings of Ruin [4/10] FINAL FANTASY XVI [4/10] Crymachina [4/10] Shenmue III [4/10] 绝区零 [4/10] BLUE REFLECTION [3/10] 不可思议的幻想乡TOD RELOADED [3/10]  </div><div class="post-footer">
-        <a href="/ngn/">阅读全文</a></div>
 </article><ul class="pagination"><li class="page-item ">
                     <span class="page-link">
                         <a href="/">1</a>
