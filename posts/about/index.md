@@ -35,5 +35,5 @@
 ---
 
 > Author: Shino  
-> URL: http://localhost:1313/posts/friends/  
+> URL: https://www.sh1no.icu/posts/about/  
 
