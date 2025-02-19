@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <head>
+    
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+    <meta name="robots" content="noodp" />
+    <title>智能合约逆向分析实战 ByteCTF2022-OhMySolidity - Shino Channel</title><meta name="author" content="Shino">
+<meta name="description" content="[Reverse] OhMySolidity题面如下
+">
+  <meta itemprop="name" content="智能合约逆向分析实战 ByteCTF2022-OhMySolidity">
+  <meta itemprop="description" content="[Reverse] OhMySolidity题面如下">
+  <meta itemprop="datePublished" content="2022-10-06T16:22:03+08:00">
+  <meta itemprop="dateModified" content="2022-10-06T16:22:03+08:00">
+  <meta itemprop="wordCount" content="1804">
+  <meta itemprop="image" content="https://www.sh1no.icu/avr.png"><meta property="og:url" content="https://www.sh1no.icu/posts/sodility/">
+  <meta property="og:site_name" content="Shino Channel">
+  <meta property="og:title" content="智能合约逆向分析实战 ByteCTF2022-OhMySolidity">
+  <meta property="og:description" content="[Reverse] OhMySolidity题面如下">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2022-10-06T16:22:03+08:00">
+    <meta property="article:modified_time" content="2022-10-06T16:22:03+08:00">
+    <meta property="og:image" content="https://www.sh1no.icu/avr.png">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://www.sh1no.icu/avr.png">
+  <meta name="twitter:title" content="智能合约逆向分析实战 ByteCTF2022-OhMySolidity">
+  <meta name="twitter:description" content="[Reverse] OhMySolidity题面如下">
+      <meta name="twitter:site" content="@ShinoLeah">
+<meta name="twitter:creator" content="@ShinoLeah" /><meta name="application-name" content="Shino Channel">
+<meta name="apple-mobile-web-app-title" content="Shino Channel"><meta name="theme-color" data-light="#f8f8f8" data-dark="#252627" content="#f8f8f8"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" type="text/html" href="https://www.sh1no.icu/posts/sodility/" title="智能合约逆向分析实战 ByteCTF2022-OhMySolidity - Shino Channel" /><link rel="prev" type="text/html" href="https://www.sh1no.icu/posts/nanogame/" title="『超高校级的幸运』WMCTF2022-nanoDiamond-rev 抽卡实况" /><link rel="next" type="text/html" href="https://www.sh1no.icu/posts/sichuan2022/" title="四川省网安技能大赛2022 个人输出复盘" /><link rel="alternate" type="text/markdown" href="https://www.sh1no.icu/posts/sodility/index.md" title="智能合约逆向分析实战 ByteCTF2022-OhMySolidity - Shino Channel"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="/lib/fontawesome-free/all.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" href="/lib/animate/animate.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
+  {
+    "@context": "http://schema.org",
+    "@type": "BlogPosting",
+    "headline": "智能合约逆向分析实战 ByteCTF2022-OhMySolidity",
+    "inLanguage": "zh-CN",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https:\/\/www.sh1no.icu\/posts\/sodility\/"
+    },"genre": "posts","wordcount":  1804 ,
+    "url": "https:\/\/www.sh1no.icu\/posts\/sodility\/","datePublished": "2022-10-06T16:22:03+08:00","dateModified": "2022-10-06T16:22:03+08:00","publisher": {
+      "@type": "Organization",
+      "name": ""},"author": {
+        "@type": "Person",
+        "name": "Shino"
+      },"description": ""
+  }
+  </script><script src="/js/head/color-scheme.min.js"></script></head>
+  <body data-header-desktop="sticky" data-header-mobile="auto"><div class="wrapper" data-page-style="normal"><header class="desktop animate__faster" id="header-desktop">
+  <div class="header-wrapper">
+    <div class="header-title">
+      <a href="/" title="Shino Channel"><span class="header-title-text">Shino</span></a><span class="header-subtitle"></span></div>
+    <nav>
+      <ul class="menu"><li class="menu-item">
+              <a class="menu-link" href="https://www.youtube.com/@anoofficialchannel" rel="noopener noreferrer" target="_blank"></a></li><li class="menu-item">
+              <a class="menu-link" href="https://www.nu1l.com/" title="Nu1L" rel="noopener noreferrer" target="_blank"><i class="fa-solid fa-paperclip fa-fw fa-sm" aria-hidden="true"></i> Nu1L</a></li><li class="menu-item">
+              <a class="menu-link" href="https://cnss.io/" title="CNSS" rel="noopener noreferrer" target="_blank"><i class="fa-solid fa-paperclip fa-fw fa-sm" aria-hidden="true"></i> CNSS</a></li><li class="menu-item">
+              <a class="menu-link" href="/posts/friends/" title="About"><i class="fa-solid fa-user-group fa-fw fa-sm" aria-hidden="true"></i> About</a></li><li class="menu-item delimiter"></li><li class="menu-item search" id="search-desktop">
+            <input type="text" placeholder="Search..." id="search-input-desktop">
+            <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+              <i class="fa-solid fa-search fa-fw" aria-hidden="true"></i>
+            </a>
+            <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+              <i class="fa-solid fa-times-circle fa-fw" aria-hidden="true"></i>
+            </a>
+            <span class="search-button search-loading" id="search-loading-desktop">
+              <i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+            </span>
+          </li><li class="menu-item theme-switch" title="Switch Theme">
+          <i class="fa-solid fa-adjust fa-fw" aria-hidden="true"></i>
+        </li></ul>
+    </nav>
+  </div>
+</header><header class="mobile animate__faster" id="header-mobile">
+  <div class="header-container">
+    <div class="header-wrapper">
+      <div class="header-title">
+        <a href="/" title="Shino Channel"><span class="header-title-text">Shino</span></a><span class="header-subtitle"></span></div>
+      <div class="menu-toggle" id="menu-toggle-mobile">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+    <nav>
+      <ul class="menu" id="menu-mobile"><li class="search-wrapper">
+            <div class="search mobile" id="search-mobile">
+              <input type="text" placeholder="Search..." id="search-input-mobile">
+              <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                <i class="fa-solid fa-search fa-fw" aria-hidden="true"></i>
+              </a>
+              <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                <i class="fa-solid fa-times-circle fa-fw" aria-hidden="true"></i>
+              </a>
+              <span class="search-button search-loading" id="search-loading-mobile">
+                <i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+              </span>
+            </div>
+            <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+              Cancel
+            </a>
+          </li><li class="menu-item"><a class="menu-link" href="https://www.youtube.com/@anoofficialchannel" rel="noopener noreferrer" target="_blank"></a></li><li class="menu-item"><a class="menu-link" href="https://www.nu1l.com/" title="Nu1L" rel="noopener noreferrer" target="_blank"><i class="fa-solid fa-paperclip fa-fw fa-sm" aria-hidden="true"></i> Nu1L</a></li><li class="menu-item"><a class="menu-link" href="https://cnss.io/" title="CNSS" rel="noopener noreferrer" target="_blank"><i class="fa-solid fa-paperclip fa-fw fa-sm" aria-hidden="true"></i> CNSS</a></li><li class="menu-item"><a class="menu-link" href="/posts/friends/" title="About"><i class="fa-solid fa-user-group fa-fw fa-sm" aria-hidden="true"></i> About</a></li><li class="menu-item menu-system">
+          <span class="menu-system-item theme-switch" title="Switch Theme"><i class="fa-solid fa-adjust fa-fw" aria-hidden="true"></i></span></li>
+      </ul>
+    </nav>
+  </div>
+</header><div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+  </div>
+  <div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+  </div><main class="container"><aside class="aside-collection animate__animated animate__fadeIn animate__faster" aria-label="Collections"></aside>
+
+  <article class="page single">
+    <div class="header"><h1 class="single-title animate__animated animate__flipInX"><span>智能合约逆向分析实战 ByteCTF2022-OhMySolidity</span>
+      </h1></div><div class="post-meta">
+      <div class="post-meta-line"><span class="post-author"><span class="author"><img loading="lazy" src="/avr.png" alt="Shino" data-title="Shino" width="20" height="20" class="avatar" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>&nbsp;Shino</span></span></div><div class="post-meta-line"><span title="published on 2022-10-06 16:22:03"><i class="fa-solid fa-calendar-days fa-fw me-1" aria-hidden="true"></i><time datetime="2022-10-06">2022-10-06</time></span>&nbsp;<span title="1804 words"><i class="fa-solid fa-pencil-alt fa-fw me-1" aria-hidden="true"></i>About 1900 words</span>&nbsp;<span><i class="fa-regular fa-clock fa-fw me-1" aria-hidden="true"></i>9 minutes</span>&nbsp;</div>
+    </div><div class="details toc" id="toc-static" data-kept="false">
+        <div class="details-summary toc-title">
+          <span>Contents</span>
+          <span><i class="details-icon fa-solid fa-angle-right" aria-hidden="true"></i></span>
+        </div>
+        <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#reverse-ohmysolidity">[Reverse] OhMySolidity</a></li>
+  </ul>
+</nav></div>
+      </div><div class="content" id="content"><h2 id="reverse-ohmysolidity" class="heading-element"><span>[Reverse] OhMySolidity</span>
+  <a href="#reverse-ohmysolidity" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>题面如下</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">input:
+</span></span><span class="line"><span class="cl">0x608060405234801561001057600080fd5b5061066e806100206000396000f3fe608060405234801561001057600080fd5b50600436106100625760003560e01c806314edb54d1461006757806358f5382e1461009157806393eed093146101c55780639577a145146101ef578063a7f81e6a14610253578063f0407ca71461027d575b600080fd5b61006f6102a7565b604051808263ffffffff1663ffffffff16815260200191505060405180910390f35b61014a600480360360208110156100a757600080fd5b81019080803590602001906401000000008111156100c457600080fd5b8201836020820111156100d657600080fd5b803590602001918460018302840111640100000000831117156100f857600080fd5b91908080601f016020809104026020016040519081016040528093929190818152602001838380828437600081840152601f19601f8201169050808301925050505050505091929192905050506102bd565b6040518080602001828103825283818151815260200191508051906020019080838360005b8381101561018a57808201518184015260208101905061016f565b50505050905090810190601f1680156101b75780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b6101cd61056f565b604051808263ffffffff1663ffffffff16815260200191505060405180910390f35b6102516004803603608081101561020557600080fd5b81019080803563ffffffff169060200190929190803563ffffffff169060200190929190803563ffffffff169060200190929190803563ffffffff169060200190929190505050610584565b005b61025b61060d565b604051808263ffffffff1663ffffffff16815260200191505060405180910390f35b610285610623565b604051808263ffffffff1663ffffffff16815260200191505060405180910390f35b600060049054906101000a900463ffffffff1681565b606080829050600060088251816102d057fe5b06146102db57600080fd5b606081516040519080825280601f01601f1916602001820160405280156103115781602001600182028038833980820191505090505b509050600063deadbeef905060008090505b83518110156105635760008090506000809050600080905060008090505b60048160ff1610156103cd578060030360080260ff16888260ff1687018151811061036857fe5b602001015160f81c60f81b60f81c60ff1663ffffffff16901b830192508060030360080260ff168860048360ff16880101815181106103a357fe5b602001015160f81c60f81b60f81c60ff1663ffffffff16901b820191508080600101915050610341565b5060008090505b60208160ff16101561047f578584019350600060049054906101000a900463ffffffff1660058363ffffffff16901c018483016000809054906101000a900463ffffffff1660048563ffffffff16901b011818830192506000600c9054906101000a900463ffffffff1660058463ffffffff16901c01848401600060089054906101000a900463ffffffff1660048663ffffffff16901b0118188201915080806001019150506103d4565b5060008090505b60048160ff1610156105545760ff8160030360080260ff168463ffffffff16901c1660f81b878260ff168701815181106104bc57fe5b60200101907effffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff1916908160001a90535060ff8160030360080260ff168363ffffffff16901c1660f81b8760048360ff168801018151811061051857fe5b60200101907effffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff1916908160001a9053508080600101915050610486565b50505050600881019050610323565b50819350505050919050565b6000809054906101000a900463ffffffff1681565b836000806101000a81548163ffffffff021916908363ffffffff16021790555082600060046101000a81548163ffffffff021916908363ffffffff16021790555081600060086101000a81548163ffffffff021916908363ffffffff160217905550806000600c6101000a81548163ffffffff021916908363ffffffff16021790555050505050565b600060089054906101000a900463ffffffff1681565b6000600c9054906101000a900463ffffffff168156fea265627a7a72315820c500ad9e15f8594ce1140fdf04f71759a549b8a033f78b149472bb00f68975a964736f6c63430005110032
+</span></span><span class="line"><span class="cl">output:
+</span></span><span class="line"><span class="cl">None
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">input:
+</span></span><span class="line"><span class="cl">0x9577a1450000000000000000000000000000000000000000000000000000000012345678000000000000000000000000000000000000000000000000000000008765432100000000000000000000000000000000000000000000000000000000aabbccdd0000000000000000000000000000000000000000000000000000000044332211
+</span></span><span class="line"><span class="cl">output:
+</span></span><span class="line"><span class="cl">None
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">input(broken):
+</span></span><span class="line"><span class="cl">0x58f5382e...
+</span></span><span class="line"><span class="cl">output:
+</span></span><span class="line"><span class="cl">0xa625e97482f83d2b7fc5125763dcbbffd8115b208c4754eee8711bdfac9e3377622bbf0cbb785e612b82c7f5143d5333</span></span></code></pre></td></tr></table>
+</div>
+</div><p>根据题目提示和开头60806040可以知道是一个Solidity字节码的逆向。Solidity语言是在区块链的智能合约部署中被广泛使用的语言之一。</p>
+<p>由于之前有接触过智能合约字节码逆向我们很快就找到了反编译的工具。</p>
+<p><a href="https://ethervm.io/decompile/"target="_blank" rel="external nofollow noopener noreferrer">Online Solidity Decompiler (ethervm.io)</a></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="n">contract</span> <span class="n">Contract</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">function</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">memory</span><span class="p">[</span><span class="mh">0x40</span><span class="p">:</span><span class="mh">0x60</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x80</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">var</span> <span class="n">var0</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">value</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">var0</span><span class="p">)</span> <span class="p">{</span> <span class="n">revert</span><span class="p">(</span><span class="n">memory</span><span class="p">[</span><span class="mh">0x00</span><span class="p">:</span><span class="mh">0x00</span><span class="p">]);</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">        <span class="n">memory</span><span class="p">[</span><span class="mh">0x00</span><span class="p">:</span><span class="mh">0x066e</span><span class="p">]</span> <span class="o">=</span> <span class="n">code</span><span class="p">[</span><span class="mh">0x20</span><span class="p">:</span><span class="mh">0x068e</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">memory</span><span class="p">[</span><span class="mh">0x00</span><span class="p">:</span><span class="mh">0x066e</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>反编译结果明显短于字节码长度。观察到<code>memory[0x00:0x066e] = code[0x20:0x068e];</code>行，推测是把0x20部分代码复制到memory内继续执行。</p>
+<p>实际上区块链智能合约分为部署合约和上链合约两部分，上链合约短于智能合约。同时，我们在0x20个字节后又发现了魔数60806040，尝试删除前缀0x20字节重新反编译。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">  1
+</span><span class="lnt">  2
+</span><span class="lnt">  3
+</span><span class="lnt">  4
+</span><span class="lnt">  5
+</span><span class="lnt">  6
+</span><span class="lnt">  7
+</span><span class="lnt">  8
+</span><span class="lnt">  9
+</span><span class="lnt"> 10
+</span><span class="lnt"> 11
+</span><span class="lnt"> 12
+</span><span class="lnt"> 13
+</span><span class="lnt"> 14
+</span><span class="lnt"> 15
+</span><span class="lnt"> 16
+</span><span class="lnt"> 17
+</span><span class="lnt"> 18
+</span><span class="lnt"> 19
+</span><span class="lnt"> 20
+</span><span class="lnt"> 21
+</span><span class="lnt"> 22
+</span><span class="lnt"> 23
+</span><span class="lnt"> 24
+</span><span class="lnt"> 25
+</span><span class="lnt"> 26
+</span><span class="lnt"> 27
+</span><span class="lnt"> 28
+</span><span class="lnt"> 29
+</span><span class="lnt"> 30
+</span><span class="lnt"> 31
+</span><span class="lnt"> 32
+</span><span class="lnt"> 33
+</span><span class="lnt"> 34
+</span><span class="lnt"> 35
+</span><span class="lnt"> 36
+</span><span class="lnt"> 37
+</span><span class="lnt"> 38
+</span><span class="lnt"> 39
+</span><span class="lnt"> 40
+</span><span class="lnt"> 41
+</span><span class="lnt"> 42
+</span><span class="lnt"> 43
+</span><span class="lnt"> 44
+</span><span class="lnt"> 45
+</span><span class="lnt"> 46
+</span><span class="lnt"> 47
+</span><span class="lnt"> 48
+</span><span class="lnt"> 49
+</span><span class="lnt"> 50
+</span><span class="lnt"> 51
+</span><span class="lnt"> 52
+</span><span class="lnt"> 53
+</span><span class="lnt"> 54
+</span><span class="lnt"> 55
+</span><span class="lnt"> 56
+</span><span class="lnt"> 57
+</span><span class="lnt"> 58
+</span><span class="lnt"> 59
+</span><span class="lnt"> 60
+</span><span class="lnt"> 61
+</span><span class="lnt"> 62
+</span><span class="lnt"> 63
+</span><span class="lnt"> 64
+</span><span class="lnt"> 65
+</span><span class="lnt"> 66
+</span><span class="lnt"> 67
+</span><span class="lnt"> 68
+</span><span class="lnt"> 69
+</span><span class="lnt"> 70
+</span><span class="lnt"> 71
+</span><span class="lnt"> 72
+</span><span class="lnt"> 73
+</span><span class="lnt"> 74
+</span><span class="lnt"> 75
+</span><span class="lnt"> 76
+</span><span class="lnt"> 77
+</span><span class="lnt"> 78
+</span><span class="lnt"> 79
+</span><span class="lnt"> 80
+</span><span class="lnt"> 81
+</span><span class="lnt"> 82
+</span><span class="lnt"> 83
+</span><span class="lnt"> 84
+</span><span class="lnt"> 85
+</span><span class="lnt"> 86
+</span><span class="lnt"> 87
+</span><span class="lnt"> 88
+</span><span class="lnt"> 89
+</span><span class="lnt"> 90
+</span><span class="lnt"> 91
+</span><span class="lnt"> 92
+</span><span class="lnt"> 93
+</span><span class="lnt"> 94
+</span><span class="lnt"> 95
+</span><span class="lnt"> 96
+</span><span class="lnt"> 97
+</span><span class="lnt"> 98
+</span><span class="lnt"> 99
+</span><span class="lnt">100
+</span><span class="lnt">101
+</span><span class="lnt">102
+</span><span class="lnt">103
+</span><span class="lnt">104
+</span><span class="lnt">105
+</span><span class="lnt">106
+</span><span class="lnt">107
+</span><span class="lnt">108
+</span><span class="lnt">109
+</span><span class="lnt">110
+</span><span class="lnt">111
+</span><span class="lnt">112
+</span><span class="lnt">113
+</span><span class="lnt">114
+</span><span class="lnt">115
+</span><span class="lnt">116
+</span><span class="lnt">117
+</span><span class="lnt">118
+</span><span class="lnt">119
+</span><span class="lnt">120
+</span><span class="lnt">121
+</span><span class="lnt">122
+</span><span class="lnt">123
+</span><span class="lnt">124
+</span><span class="lnt">125
+</span><span class="lnt">126
+</span><span class="lnt">127
+</span><span class="lnt">128
+</span><span class="lnt">129
+</span><span class="lnt">130
+</span><span class="lnt">131
+</span><span class="lnt">132
+</span><span class="lnt">133
+</span><span class="lnt">134
+</span><span class="lnt">135
+</span><span class="lnt">136
+</span><span class="lnt">137
+</span><span class="lnt">138
+</span><span class="lnt">139
+</span><span class="lnt">140
+</span><span class="lnt">141
+</span><span class="lnt">142
+</span><span class="lnt">143
+</span><span class="lnt">144
+</span><span class="lnt">145
+</span><span class="lnt">146
+</span><span class="lnt">147
+</span><span class="lnt">148
+</span><span class="lnt">149
+</span><span class="lnt">150
+</span><span class="lnt">151
+</span><span class="lnt">152
+</span><span class="lnt">153
+</span><span class="lnt">154
+</span><span class="lnt">155
+</span><span class="lnt">156
+</span><span class="lnt">157
+</span><span class="lnt">158
+</span><span class="lnt">159
+</span><span class="lnt">160
+</span><span class="lnt">161
+</span><span class="lnt">162
+</span><span class="lnt">163
+</span><span class="lnt">164
+</span><span class="lnt">165
+</span><span class="lnt">166
+</span><span class="lnt">167
+</span><span class="lnt">168
+</span><span class="lnt">169
+</span><span class="lnt">170
+</span><span class="lnt">171
+</span><span class="lnt">172
+</span><span class="lnt">173
+</span><span class="lnt">174
+</span><span class="lnt">175
+</span><span class="lnt">176
+</span><span class="lnt">177
+</span><span class="lnt">178
+</span><span class="lnt">179
+</span><span class="lnt">180
+</span><span class="lnt">181
+</span><span class="lnt">182
+</span><span class="lnt">183
+</span><span class="lnt">184
+</span><span class="lnt">185
+</span><span class="lnt">186
+</span><span class="lnt">187
+</span><span class="lnt">188
+</span><span class="lnt">189
+</span><span class="lnt">190
+</span><span class="lnt">191
+</span><span class="lnt">192
+</span><span class="lnt">193
+</span><span class="lnt">194
+</span><span class="lnt">195
+</span><span class="lnt">196
+</span><span class="lnt">197
+</span><span class="lnt">198
+</span><span class="lnt">199
+</span><span class="lnt">200
+</span><span class="lnt">201
+</span><span class="lnt">202
+</span><span class="lnt">203
+</span><span class="lnt">204
+</span><span class="lnt">205
+</span><span class="lnt">206
+</span><span class="lnt">207
+</span><span class="lnt">208
+</span><span class="lnt">209
+</span><span class="lnt">210
+</span><span class="lnt">211
+</span><span class="lnt">212
+</span><span class="lnt">213
+</span><span class="lnt">214
+</span><span class="lnt">215
+</span><span class="lnt">216
+</span><span class="lnt">217
+</span><span class="lnt">218
+</span><span class="lnt">219
+</span><span class="lnt">220
+</span><span class="lnt">221
+</span><span class="lnt">222
+</span><span class="lnt">223
+</span><span class="lnt">224
+</span><span class="lnt">225
+</span><span class="lnt">226
+</span><span class="lnt">227
+</span><span class="lnt">228
+</span><span class="lnt">229
+</span><span class="lnt">230
+</span><span class="lnt">231
+</span><span class="lnt">232
+</span><span class="lnt">233
+</span><span class="lnt">234
+</span><span class="lnt">235
+</span><span class="lnt">236
+</span><span class="lnt">237
+</span><span class="lnt">238
+</span><span class="lnt">239
+</span><span class="lnt">240
+</span><span class="lnt">241
+</span><span class="lnt">242
+</span><span class="lnt">243
+</span><span class="lnt">244
+</span><span class="lnt">245
+</span><span class="lnt">246
+</span><span class="lnt">247
+</span><span class="lnt">248
+</span><span class="lnt">249
+</span><span class="lnt">250
+</span><span class="lnt">251
+</span><span class="lnt">252
+</span><span class="lnt">253
+</span><span class="lnt">254
+</span><span class="lnt">255
+</span><span class="lnt">256
+</span><span class="lnt">257
+</span><span class="lnt">258
+</span><span class="lnt">259
+</span><span class="lnt">260
+</span><span class="lnt">261
+</span><span class="lnt">262
+</span><span class="lnt">263
+</span><span class="lnt">264
+</span><span class="lnt">265
+</span><span class="lnt">266
+</span><span class="lnt">267
+</span><span class="lnt">268
+</span><span class="lnt">269
+</span><span class="lnt">270
+</span><span class="lnt">271
+</span><span class="lnt">272
+</span><span class="lnt">273
+</span><span class="lnt">274
+</span><span class="lnt">275
+</span><span class="lnt">276
+</span><span class="lnt">277
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="n">contract</span> <span class="n">Contract</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">function</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">memory</span><span class="p">[</span><span class="mh">0x40</span><span class="p">:</span><span class="mh">0x60</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x80</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">var</span> <span class="n">var0</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">value</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">var0</span><span class="p">)</span> <span class="p">{</span> <span class="n">revert</span><span class="p">(</span><span class="n">memory</span><span class="p">[</span><span class="mh">0x00</span><span class="p">:</span><span class="mh">0x00</span><span class="p">]);</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">length</span> <span class="o">&lt;</span> <span class="mh">0x04</span><span class="p">)</span> <span class="p">{</span> <span class="n">revert</span><span class="p">(</span><span class="n">memory</span><span class="p">[</span><span class="mh">0x00</span><span class="p">:</span><span class="mh">0x00</span><span class="p">]);</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">        <span class="n">var0</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mh">0x00</span><span class="p">:</span><span class="mh">0x20</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="mh">0xe0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">var0</span> <span class="o">==</span> <span class="mh">0x14edb54d</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="o">//</span> <span class="n">Dispatch</span> <span class="n">table</span> <span class="n">entry</span> <span class="k">for</span> <span class="n">k1</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">            <span class="k">var</span> <span class="n">var1</span> <span class="o">=</span> <span class="mh">0x006f</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="k">var</span> <span class="n">var2</span> <span class="o">=</span> <span class="n">k1</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">            <span class="k">var</span> <span class="n">temp0</span> <span class="o">=</span> <span class="n">memory</span><span class="p">[</span><span class="mh">0x40</span><span class="p">:</span><span class="mh">0x60</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">            <span class="n">memory</span><span class="p">[</span><span class="n">temp0</span><span class="p">:</span><span class="n">temp0</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">]</span> <span class="o">=</span> <span class="n">var2</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="k">var</span> <span class="n">temp1</span> <span class="o">=</span> <span class="n">memory</span><span class="p">[</span><span class="mh">0x40</span><span class="p">:</span><span class="mh">0x60</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="n">memory</span><span class="p">[</span><span class="n">temp1</span><span class="p">:</span><span class="n">temp1</span> <span class="o">+</span> <span class="p">(</span><span class="n">temp0</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">)</span> <span class="o">-</span> <span class="n">temp1</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">var0</span> <span class="o">==</span> <span class="mh">0x58f5382e</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="o">//</span> <span class="n">Dispatch</span> <span class="n">table</span> <span class="n">entry</span> <span class="k">for</span> <span class="n">challenge</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="n">var1</span> <span class="o">=</span> <span class="mh">0x014a</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="n">var2</span> <span class="o">=</span> <span class="mh">0x04</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="k">var</span> <span class="n">var3</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">length</span> <span class="o">-</span> <span class="n">var2</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="n">var3</span> <span class="o">&lt;</span> <span class="mh">0x20</span><span class="p">)</span> <span class="p">{</span> <span class="n">revert</span><span class="p">(</span><span class="n">memory</span><span class="p">[</span><span class="mh">0x00</span><span class="p">:</span><span class="mh">0x00</span><span class="p">]);</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">            <span class="n">var1</span> <span class="o">=</span> <span class="n">challenge</span><span class="p">(</span><span class="n">var2</span><span class="p">,</span> <span class="n">var3</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="k">var</span> <span class="n">temp2</span> <span class="o">=</span> <span class="n">memory</span><span class="p">[</span><span class="mh">0x40</span><span class="p">:</span><span class="mh">0x60</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">            <span class="n">var2</span> <span class="o">=</span> <span class="n">temp2</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="n">var3</span> <span class="o">=</span> <span class="n">var2</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="k">var</span> <span class="n">temp3</span> <span class="o">=</span> <span class="n">var3</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="n">memory</span><span class="p">[</span><span class="n">var3</span><span class="p">:</span><span class="n">var3</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp3</span> <span class="o">-</span> <span class="n">var3</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="k">var</span> <span class="n">temp4</span> <span class="o">=</span> <span class="n">var1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="n">memory</span><span class="p">[</span><span class="n">temp3</span><span class="p">:</span><span class="n">temp3</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">]</span> <span class="o">=</span> <span class="n">memory</span><span class="p">[</span><span class="n">temp4</span><span class="p">:</span><span class="n">temp4</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">            <span class="k">var</span> <span class="n">var4</span> <span class="o">=</span> <span class="n">temp3</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="k">var</span> <span class="n">var5</span> <span class="o">=</span> <span class="n">temp4</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="k">var</span> <span class="n">var6</span> <span class="o">=</span> <span class="n">memory</span><span class="p">[</span><span class="n">temp4</span><span class="p">:</span><span class="n">temp4</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">            <span class="k">var</span> <span class="n">var7</span> <span class="o">=</span> <span class="n">var6</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="k">var</span> <span class="n">var8</span> <span class="o">=</span> <span class="n">var4</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="k">var</span> <span class="n">var9</span> <span class="o">=</span> <span class="n">var5</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="k">var</span> <span class="n">var10</span> <span class="o">=</span> <span class="mh">0x00</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="n">var10</span> <span class="o">&gt;=</span> <span class="n">var7</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">label_018A</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="k">var</span> <span class="n">temp5</span> <span class="o">=</span> <span class="n">var6</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                <span class="n">var4</span> <span class="o">=</span> <span class="n">temp5</span> <span class="o">+</span> <span class="n">var4</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                <span class="n">var5</span> <span class="o">=</span> <span class="n">temp5</span> <span class="o">&amp;</span> <span class="mh">0x1f</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            
+</span></span><span class="line"><span class="cl">                <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">var5</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                    <span class="k">var</span> <span class="n">temp6</span> <span class="o">=</span> <span class="n">memory</span><span class="p">[</span><span class="mh">0x40</span><span class="p">:</span><span class="mh">0x60</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">                    <span class="k">return</span> <span class="n">memory</span><span class="p">[</span><span class="n">temp6</span><span class="p">:</span><span class="n">temp6</span> <span class="o">+</span> <span class="n">var4</span> <span class="o">-</span> <span class="n">temp6</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">                <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                    <span class="k">var</span> <span class="n">temp7</span> <span class="o">=</span> <span class="n">var5</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                    <span class="k">var</span> <span class="n">temp8</span> <span class="o">=</span> <span class="n">var4</span> <span class="o">-</span> <span class="n">temp7</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">memory</span><span class="p">[</span><span class="n">temp8</span><span class="p">:</span><span class="n">temp8</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">]</span> <span class="o">=</span> <span class="o">~</span><span class="p">(</span><span class="mh">0x0100</span> <span class="o">**</span> <span class="p">(</span><span class="mh">0x20</span> <span class="o">-</span> <span class="n">temp7</span><span class="p">)</span> <span class="o">-</span> <span class="mh">0x01</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">memory</span><span class="p">[</span><span class="n">temp8</span><span class="p">:</span><span class="n">temp8</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">                    <span class="k">var</span> <span class="n">temp9</span> <span class="o">=</span> <span class="n">memory</span><span class="p">[</span><span class="mh">0x40</span><span class="p">:</span><span class="mh">0x60</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">                    <span class="k">return</span> <span class="n">memory</span><span class="p">[</span><span class="n">temp9</span><span class="p">:</span><span class="n">temp9</span> <span class="o">+</span> <span class="p">(</span><span class="n">temp8</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">)</span> <span class="o">-</span> <span class="n">temp9</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">                <span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">label_0178</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="k">var</span> <span class="n">temp10</span> <span class="o">=</span> <span class="n">var10</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                <span class="n">memory</span><span class="p">[</span><span class="n">var8</span> <span class="o">+</span> <span class="n">temp10</span><span class="p">:</span><span class="n">var8</span> <span class="o">+</span> <span class="n">temp10</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">]</span> <span class="o">=</span> <span class="n">memory</span><span class="p">[</span><span class="n">var9</span> <span class="o">+</span> <span class="n">temp10</span><span class="p">:</span><span class="n">var9</span> <span class="o">+</span> <span class="n">temp10</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">                <span class="n">var10</span> <span class="o">=</span> <span class="n">temp10</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            
+</span></span><span class="line"><span class="cl">                <span class="k">if</span> <span class="p">(</span><span class="n">var10</span> <span class="o">&gt;=</span> <span class="n">var7</span><span class="p">)</span> <span class="p">{</span> <span class="n">goto</span> <span class="n">label_018A</span><span class="p">;</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                <span class="k">else</span> <span class="p">{</span> <span class="n">goto</span> <span class="n">label_0178</span><span class="p">;</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">var0</span> <span class="o">==</span> <span class="mh">0x93eed093</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="o">//</span> <span class="n">Dispatch</span> <span class="n">table</span> <span class="n">entry</span> <span class="k">for</span> <span class="mh">0x93eed093</span> <span class="p">(</span><span class="n">unknown</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="n">var1</span> <span class="o">=</span> <span class="mh">0x01cd</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="n">var2</span> <span class="o">=</span> <span class="n">func_056F</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">            <span class="k">var</span> <span class="n">temp11</span> <span class="o">=</span> <span class="n">memory</span><span class="p">[</span><span class="mh">0x40</span><span class="p">:</span><span class="mh">0x60</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">            <span class="n">memory</span><span class="p">[</span><span class="n">temp11</span><span class="p">:</span><span class="n">temp11</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">]</span> <span class="o">=</span> <span class="n">var2</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="k">var</span> <span class="n">temp12</span> <span class="o">=</span> <span class="n">memory</span><span class="p">[</span><span class="mh">0x40</span><span class="p">:</span><span class="mh">0x60</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="n">memory</span><span class="p">[</span><span class="n">temp12</span><span class="p">:</span><span class="n">temp12</span> <span class="o">+</span> <span class="p">(</span><span class="n">temp11</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">)</span> <span class="o">-</span> <span class="n">temp12</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">var0</span> <span class="o">==</span> <span class="mh">0x9577a145</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="o">//</span> <span class="n">Dispatch</span> <span class="n">table</span> <span class="n">entry</span> <span class="k">for</span> <span class="mh">0x9577a145</span> <span class="p">(</span><span class="n">unknown</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="n">var1</span> <span class="o">=</span> <span class="mh">0x0251</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="n">var2</span> <span class="o">=</span> <span class="mh">0x04</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="n">var3</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">length</span> <span class="o">-</span> <span class="n">var2</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="n">var3</span> <span class="o">&lt;</span> <span class="mh">0x80</span><span class="p">)</span> <span class="p">{</span> <span class="n">revert</span><span class="p">(</span><span class="n">memory</span><span class="p">[</span><span class="mh">0x00</span><span class="p">:</span><span class="mh">0x00</span><span class="p">]);</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">            <span class="n">func_0205</span><span class="p">(</span><span class="n">var2</span><span class="p">,</span> <span class="n">var3</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">stop</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">var0</span> <span class="o">==</span> <span class="mh">0xa7f81e6a</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="o">//</span> <span class="n">Dispatch</span> <span class="n">table</span> <span class="n">entry</span> <span class="k">for</span> <span class="n">k2</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">            <span class="n">var1</span> <span class="o">=</span> <span class="mh">0x025b</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="n">var2</span> <span class="o">=</span> <span class="n">k2</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">            <span class="k">var</span> <span class="n">temp13</span> <span class="o">=</span> <span class="n">memory</span><span class="p">[</span><span class="mh">0x40</span><span class="p">:</span><span class="mh">0x60</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">            <span class="n">memory</span><span class="p">[</span><span class="n">temp13</span><span class="p">:</span><span class="n">temp13</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">]</span> <span class="o">=</span> <span class="n">var2</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="k">var</span> <span class="n">temp14</span> <span class="o">=</span> <span class="n">memory</span><span class="p">[</span><span class="mh">0x40</span><span class="p">:</span><span class="mh">0x60</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="n">memory</span><span class="p">[</span><span class="n">temp14</span><span class="p">:</span><span class="n">temp14</span> <span class="o">+</span> <span class="p">(</span><span class="n">temp13</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">)</span> <span class="o">-</span> <span class="n">temp14</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">var0</span> <span class="o">==</span> <span class="mh">0xf0407ca7</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="o">//</span> <span class="n">Dispatch</span> <span class="n">table</span> <span class="n">entry</span> <span class="k">for</span> <span class="mh">0xf0407ca7</span> <span class="p">(</span><span class="n">unknown</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="n">var1</span> <span class="o">=</span> <span class="mh">0x0285</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="n">var2</span> <span class="o">=</span> <span class="n">func_0623</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">            <span class="k">var</span> <span class="n">temp15</span> <span class="o">=</span> <span class="n">memory</span><span class="p">[</span><span class="mh">0x40</span><span class="p">:</span><span class="mh">0x60</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">            <span class="n">memory</span><span class="p">[</span><span class="n">temp15</span><span class="p">:</span><span class="n">temp15</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">]</span> <span class="o">=</span> <span class="n">var2</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="k">var</span> <span class="n">temp16</span> <span class="o">=</span> <span class="n">memory</span><span class="p">[</span><span class="mh">0x40</span><span class="p">:</span><span class="mh">0x60</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="n">memory</span><span class="p">[</span><span class="n">temp16</span><span class="p">:</span><span class="n">temp16</span> <span class="o">+</span> <span class="p">(</span><span class="n">temp15</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">)</span> <span class="o">-</span> <span class="n">temp16</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span> <span class="n">revert</span><span class="p">(</span><span class="n">memory</span><span class="p">[</span><span class="mh">0x00</span><span class="p">:</span><span class="mh">0x00</span><span class="p">]);</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="n">function</span> <span class="n">challenge</span><span class="p">(</span><span class="k">var</span> <span class="n">arg0</span><span class="p">,</span> <span class="k">var</span> <span class="n">arg1</span><span class="p">)</span> <span class="n">returns</span> <span class="p">(</span><span class="k">var</span> <span class="n">r0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">var</span> <span class="n">temp0</span> <span class="o">=</span> <span class="n">arg0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">var</span> <span class="n">temp1</span> <span class="o">=</span> <span class="n">temp0</span> <span class="o">+</span> <span class="n">arg1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">arg1</span> <span class="o">=</span> <span class="n">temp0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">arg0</span> <span class="o">=</span> <span class="n">temp1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">var</span> <span class="n">var0</span> <span class="o">=</span> <span class="n">arg1</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">var</span> <span class="n">var1</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">arg1</span><span class="p">:</span><span class="n">arg1</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">var1</span> <span class="o">&gt;</span> <span class="mh">0x0100000000</span><span class="p">)</span> <span class="p">{</span> <span class="n">revert</span><span class="p">(</span><span class="n">memory</span><span class="p">[</span><span class="mh">0x00</span><span class="p">:</span><span class="mh">0x00</span><span class="p">]);</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">        <span class="k">var</span> <span class="n">temp2</span> <span class="o">=</span> <span class="n">arg1</span> <span class="o">+</span> <span class="n">var1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">var1</span> <span class="o">=</span> <span class="n">temp2</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">var1</span> <span class="o">+</span> <span class="mh">0x20</span> <span class="o">&gt;</span> <span class="n">arg0</span><span class="p">)</span> <span class="p">{</span> <span class="n">revert</span><span class="p">(</span><span class="n">memory</span><span class="p">[</span><span class="mh">0x00</span><span class="p">:</span><span class="mh">0x00</span><span class="p">]);</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">        <span class="k">var</span> <span class="n">temp3</span> <span class="o">=</span> <span class="n">var1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">var</span> <span class="n">temp4</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">temp3</span><span class="p">:</span><span class="n">temp3</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">        <span class="n">var1</span> <span class="o">=</span> <span class="n">temp4</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">var</span> <span class="n">var2</span> <span class="o">=</span> <span class="n">var0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">var0</span> <span class="o">=</span> <span class="n">temp3</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">((</span><span class="n">var1</span> <span class="o">&gt;</span> <span class="mh">0x0100000000</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">var0</span> <span class="o">+</span> <span class="n">var1</span> <span class="o">&gt;</span> <span class="n">arg0</span><span class="p">))</span> <span class="p">{</span> <span class="n">revert</span><span class="p">(</span><span class="n">memory</span><span class="p">[</span><span class="mh">0x00</span><span class="p">:</span><span class="mh">0x00</span><span class="p">]);</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">        <span class="k">var</span> <span class="n">temp5</span> <span class="o">=</span> <span class="n">var1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">var</span> <span class="n">temp6</span> <span class="o">=</span> <span class="n">memory</span><span class="p">[</span><span class="mh">0x40</span><span class="p">:</span><span class="mh">0x60</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">        <span class="n">memory</span><span class="p">[</span><span class="mh">0x40</span><span class="p">:</span><span class="mh">0x60</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp6</span> <span class="o">+</span> <span class="p">(</span><span class="n">temp5</span> <span class="o">+</span> <span class="mh">0x1f</span><span class="p">)</span> <span class="o">/</span> <span class="mh">0x20</span> <span class="o">*</span> <span class="mh">0x20</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">memory</span><span class="p">[</span><span class="n">temp6</span><span class="p">:</span><span class="n">temp6</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp5</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">var</span> <span class="n">temp7</span> <span class="o">=</span> <span class="n">temp6</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">memory</span><span class="p">[</span><span class="n">temp7</span><span class="p">:</span><span class="n">temp7</span> <span class="o">+</span> <span class="n">temp5</span><span class="p">]</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">var0</span><span class="p">:</span><span class="n">var0</span> <span class="o">+</span> <span class="n">temp5</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">        <span class="n">memory</span><span class="p">[</span><span class="n">temp7</span> <span class="o">+</span> <span class="n">temp5</span><span class="p">:</span><span class="n">temp7</span> <span class="o">+</span> <span class="n">temp5</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x00</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">arg0</span> <span class="o">=</span> <span class="n">temp6</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">arg1</span> <span class="o">=</span> <span class="mh">0x60</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">var0</span> <span class="o">=</span> <span class="n">arg0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">var1</span> <span class="o">=</span> <span class="mh">0x00</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">var2</span> <span class="o">=</span> <span class="mh">0x08</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">var</span> <span class="n">var3</span> <span class="o">=</span> <span class="n">memory</span><span class="p">[</span><span class="n">var0</span><span class="p">:</span><span class="n">var0</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">var2</span><span class="p">)</span> <span class="p">{</span> <span class="nb">assert</span><span class="p">();</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">var3</span> <span class="o">%</span> <span class="n">var2</span> <span class="o">!=</span> <span class="n">var1</span><span class="p">)</span> <span class="p">{</span> <span class="n">revert</span><span class="p">(</span><span class="n">memory</span><span class="p">[</span><span class="mh">0x00</span><span class="p">:</span><span class="mh">0x00</span><span class="p">]);</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">        <span class="n">var1</span> <span class="o">=</span> <span class="mh">0x60</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">var</span> <span class="n">temp8</span> <span class="o">=</span> <span class="n">memory</span><span class="p">[</span><span class="n">var0</span><span class="p">:</span><span class="n">var0</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">        <span class="k">var</span> <span class="n">temp9</span> <span class="o">=</span> <span class="n">memory</span><span class="p">[</span><span class="mh">0x40</span><span class="p">:</span><span class="mh">0x60</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">        <span class="n">var3</span> <span class="o">=</span> <span class="n">temp8</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">var2</span> <span class="o">=</span> <span class="n">temp9</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">memory</span><span class="p">[</span><span class="n">var2</span><span class="p">:</span><span class="n">var2</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">]</span> <span class="o">=</span> <span class="n">var3</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">memory</span><span class="p">[</span><span class="mh">0x40</span><span class="p">:</span><span class="mh">0x60</span><span class="p">]</span> <span class="o">=</span> <span class="n">var2</span> <span class="o">+</span> <span class="p">(</span><span class="n">var3</span> <span class="o">+</span> <span class="mh">0x1f</span> <span class="o">&amp;</span> <span class="o">~</span><span class="mh">0x1f</span><span class="p">)</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">var3</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">var1</span> <span class="o">=</span> <span class="n">var2</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="n">var2</span> <span class="o">=</span> <span class="mh">0xdeadbeef</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="n">var3</span> <span class="o">=</span> <span class="mh">0x00</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="n">var3</span> <span class="o">&gt;=</span> <span class="n">memory</span><span class="p">[</span><span class="n">var0</span><span class="p">:</span><span class="n">var0</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">])</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">label_0563</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="k">return</span> <span class="n">var1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">label_032D</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="k">var</span> <span class="n">var4</span> <span class="o">=</span> <span class="mh">0x00</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                <span class="k">var</span> <span class="n">var5</span> <span class="o">=</span> <span class="mh">0x00</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                <span class="k">var</span> <span class="n">var6</span> <span class="o">=</span> <span class="mh">0x00</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                <span class="k">var</span> <span class="n">var7</span> <span class="o">=</span> <span class="mh">0x00</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            
+</span></span><span class="line"><span class="cl">                <span class="k">if</span> <span class="p">(</span><span class="n">var7</span> <span class="o">&amp;</span> <span class="mh">0xff</span> <span class="o">&gt;=</span> <span class="mh">0x04</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="n">label_03CD</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">var7</span> <span class="o">=</span> <span class="mh">0x00</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                
+</span></span><span class="line"><span class="cl">                    <span class="k">if</span> <span class="p">(</span><span class="n">var7</span> <span class="o">&amp;</span> <span class="mh">0xff</span> <span class="o">&gt;=</span> <span class="mh">0x20</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">label_047F</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                        <span class="n">var7</span> <span class="o">=</span> <span class="mh">0x00</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                    
+</span></span><span class="line"><span class="cl">                        <span class="k">if</span> <span class="p">(</span><span class="n">var7</span> <span class="o">&amp;</span> <span class="mh">0xff</span> <span class="o">&gt;=</span> <span class="mh">0x04</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                        <span class="n">label_0554</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                            <span class="n">var3</span> <span class="o">=</span> <span class="n">var3</span> <span class="o">+</span> <span class="mh">0x08</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                        
+</span></span><span class="line"><span class="cl">                            <span class="k">if</span> <span class="p">(</span><span class="n">var3</span> <span class="o">&gt;=</span> <span class="n">memory</span><span class="p">[</span><span class="n">var0</span><span class="p">:</span><span class="n">var0</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">])</span> <span class="p">{</span> <span class="n">goto</span> <span class="n">label_0563</span><span class="p">;</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                            <span class="k">else</span> <span class="p">{</span> <span class="n">goto</span> <span class="n">label_032D</span><span class="p">;</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                        <span class="n">label_0493</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                            <span class="k">var</span> <span class="n">temp10</span> <span class="o">=</span> <span class="n">var7</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                            <span class="k">var</span> <span class="n">var8</span> <span class="o">=</span> <span class="p">(((</span><span class="n">var5</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="mh">0x03</span> <span class="o">-</span> <span class="n">temp10</span> <span class="o">*</span> <span class="mh">0x08</span> <span class="o">&amp;</span> <span class="mh">0xff</span><span class="p">))</span> <span class="o">&amp;</span> <span class="mh">0xff</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mh">0xf8</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                            <span class="k">var</span> <span class="n">var9</span> <span class="o">=</span> <span class="n">var1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                            <span class="k">var</span> <span class="n">var10</span> <span class="o">=</span> <span class="n">var3</span> <span class="o">+</span> <span class="p">(</span><span class="n">temp10</span> <span class="o">&amp;</span> <span class="mh">0xff</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                        
+</span></span><span class="line"><span class="cl">                            <span class="k">if</span> <span class="p">(</span><span class="n">var10</span> <span class="o">&gt;=</span> <span class="n">memory</span><span class="p">[</span><span class="n">var9</span><span class="p">:</span><span class="n">var9</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">])</span> <span class="p">{</span> <span class="nb">assert</span><span class="p">();</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                        
+</span></span><span class="line"><span class="cl">                            <span class="n">memory</span><span class="p">[</span><span class="n">var10</span> <span class="o">+</span> <span class="mh">0x20</span> <span class="o">+</span> <span class="n">var9</span><span class="p">:</span><span class="n">var10</span> <span class="o">+</span> <span class="mh">0x20</span> <span class="o">+</span> <span class="n">var9</span> <span class="o">+</span> <span class="mh">0x01</span><span class="p">]</span> <span class="o">=</span> <span class="n">byte</span><span class="p">(</span><span class="n">var8</span> <span class="o">&amp;</span> <span class="o">~</span><span class="mh">0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                            <span class="k">var</span> <span class="n">temp11</span> <span class="o">=</span> <span class="n">var7</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                            <span class="n">var8</span> <span class="o">=</span> <span class="p">(((</span><span class="n">var6</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="mh">0x03</span> <span class="o">-</span> <span class="n">temp11</span> <span class="o">*</span> <span class="mh">0x08</span> <span class="o">&amp;</span> <span class="mh">0xff</span><span class="p">))</span> <span class="o">&amp;</span> <span class="mh">0xff</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mh">0xf8</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                            <span class="n">var9</span> <span class="o">=</span> <span class="n">var1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                            <span class="n">var10</span> <span class="o">=</span> <span class="n">var3</span> <span class="o">+</span> <span class="p">(</span><span class="n">temp11</span> <span class="o">&amp;</span> <span class="mh">0xff</span><span class="p">)</span> <span class="o">+</span> <span class="mh">0x04</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                        
+</span></span><span class="line"><span class="cl">                            <span class="k">if</span> <span class="p">(</span><span class="n">var10</span> <span class="o">&gt;=</span> <span class="n">memory</span><span class="p">[</span><span class="n">var9</span><span class="p">:</span><span class="n">var9</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">])</span> <span class="p">{</span> <span class="nb">assert</span><span class="p">();</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                        
+</span></span><span class="line"><span class="cl">                            <span class="n">memory</span><span class="p">[</span><span class="n">var10</span> <span class="o">+</span> <span class="mh">0x20</span> <span class="o">+</span> <span class="n">var9</span><span class="p">:</span><span class="n">var10</span> <span class="o">+</span> <span class="mh">0x20</span> <span class="o">+</span> <span class="n">var9</span> <span class="o">+</span> <span class="mh">0x01</span><span class="p">]</span> <span class="o">=</span> <span class="n">byte</span><span class="p">(</span><span class="n">var8</span> <span class="o">&amp;</span> <span class="o">~</span><span class="mh">0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                            <span class="n">var7</span> <span class="o">=</span> <span class="n">var7</span> <span class="o">+</span> <span class="mh">0x01</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                        
+</span></span><span class="line"><span class="cl">                            <span class="k">if</span> <span class="p">(</span><span class="n">var7</span> <span class="o">&amp;</span> <span class="mh">0xff</span> <span class="o">&gt;=</span> <span class="mh">0x04</span><span class="p">)</span> <span class="p">{</span> <span class="n">goto</span> <span class="n">label_0554</span><span class="p">;</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                            <span class="k">else</span> <span class="p">{</span> <span class="n">goto</span> <span class="n">label_0493</span><span class="p">;</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">label_03E1</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                        <span class="k">var</span> <span class="n">temp12</span> <span class="o">=</span> <span class="n">var4</span> <span class="o">+</span> <span class="n">var2</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                        <span class="n">var4</span> <span class="o">=</span> <span class="n">temp12</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                        <span class="k">var</span> <span class="n">temp13</span> <span class="o">=</span> <span class="n">var6</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                        <span class="k">var</span> <span class="n">temp14</span> <span class="o">=</span> <span class="n">var5</span> <span class="o">+</span> <span class="p">(((</span><span class="n">temp13</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mh">0x04</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">storage</span><span class="p">[</span><span class="mh">0x00</span><span class="p">]</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">)</span> <span class="o">~</span> <span class="n">temp13</span> <span class="o">+</span> <span class="n">var4</span> <span class="o">~</span> <span class="p">((</span><span class="n">temp13</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mh">0x05</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">storage</span><span class="p">[</span><span class="mh">0x00</span><span class="p">]</span> <span class="o">/</span> <span class="mh">0x0100</span> <span class="o">**</span> <span class="mh">0x04</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">                        <span class="n">var5</span> <span class="o">=</span> <span class="n">temp14</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                        <span class="n">var6</span> <span class="o">=</span> <span class="n">temp13</span> <span class="o">+</span> <span class="p">(((</span><span class="n">var5</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mh">0x04</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">storage</span><span class="p">[</span><span class="mh">0x00</span><span class="p">]</span> <span class="o">/</span> <span class="mh">0x0100</span> <span class="o">**</span> <span class="mh">0x08</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">)</span> <span class="o">~</span> <span class="n">var5</span> <span class="o">+</span> <span class="n">var4</span> <span class="o">~</span> <span class="p">((</span><span class="n">var5</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mh">0x05</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">storage</span><span class="p">[</span><span class="mh">0x00</span><span class="p">]</span> <span class="o">/</span> <span class="mh">0x0100</span> <span class="o">**</span> <span class="mh">0x0c</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">                        <span class="n">var7</span> <span class="o">=</span> <span class="n">var7</span> <span class="o">+</span> <span class="mh">0x01</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                    
+</span></span><span class="line"><span class="cl">                        <span class="k">if</span> <span class="p">(</span><span class="n">var7</span> <span class="o">&amp;</span> <span class="mh">0xff</span> <span class="o">&gt;=</span> <span class="mh">0x20</span><span class="p">)</span> <span class="p">{</span> <span class="n">goto</span> <span class="n">label_047F</span><span class="p">;</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                        <span class="k">else</span> <span class="p">{</span> <span class="n">goto</span> <span class="n">label_03E1</span><span class="p">;</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="n">label_034E</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                    <span class="k">var</span> <span class="n">temp15</span> <span class="o">=</span> <span class="n">var7</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">var8</span> <span class="o">=</span> <span class="mh">0x03</span> <span class="o">-</span> <span class="n">temp15</span> <span class="o">*</span> <span class="mh">0x08</span> <span class="o">&amp;</span> <span class="mh">0xff</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">var9</span> <span class="o">=</span> <span class="n">var0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">var10</span> <span class="o">=</span> <span class="n">var3</span> <span class="o">+</span> <span class="p">(</span><span class="n">temp15</span> <span class="o">&amp;</span> <span class="mh">0xff</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                
+</span></span><span class="line"><span class="cl">                    <span class="k">if</span> <span class="p">(</span><span class="n">var10</span> <span class="o">&gt;=</span> <span class="n">memory</span><span class="p">[</span><span class="n">var9</span><span class="p">:</span><span class="n">var9</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">])</span> <span class="p">{</span> <span class="nb">assert</span><span class="p">();</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                
+</span></span><span class="line"><span class="cl">                    <span class="n">var5</span> <span class="o">=</span> <span class="n">var5</span> <span class="o">+</span> <span class="p">(((((</span><span class="n">memory</span><span class="p">[</span><span class="n">var10</span> <span class="o">+</span> <span class="mh">0x20</span> <span class="o">+</span> <span class="n">var9</span><span class="p">:</span><span class="n">var10</span> <span class="o">+</span> <span class="mh">0x20</span> <span class="o">+</span> <span class="n">var9</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="mh">0xf8</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mh">0xf8</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mh">0xf8</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xff</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">var8</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                    <span class="k">var</span> <span class="n">temp16</span> <span class="o">=</span> <span class="n">var7</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">var8</span> <span class="o">=</span> <span class="mh">0x03</span> <span class="o">-</span> <span class="n">temp16</span> <span class="o">*</span> <span class="mh">0x08</span> <span class="o">&amp;</span> <span class="mh">0xff</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">var9</span> <span class="o">=</span> <span class="n">var0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">var10</span> <span class="o">=</span> <span class="n">var3</span> <span class="o">+</span> <span class="p">(</span><span class="n">temp16</span> <span class="o">&amp;</span> <span class="mh">0xff</span><span class="p">)</span> <span class="o">+</span> <span class="mh">0x04</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                
+</span></span><span class="line"><span class="cl">                    <span class="k">if</span> <span class="p">(</span><span class="n">var10</span> <span class="o">&gt;=</span> <span class="n">memory</span><span class="p">[</span><span class="n">var9</span><span class="p">:</span><span class="n">var9</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">])</span> <span class="p">{</span> <span class="nb">assert</span><span class="p">();</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                
+</span></span><span class="line"><span class="cl">                    <span class="n">var6</span> <span class="o">=</span> <span class="n">var6</span> <span class="o">+</span> <span class="p">(((((</span><span class="n">memory</span><span class="p">[</span><span class="n">var10</span> <span class="o">+</span> <span class="mh">0x20</span> <span class="o">+</span> <span class="n">var9</span><span class="p">:</span><span class="n">var10</span> <span class="o">+</span> <span class="mh">0x20</span> <span class="o">+</span> <span class="n">var9</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="mh">0xf8</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mh">0xf8</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mh">0xf8</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xff</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">var8</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">var7</span> <span class="o">=</span> <span class="n">var7</span> <span class="o">+</span> <span class="mh">0x01</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                
+</span></span><span class="line"><span class="cl">                    <span class="k">if</span> <span class="p">(</span><span class="n">var7</span> <span class="o">&amp;</span> <span class="mh">0xff</span> <span class="o">&gt;=</span> <span class="mh">0x04</span><span class="p">)</span> <span class="p">{</span> <span class="n">goto</span> <span class="n">label_03CD</span><span class="p">;</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                    <span class="k">else</span> <span class="p">{</span> <span class="n">goto</span> <span class="n">label_034E</span><span class="p">;</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                <span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">var</span> <span class="n">temp17</span> <span class="o">=</span> <span class="n">var3</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="n">memory</span><span class="p">[</span><span class="n">var2</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">:</span><span class="n">var2</span> <span class="o">+</span> <span class="mh">0x20</span> <span class="o">+</span> <span class="n">temp17</span><span class="p">]</span> <span class="o">=</span> <span class="n">code</span><span class="p">[</span><span class="n">code</span><span class="o">.</span><span class="n">length</span><span class="p">:</span><span class="n">code</span><span class="o">.</span><span class="n">length</span> <span class="o">+</span> <span class="n">temp17</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">            <span class="n">var1</span> <span class="o">=</span> <span class="n">var2</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="n">var2</span> <span class="o">=</span> <span class="mh">0xdeadbeef</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="n">var3</span> <span class="o">=</span> <span class="mh">0x00</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="n">var3</span> <span class="o">&gt;=</span> <span class="n">memory</span><span class="p">[</span><span class="n">var0</span><span class="p">:</span><span class="n">var0</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">])</span> <span class="p">{</span> <span class="n">goto</span> <span class="n">label_0563</span><span class="p">;</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="k">else</span> <span class="p">{</span> <span class="n">goto</span> <span class="n">label_032D</span><span class="p">;</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="n">function</span> <span class="n">func_0205</span><span class="p">(</span><span class="k">var</span> <span class="n">arg0</span><span class="p">,</span> <span class="k">var</span> <span class="n">arg1</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">var</span> <span class="n">temp0</span> <span class="o">=</span> <span class="n">arg0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">var</span> <span class="n">temp1</span> <span class="o">=</span> <span class="n">temp0</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">arg0</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">temp0</span><span class="p">:</span><span class="n">temp0</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">]</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">var</span> <span class="n">temp2</span> <span class="o">=</span> <span class="n">temp1</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">arg1</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">temp1</span><span class="p">:</span><span class="n">temp1</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">]</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">var</span> <span class="n">var0</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">temp2</span><span class="p">:</span><span class="n">temp2</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">]</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">var</span> <span class="n">var1</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">temp2</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">:</span><span class="n">temp2</span> <span class="o">+</span> <span class="mh">0x20</span> <span class="o">+</span> <span class="mh">0x20</span><span class="p">]</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">storage</span><span class="p">[</span><span class="mh">0x00</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">arg0</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">storage</span><span class="p">[</span><span class="mh">0x00</span><span class="p">]</span> <span class="o">&amp;</span> <span class="o">~</span><span class="mh">0xffffffff</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">storage</span><span class="p">[</span><span class="mh">0x00</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">arg1</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">)</span> <span class="o">*</span> <span class="mh">0x0100</span> <span class="o">**</span> <span class="mh">0x04</span> <span class="o">|</span> <span class="p">(</span><span class="n">storage</span><span class="p">[</span><span class="mh">0x00</span><span class="p">]</span> <span class="o">&amp;</span> <span class="o">~</span><span class="p">(</span><span class="mh">0xffffffff</span> <span class="o">*</span> <span class="mh">0x0100</span> <span class="o">**</span> <span class="mh">0x04</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">        <span class="n">storage</span><span class="p">[</span><span class="mh">0x00</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">var0</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">)</span> <span class="o">*</span> <span class="mh">0x0100</span> <span class="o">**</span> <span class="mh">0x08</span> <span class="o">|</span> <span class="p">(</span><span class="n">storage</span><span class="p">[</span><span class="mh">0x00</span><span class="p">]</span> <span class="o">&amp;</span> <span class="o">~</span><span class="p">(</span><span class="mh">0xffffffff</span> <span class="o">*</span> <span class="mh">0x0100</span> <span class="o">**</span> <span class="mh">0x08</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">        <span class="n">storage</span><span class="p">[</span><span class="mh">0x00</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">var1</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">)</span> <span class="o">*</span> <span class="mh">0x0100</span> <span class="o">**</span> <span class="mh">0x0c</span> <span class="o">|</span> <span class="p">(</span><span class="n">storage</span><span class="p">[</span><span class="mh">0x00</span><span class="p">]</span> <span class="o">&amp;</span> <span class="o">~</span><span class="p">(</span><span class="mh">0xffffffff</span> <span class="o">*</span> <span class="mh">0x0100</span> <span class="o">**</span> <span class="mh">0x0c</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="n">function</span> <span class="n">k1</span><span class="p">()</span> <span class="n">returns</span> <span class="p">(</span><span class="k">var</span> <span class="n">r0</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="n">storage</span><span class="p">[</span><span class="mh">0x00</span><span class="p">]</span> <span class="o">/</span> <span class="mh">0x0100</span> <span class="o">**</span> <span class="mh">0x04</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">;</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="n">function</span> <span class="n">func_056F</span><span class="p">()</span> <span class="n">returns</span> <span class="p">(</span><span class="k">var</span> <span class="n">r0</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="n">storage</span><span class="p">[</span><span class="mh">0x00</span><span class="p">]</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">;</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="n">function</span> <span class="n">k2</span><span class="p">()</span> <span class="n">returns</span> <span class="p">(</span><span class="k">var</span> <span class="n">r0</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="n">storage</span><span class="p">[</span><span class="mh">0x00</span><span class="p">]</span> <span class="o">/</span> <span class="mh">0x0100</span> <span class="o">**</span> <span class="mh">0x08</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">;</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="n">function</span> <span class="n">func_0623</span><span class="p">()</span> <span class="n">returns</span> <span class="p">(</span><span class="k">var</span> <span class="n">r0</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="n">storage</span><span class="p">[</span><span class="mh">0x00</span><span class="p">]</span> <span class="o">/</span> <span class="mh">0x0100</span> <span class="o">**</span> <span class="mh">0x0c</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">;</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>观察到main()部分包含对var0的一系列判断与分发，猜测var0是标识操作类型的数据。同时在给定的input里发现相应前缀9577a145和58f5382e。</p>
+<p>首先观察分析9577a145操作，不难发现是把4个4字节整数拼接在一起存入storage[]中。</p>
+<p>58f5382e操作对应challenge，推测是将flag加密后输出密文。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="k">var</span> <span class="n">temp14</span> <span class="o">=</span> <span class="n">var5</span> <span class="o">+</span> <span class="p">(((</span><span class="n">temp13</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mh">0x04</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">storage</span><span class="p">[</span><span class="mh">0x00</span><span class="p">]</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">)</span> <span class="o">~</span> <span class="n">temp13</span> <span class="o">+</span> <span class="n">var4</span> <span class="o">~</span> <span class="p">((</span><span class="n">temp13</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mh">0x05</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">storage</span><span class="p">[</span><span class="mh">0x00</span><span class="p">]</span> <span class="o">/</span> <span class="mh">0x0100</span> <span class="o">**</span> <span class="mh">0x04</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl"><span class="n">var6</span> <span class="o">=</span> <span class="n">temp13</span> <span class="o">+</span> <span class="p">(((</span><span class="n">var5</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mh">0x04</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">storage</span><span class="p">[</span><span class="mh">0x00</span><span class="p">]</span> <span class="o">/</span> <span class="mh">0x0100</span> <span class="o">**</span> <span class="mh">0x08</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">)</span> <span class="o">~</span> <span class="n">var5</span> <span class="o">+</span> <span class="n">var4</span> <span class="o">~</span> <span class="p">((</span><span class="n">var5</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mh">0x05</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">storage</span><span class="p">[</span><span class="mh">0x00</span><span class="p">]</span> <span class="o">/</span> <span class="mh">0x0100</span> <span class="o">**</span> <span class="mh">0x0c</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">));</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>根据经验发现TEA加密特征，key是9577a145操作输入的四个数，delta是<code>var2=0xdeadbeef</code>。</p>
+<p>直接写解密脚本梭哈，用前8个字节成功解出flag头，继续解密拿到flag。</p>
+</div><div class="post-footer" id="post-footer">
+  <div class="post-info">
+    <div class="post-info-line">
+      <div class="post-info-mod">
+        <span title="Updated on 2022-10-06 16:22:03">Updated on 2022-10-06&nbsp;</span>
+      </div><div class="post-info-license">
+            <span><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a></span>
+          </div></div><div class="post-info-line">
+        <div class="post-info-md"><span><a href="/posts/sodility/index.md" title="Read Markdown" class="link-to-markdown">Read Markdown</a></span></div>
+        <div class="post-info-share">
+          <span><a href="javascript:void(0);" title="Share on X" data-sharer="twitter" data-url="https://www.sh1no.icu/posts/sodility/" data-title="智能合约逆向分析实战 ByteCTF2022-OhMySolidity" data-via="ShinoLeah"><i class="fa-brands fa-x-twitter fa-fw" aria-hidden="true"></i></a>
+  <a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="https://www.sh1no.icu/posts/sodility/"><i class="fa-brands fa-facebook-square fa-fw" aria-hidden="true"></i></a>
+  <a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.sh1no.icu/posts/sodility/" data-title="智能合约逆向分析实战 ByteCTF2022-OhMySolidity"><i class="fa-brands fa-weibo fa-fw" aria-hidden="true"></i></a>
+  </span>
+        </div>
+      </div></div>
+
+  <div class="post-info-more">
+    <section class="post-tags"></section>
+    <section>
+      <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+    </section>
+  </div><div class="post-nav"><a href="/posts/nanogame/" class="post-nav-item" rel="prev" title="『超高校级的幸运』WMCTF2022-NanoDiamond-Rev 抽卡实况"><i class="fa-solid fa-angle-left fa-fw" aria-hidden="true"></i>『超高校级的幸运』WMCTF2022-NanoDiamond-Rev 抽卡实况</a><a href="/posts/sichuan2022/" class="post-nav-item" rel="next" title="四川省网安技能大赛2022 个人输出复盘">四川省网安技能大赛2022 个人输出复盘<i class="fa-solid fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article>
+
+  <aside class="toc" id="toc-auto" aria-label="Contents"><h2 class="toc-title">Contents&nbsp;<i class="toc-icon fa-solid fa-angle-down fa-fw" aria-hidden="true"></i></h2>
+      <div class="toc-content" id="toc-content-auto"></div></aside></main><footer class="footer">
+    <div class="footer-container"><div class="footer-line powered">Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow noopener noreferrer" title="Hugo 0.144.2"><img class="hugo-icon" src="/images/hugo.min.svg" alt="Hugo logo" /> Hugo</a> | Theme - <a href="https://github.com/hugo-fixit/FixIt" target="_blank" rel="external" title="FixIt v0.3.17-8b402129"><img class="fixit-icon" src="/images/fixit.min.svg" alt="FixIt logo" /> FixIt</a>
+        </div><div class="footer-line copyright" itemscope itemtype="http://schema.org/CreativeWork"><i class="fa-regular fa-copyright fa-fw" aria-hidden="true"></i>
+            <span itemprop="copyrightYear">2020 - 2025</span><span class="author" itemprop="copyrightHolder">
+              <a href="/">Shino</a></span></div></div>
+  </footer></div><div class="widgets"><div class="fixed-buttons animate__faster d-none"><div class="fixed-button back-to-top" role="button" aria-label="Back to Top"><i class="fa-solid fa-arrow-up fa-fw" aria-hidden="true"></i><span class="variant-numeric d-none">0%</span>
+        </div></div><div id="mask"></div><div class="reading-progress-bar" style="left: 0;top: 0;"></div><noscript>
+    <div class="noscript-warning">This website works best with JavaScript enabled.</div>
+  </noscript>
+</div><link rel="preload" href="/lib/katex/katex.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/katex/katex.min.css"></noscript><script src="/lib/autocomplete/autocomplete.min.js" defer></script><script src="/lib/fuse/fuse.min.js" defer></script><script src="/lib/sharer/sharer.min.js" async defer></script><script src="/lib/katex/katex.min.js" defer></script><script src="/lib/katex/auto-render.min.js" defer></script><script src="/lib/katex/copy-tex.min.js" defer></script><script src="/lib/katex/mhchem.min.js" defer></script><script>var postChatConfig={"addButton":true,"backgroundColor":"","blackDom":[".expiration-reminder","meting-js",".lnt"],"bottom":"","defaultChatQuestions":[],"defaultInput":false,"defaultSearchQuestions":[],"fill":"","frameHeight":"","frameWidth":"","height":"","left":"","showInviteLink":true,"upLoadWeb":true,"userDesc":"","userIcon":"","userMode":"magic","userTitle":"","width":""}</script><script src="https://ai.tianli0.top/static/public/postChatUser.min.js" defer data-postChat_key="94e33c8ca2fc6b925063d733c79bb98c27972f8f"></script><script>window.config={"code":{"copyTitle":"Copy to clipboard","editLockTitle":"Lock editable code block","editUnLockTitle":"Unlock editable code block","editable":true,"maxShownLines":10},"comment":{"enable":false},"enablePWA":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"distance":100,"findAllMatches":false,"fuseIndexURL":"/search.json","highlightTag":"em","ignoreFieldNorm":false,"ignoreLocation":false,"isCaseSensitive":false,"location":0,"maxResultLength":10,"minMatchCharLength":2,"noResultsFound":"No results found","snippetLength":30,"threshold":0.3,"type":"fuse","useExtendedSearch":false},"version":"v0.3.17-8b402129"};</script><script src="/js/theme.min.js" defer></script></body>
+</html>

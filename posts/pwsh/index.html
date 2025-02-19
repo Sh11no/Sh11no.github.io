@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <head>
+    
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+    <meta name="robots" content="noodp" />
+    <title>Ciscn2023-Pwsh Powershell反混淆对抗实战 - Shino Channel</title><meta name="author" content="Shino">
+<meta name="description" content="碎碎念​	刚进黑灯模式就出了flag，看到还是 0 解题以为可以拿全场唯一解光荣退役了，结果平台的flag配置是烂的，以为 0 解的原因是平台烂直接找运维对线，拉扯了一个小时左右赛后说 pwsh 需要人工验证flag以为其实大家都会做只是没交上，第二天起床一看还真是一血全场只有 2 解。也算光荣退役了？
+">
+  <meta itemprop="name" content="ciscn2023-Pwsh Powershell反混淆对抗实战">
+  <meta itemprop="description" content="碎碎念​	刚进黑灯模式就出了flag，看到还是 0 解题以为可以拿全场唯一解光荣退役了，结果平台的flag配置是烂的，以为 0 解的原因是平台烂直接找运维对线，拉扯了一个小时左右赛后说 pwsh 需要人工验证flag以为其实大家都会做只是没交上，第二天起床一看还真是一血全场只有 2 解。也算光荣退役了？">
+  <meta itemprop="datePublished" content="2023-05-28T22:35:33+08:00">
+  <meta itemprop="dateModified" content="2023-05-28T22:35:33+08:00">
+  <meta itemprop="wordCount" content="492">
+  <meta itemprop="image" content="https://www.sh1no.icu/avr.png"><meta property="og:url" content="https://www.sh1no.icu/posts/pwsh/">
+  <meta property="og:site_name" content="Shino Channel">
+  <meta property="og:title" content="ciscn2023-Pwsh Powershell反混淆对抗实战">
+  <meta property="og:description" content="碎碎念​	刚进黑灯模式就出了flag，看到还是 0 解题以为可以拿全场唯一解光荣退役了，结果平台的flag配置是烂的，以为 0 解的原因是平台烂直接找运维对线，拉扯了一个小时左右赛后说 pwsh 需要人工验证flag以为其实大家都会做只是没交上，第二天起床一看还真是一血全场只有 2 解。也算光荣退役了？">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2023-05-28T22:35:33+08:00">
+    <meta property="article:modified_time" content="2023-05-28T22:35:33+08:00">
+    <meta property="og:image" content="https://www.sh1no.icu/avr.png">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://www.sh1no.icu/avr.png">
+  <meta name="twitter:title" content="ciscn2023-Pwsh Powershell反混淆对抗实战">
+  <meta name="twitter:description" content="碎碎念​	刚进黑灯模式就出了flag，看到还是 0 解题以为可以拿全场唯一解光荣退役了，结果平台的flag配置是烂的，以为 0 解的原因是平台烂直接找运维对线，拉扯了一个小时左右赛后说 pwsh 需要人工验证flag以为其实大家都会做只是没交上，第二天起床一看还真是一血全场只有 2 解。也算光荣退役了？">
+      <meta name="twitter:site" content="@ShinoLeah">
+<meta name="twitter:creator" content="@ShinoLeah" /><meta name="application-name" content="Shino Channel">
+<meta name="apple-mobile-web-app-title" content="Shino Channel"><meta name="theme-color" data-light="#f8f8f8" data-dark="#252627" content="#f8f8f8"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" type="text/html" href="https://www.sh1no.icu/posts/pwsh/" title="ciscn2023-Pwsh Powershell反混淆对抗实战 - Shino Channel" /><link rel="prev" type="text/html" href="https://www.sh1no.icu/posts/wdb2022/" title="网鼎杯2022总决赛-secret 全栈CTFer的自我修养(？)" /><link rel="next" type="text/html" href="https://www.sh1no.icu/posts/gson/" title="SCTF2023 - SycGson" /><link rel="alternate" type="text/markdown" href="https://www.sh1no.icu/posts/pwsh/index.md" title="ciscn2023-Pwsh Powershell反混淆对抗实战 - Shino Channel"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="/lib/fontawesome-free/all.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" href="/lib/animate/animate.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
+  {
+    "@context": "http://schema.org",
+    "@type": "BlogPosting",
+    "headline": "ciscn2023-Pwsh Powershell反混淆对抗实战",
+    "inLanguage": "zh-CN",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https:\/\/www.sh1no.icu\/posts\/pwsh\/"
+    },"genre": "posts","wordcount":  492 ,
+    "url": "https:\/\/www.sh1no.icu\/posts\/pwsh\/","datePublished": "2023-05-28T22:35:33+08:00","dateModified": "2023-05-28T22:35:33+08:00","publisher": {
+      "@type": "Organization",
+      "name": ""},"author": {
+        "@type": "Person",
+        "name": "Shino"
+      },"description": ""
+  }
+  </script><script src="/js/head/color-scheme.min.js"></script></head>
+  <body data-header-desktop="sticky" data-header-mobile="auto"><div class="wrapper" data-page-style="normal"><header class="desktop animate__faster" id="header-desktop">
+  <div class="header-wrapper">
+    <div class="header-title">
+      <a href="/" title="Shino Channel"><span class="header-title-text">Shino</span></a><span class="header-subtitle"></span></div>
+    <nav>
+      <ul class="menu"><li class="menu-item">
+              <a class="menu-link" href="https://www.youtube.com/@anoofficialchannel" rel="noopener noreferrer" target="_blank"></a></li><li class="menu-item">
+              <a class="menu-link" href="https://www.nu1l.com/" title="Nu1L" rel="noopener noreferrer" target="_blank"><i class="fa-solid fa-paperclip fa-fw fa-sm" aria-hidden="true"></i> Nu1L</a></li><li class="menu-item">
+              <a class="menu-link" href="https://cnss.io/" title="CNSS" rel="noopener noreferrer" target="_blank"><i class="fa-solid fa-paperclip fa-fw fa-sm" aria-hidden="true"></i> CNSS</a></li><li class="menu-item">
+              <a class="menu-link" href="/posts/friends/" title="About"><i class="fa-solid fa-user-group fa-fw fa-sm" aria-hidden="true"></i> About</a></li><li class="menu-item delimiter"></li><li class="menu-item search" id="search-desktop">
+            <input type="text" placeholder="Search..." id="search-input-desktop">
+            <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+              <i class="fa-solid fa-search fa-fw" aria-hidden="true"></i>
+            </a>
+            <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+              <i class="fa-solid fa-times-circle fa-fw" aria-hidden="true"></i>
+            </a>
+            <span class="search-button search-loading" id="search-loading-desktop">
+              <i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+            </span>
+          </li><li class="menu-item theme-switch" title="Switch Theme">
+          <i class="fa-solid fa-adjust fa-fw" aria-hidden="true"></i>
+        </li></ul>
+    </nav>
+  </div>
+</header><header class="mobile animate__faster" id="header-mobile">
+  <div class="header-container">
+    <div class="header-wrapper">
+      <div class="header-title">
+        <a href="/" title="Shino Channel"><span class="header-title-text">Shino</span></a><span class="header-subtitle"></span></div>
+      <div class="menu-toggle" id="menu-toggle-mobile">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+    <nav>
+      <ul class="menu" id="menu-mobile"><li class="search-wrapper">
+            <div class="search mobile" id="search-mobile">
+              <input type="text" placeholder="Search..." id="search-input-mobile">
+              <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                <i class="fa-solid fa-search fa-fw" aria-hidden="true"></i>
+              </a>
+              <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                <i class="fa-solid fa-times-circle fa-fw" aria-hidden="true"></i>
+              </a>
+              <span class="search-button search-loading" id="search-loading-mobile">
+                <i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+              </span>
+            </div>
+            <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+              Cancel
+            </a>
+          </li><li class="menu-item"><a class="menu-link" href="https://www.youtube.com/@anoofficialchannel" rel="noopener noreferrer" target="_blank"></a></li><li class="menu-item"><a class="menu-link" href="https://www.nu1l.com/" title="Nu1L" rel="noopener noreferrer" target="_blank"><i class="fa-solid fa-paperclip fa-fw fa-sm" aria-hidden="true"></i> Nu1L</a></li><li class="menu-item"><a class="menu-link" href="https://cnss.io/" title="CNSS" rel="noopener noreferrer" target="_blank"><i class="fa-solid fa-paperclip fa-fw fa-sm" aria-hidden="true"></i> CNSS</a></li><li class="menu-item"><a class="menu-link" href="/posts/friends/" title="About"><i class="fa-solid fa-user-group fa-fw fa-sm" aria-hidden="true"></i> About</a></li><li class="menu-item menu-system">
+          <span class="menu-system-item theme-switch" title="Switch Theme"><i class="fa-solid fa-adjust fa-fw" aria-hidden="true"></i></span></li>
+      </ul>
+    </nav>
+  </div>
+</header><div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+  </div>
+  <div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+  </div><main class="container"><aside class="aside-collection animate__animated animate__fadeIn animate__faster" aria-label="Collections"></aside>
+
+  <article class="page single">
+    <div class="header"><h1 class="single-title animate__animated animate__flipInX"><span>Ciscn2023-Pwsh Powershell反混淆对抗实战</span>
+      </h1></div><div class="post-meta">
+      <div class="post-meta-line"><span class="post-author"><span class="author"><img loading="lazy" src="/avr.png" alt="Shino" data-title="Shino" width="20" height="20" class="avatar" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>&nbsp;Shino</span></span></div><div class="post-meta-line"><span title="published on 2023-05-28 22:35:33"><i class="fa-solid fa-calendar-days fa-fw me-1" aria-hidden="true"></i><time datetime="2023-05-28">2023-05-28</time></span>&nbsp;<span title="492 words"><i class="fa-solid fa-pencil-alt fa-fw me-1" aria-hidden="true"></i>About 500 words</span>&nbsp;<span><i class="fa-regular fa-clock fa-fw me-1" aria-hidden="true"></i>3 minutes</span>&nbsp;</div>
+    </div><div class="details toc" id="toc-static" data-kept="false">
+        <div class="details-summary toc-title">
+          <span>Contents</span>
+          <span><i class="details-icon fa-solid fa-angle-right" aria-hidden="true"></i></span>
+        </div>
+        <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#碎碎念">碎碎念</a></li>
+        <li><a href="#writeups">Writeups</a>
+          <ul>
+            <li><a href="#初步分析">初步分析</a></li>
+            <li><a href="#混淆分析">混淆分析</a></li>
+            <li><a href="#静态解混淆尝试">静态解混淆尝试</a></li>
+            <li><a href="#动态解混淆">动态解混淆</a></li>
+            <li><a href="#逻辑分析">逻辑分析</a></li>
+          </ul>
+        </li>
+        <li><a href="#总结">总结</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+      </div><div class="content" id="content"><h3 id="碎碎念" class="heading-element"><span>碎碎念</span>
+  <a href="#%e7%a2%8e%e7%a2%8e%e5%bf%b5" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>​		刚进黑灯模式就出了flag，看到还是 0 解题以为可以拿全场唯一解光荣退役了，结果平台的flag配置是烂的，以为 0 解的原因是平台烂直接找运维对线，拉扯了一个小时左右赛后说 pwsh 需要人工验证flag以为其实大家都会做只是没交上，第二天起床一看还真是一血全场只有 2 解。也算光荣退役了？</p>
+<p><img loading="lazy" src="https://small.fileditch.ch/s3/ANqyDJIGowcAvMtJnIon.png" alt="https://small.fileditch.ch/s3/ANqyDJIGowcAvMtJnIon.png" srcset="https://small.fileditch.ch/s3/ANqyDJIGowcAvMtJnIon.png?size=small, https://small.fileditch.ch/s3/ANqyDJIGowcAvMtJnIon.png?size=medium 1.5x, https://small.fileditch.ch/s3/ANqyDJIGowcAvMtJnIon.png?size=large 2x" data-title="https://small.fileditch.ch/s3/ANqyDJIGowcAvMtJnIon.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></p>
+<p>但是比赛结果一般，打ctf不如闲鱼买flag，整场比赛充斥着国粹这种脑瘫题，不过打不过闲鱼哥还是我太菜了。</p>
+<h3 id="writeups" class="heading-element"><span>Writeups</span>
+  <a href="#writeups" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><h4 id="初步分析" class="heading-element"><span>初步分析</span>
+  <a href="#%e5%88%9d%e6%ad%a5%e5%88%86%e6%9e%90" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>题目备份：https://small.fileditch.ch/s3/ssQpUZIxaIRvkfVeChBp.ps1</p>
+<p>一个<code>powershell</code>脚本，先base64后解密再执行，先上手解密base64串</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&#34;p4.ps1&#34;</span><span class="p">,</span> <span class="s2">&#34;w&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">base64</span><span class="o">.</span><span class="n">b64decode</span><span class="p">(</span><span class="n">code</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">())</span></span></span></code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="nv">$M</span><span class="p">=</span><span class="vm">@</span><span class="p">{</span><span class="mf">129693309641433576095262078804193086780</span><span class="p">=</span><span class="s1">&#39;(New-ObJecT sysTEm.Io.COMpResSIoN.DEflATesTReAm( [SyStEM.iO.meMORYsTreaM] [sYSTEm.CoNVErT]::FRoMbASe64StrIng( &#34;1VhNaxxHED3Xv+iDYXZBWuwEArHJwQYTy8gS2CKHiCUHIX/koDiKyMXWf89G8s7Ux6ue7hpN7zqBZKa7qvrVq1fVs+rSt3/o7j/0/wNtH+5eaLt7/ySWktmmbThuTP06bfe1pY0grNUi9fY6tPHOBLYnkec17FuLnpHEY2RyVgsqS5T0kLM+yiyA4CTXSa3yOoO4EoWLS+U6mjtxF2K75DKYVx5LkgBWtpCjUBYE+GdMvFpoCXFswiShhd3ABXQR9mqKxxdje1RGgPmqqWXTICCR7fTEbe1HV7FJv+2yAUYpYq2Pjj....&#39;</span>
+</span></span><span class="line"><span class="cl"><span class="nv">$t</span><span class="p">=</span><span class="nb">Read-Host</span> <span class="n">-Prompt</span> <span class="s2">&#34;Enter your flag&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">[</span><span class="no">System.Collections.Queue</span><span class="p">]</span><span class="nv">$tt</span><span class="p">=([</span><span class="no">byte[]][char[]</span><span class="p">]</span><span class="nv">$t</span><span class="p">|%{</span><span class="nv">$_</span> <span class="n">-shr</span> <span class="mf">4</span><span class="p">;</span><span class="nv">$_</span><span class="k">%</span><span class="mf">16</span><span class="p">});</span>
+</span></span><span class="line"><span class="cl"><span class="n">iex</span><span class="p">(</span><span class="nv">$M</span><span class="p">[</span><span class="mf">129693309641433576095262078804193086780</span><span class="p">])</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>M太长了这里就不放了，可以看到M是一个字典，对应的是混淆过的powershell脚本，每个<code>key</code>(一串数字)分别对应了一段混淆过的powershell的脚本，尝试解混淆。</p>
+<h4 id="混淆分析" class="heading-element"><span>混淆分析</span>
+  <a href="#%e6%b7%b7%e6%b7%86%e5%88%86%e6%9e%90" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>混淆方式类似如下，这里给出几个样本：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="p">(</span><span class="nb">New-ObJecT</span> <span class="n">sysTEm</span><span class="p">.</span><span class="py">Io</span><span class="p">.</span><span class="py">COMpResSIoN</span><span class="p">.</span><span class="py">DEflATesTReAm</span><span class="p">(</span> <span class="p">[</span><span class="no">SyStEM.iO.meMORYsTreaM] [sYSTEm.CoNVErT</span><span class="p">]::</span><span class="n">FRoMbASe64StrIng</span><span class="p">(</span> <span class="s2">&#34;.....&#34;</span> <span class="p">)</span> <span class="p">,[</span><span class="no">SYSTeM.io.COMpRESSIoN.COmPressiOnmODe</span><span class="p">]::</span><span class="n">dECoMprEss</span> <span class="p">)</span> <span class="p">|</span> <span class="nb">FoREaCH-objEct</span><span class="p">{</span><span class="nb">New-ObJecT</span>  <span class="n">sySTem</span><span class="p">.</span><span class="py">Io</span><span class="p">.</span><span class="py">StReamreAder</span><span class="p">(</span> <span class="nv">$_</span> <span class="p">,</span> <span class="p">[</span><span class="no">TexT.enCOdING</span><span class="p">]::</span><span class="n">ascII</span><span class="p">)</span> <span class="p">}|</span><span class="nb">FOrEacH-obJECt</span><span class="p">{</span><span class="nv">$_</span><span class="p">.</span><span class="py">REAdtoend</span><span class="p">(</span> <span class="p">)}</span> <span class="p">)|.</span> <span class="p">(</span> <span class="nv">$sHElLId</span><span class="p">[</span><span class="mf">1</span><span class="p">]+</span><span class="nv">$Shellid</span><span class="p">[</span><span class="mf">13</span><span class="p">]+</span><span class="s2">&#34;X&#34;</span><span class="p">);</span> 
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="p">&amp;(</span> <span class="nv">$SHEllID</span><span class="p">[</span><span class="mf">1</span><span class="p">]+</span><span class="nv">$SHEllid</span><span class="p">[</span><span class="mf">13</span><span class="p">]+</span><span class="s2">&#34;X&#34;</span><span class="p">)</span> <span class="p">(</span> <span class="nb">nEw-obJEcT</span>  <span class="n">System</span><span class="p">.</span><span class="py">io</span><span class="p">.</span><span class="py">STREAMrEADeR</span><span class="p">((</span><span class="nb">nEw-obJEcT</span>  <span class="n">IO</span><span class="p">.</span><span class="py">cOMPreSsiOn</span><span class="p">.</span><span class="py">deFLaTeSTreAm</span><span class="p">([</span><span class="no">system.io.MeMoRYStReam][sYsTem.COnVERt</span><span class="p">]::</span><span class="n">fROMBAsE64sTRiNG</span><span class="p">(</span><span class="s2">&#34; ...&#34;</span><span class="p">)</span> <span class="p">,</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="p">[</span><span class="no">sYsTEm.io.COmPREsSIoN.coMpRessionmoDE</span><span class="p">]::</span><span class="n">deComPResS</span> <span class="p">)|%</span> <span class="p">{</span> <span class="nb">nEw-objEcT</span> <span class="n">iO</span><span class="p">.</span><span class="py">StREamREAdEr</span><span class="p">(</span> <span class="nv">$_</span> <span class="p">,[</span><span class="no">TExt.EncOdING</span><span class="p">]::</span><span class="n">asCii</span> <span class="p">)}|%{</span> <span class="nv">$_</span><span class="p">.</span><span class="py">ReadtoeND</span><span class="p">(</span> <span class="p">)</span> <span class="p">})|&amp;</span> <span class="p">(</span> <span class="nv">$EnV:cOMspEc</span><span class="p">[</span><span class="mf">4</span><span class="p">,</span><span class="mf">15</span><span class="p">,</span><span class="mf">25</span><span class="p">]</span><span class="n">-joiN</span><span class="s2">&#34;&#34;</span><span class="p">);</span> 
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="p">(</span> <span class="nb">New-OBjecT</span>  <span class="n">system</span><span class="p">.</span><span class="py">iO</span><span class="p">.</span><span class="py">STreAmReAdeR</span><span class="p">((</span> <span class="nb">New-OBjecT</span> <span class="n">SYstEM</span><span class="p">.</span><span class="py">IO</span><span class="p">.</span><span class="py">cOMprESsion</span><span class="p">.</span><span class="py">DeFlATeStrEAm</span><span class="p">(</span> <span class="p">[</span><span class="no">io.meMOrySTReAm][cONVert</span><span class="p">]::</span><span class="n">FrOmBASE64sTrInG</span><span class="p">(</span> <span class="s2">&#34;...&#34;</span><span class="p">),[</span><span class="no">SysTEm.IO.coMPreSsIon.coMpreSsIonMODE</span><span class="p">]::</span><span class="n">decOmPress</span> <span class="p">)),[</span><span class="no">sYsTeM.TEXT.ENcOdiNg</span><span class="p">]::</span><span class="n">aSciI</span><span class="p">)</span> <span class="p">).</span><span class="n">REAdtoeND</span><span class="p">()|</span> <span class="p">.(</span> <span class="nv">$pShOmE</span><span class="p">[</span><span class="mf">21</span><span class="p">]+</span><span class="nv">$pShoME</span><span class="p">[</span><span class="mf">34</span><span class="p">]+</span><span class="s2">&#34;x&#34;</span><span class="p">);</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>可以归纳为以下的模式：</p>
+<ul>
+<li><code>iex的变种</code> (<code>混淆过的字符串和对应的解密代码</code>)</li>
+<li><code>混淆过的字符串和对应的解密代码</code> | <code>iex的变种</code></li>
+</ul>
+<p>其中 iex 是 powershell 的一个 cmdlet 指令，全名 <code>Invoke-Expression</code> ，作用是执行表达式（类似<code>eval()</code>）。</p>
+<p>在上面的例子中，混淆过的字符串和对应的解密代码都是base64和压缩，但在嵌套的更深层次的混淆中，存在很多种加密或编码方式。</p>
+<p>而<code>iex</code>的变种是如下几种：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">( $SHEllID[1]+$SHEllid[13]+&#34;X&#34;)
+</span></span><span class="line"><span class="cl">( $EnV:cOMspEc[4,15,25]-joiN&#34;&#34;)
+</span></span><span class="line"><span class="cl">.( $pShOmE[21]+$pShoME[34]+&#34;x&#34;)</span></span></code></pre></td></tr></table>
+</div>
+</div><p>在嵌套的更深层次的混淆中同样存在非常多种iex的变种，这里只是其中几种。</p>
+<p>（除此之外还有随机大小写混淆但是不关注）</p>
+<h4 id="静态解混淆尝试" class="heading-element"><span>静态解混淆尝试</span>
+  <a href="#%e9%9d%99%e6%80%81%e8%a7%a3%e6%b7%b7%e6%b7%86%e5%b0%9d%e8%af%95" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>一个直观的思路是去掉代码中的iex变种变成字符串解密操作，直接运行得到解密后的代码。但是混淆后的代码多达1000+个，每个都有5~6层混淆嵌套，手动非常的不现实。</p>
+<p>本来想当正则大师解决，但是iex变种有20+种难以收集，且存在混淆，执行方式也不一样。</p>
+<p>另外这里有个对本题没有帮助的仓库。https://github.com/pan-unit42/public_tools/tree/master/powershellprofiler</p>
+<h4 id="动态解混淆" class="heading-element"><span>动态解混淆</span>
+  <a href="#%e5%8a%a8%e6%80%81%e8%a7%a3%e6%b7%b7%e6%b7%86" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>​		很明显我们的目的是找到一种自动化解混淆的方式。如果我们不考虑静态分析，而是考虑 Hook Powershell里的<code>iex</code>函数，让它每次被调用的时候都改为输出参数的值然后直接运行脚本呢？</p>
+<p>查一查可以找到在<code>Powershell</code>中命令默认的调用顺序：</p>
+<ol>
+<li>Alias</li>
+<li>Function</li>
+<li>Cmdlet</li>
+<li>本机 Windows 命令</li>
+</ol>
+<p>Powershell 会按照上面的顺序寻找，并且调用第一个被寻找到的方法</p>
+<p>可以发现，对 Function 的调用优先于 Cmdlet。也就是说如果我们定义一个名为<code>Invoke-Expression</code>的函数，在<code>iex</code>被调用时将会调用我们的自定义函数而不是<code>iex</code>。</p>
+<p>编写如下函数重载<code>iex</code>.</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="kd">function</span><span class="w"> </span><span class="nb">Invoke-Expression{$input|%{$_;};$args|%{$_</span><span class="p">;}};</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>作用是将<code>input</code>（用于管道执行方法）或<code>args</code>（用于调用执行方法）直接输出。</p>
+<p>现在我们可以自动化解混淆，请一个 <code>python</code> 大师来完成。</p>
+<p>注意到代码中包含一些干扰直接执行的代码比如<code>while($true){echo Warning!};</code>和<code>(sleep 10000);</code>会导致程序卡死，但是情况不多（就这两种）特判一下即可。</p>
+<p>Script by <a href="https://www.cnblogs.com/timlzh/"target="_blank" rel="external nofollow noopener noreferrer">Timlzh</a></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">subprocess</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">threading</span> <span class="kn">import</span> <span class="n">Thread</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">json</span> <span class="kn">import</span> <span class="n">loads</span><span class="p">,</span> <span class="n">dumps</span>
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;hash.json&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">hash_dict</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">redir</span> <span class="o">=</span> <span class="s2">&#34;function Invoke-Expression{$input|%{$_;};$args|%{$_;}};&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">cmd</span> <span class="o">=</span> <span class="s1">&#39;powershell.exe&#39;</span>
+</span></span><span class="line"><span class="cl"><span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+</span></span><span class="line"><span class="cl"><span class="n">cnt</span> <span class="o">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">exp</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">try</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">script</span> <span class="o">=</span> <span class="n">redir</span> <span class="o">+</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">stdin</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">out</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">communicate</span><span class="p">(</span><span class="n">script</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        <span class="n">res</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)[</span><span class="mi">6</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;gbk&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">        <span class="k">if</span><span class="p">(</span><span class="s1">&#39;while&#39;</span> <span class="ow">in</span> <span class="n">res</span> <span class="ow">or</span> <span class="s1">&#39;sleep&#39;</span> <span class="ow">in</span> <span class="n">res</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="n">res</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span><span class="p">(</span><span class="n">res</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span> <span class="ow">or</span> <span class="s1">&#39;F:</span><span class="se">\\</span><span class="s1">CNSS&gt;&#39;</span> <span class="ow">in</span> <span class="n">res</span> <span class="ow">or</span> <span class="s1">&#39;无法将&#39;</span> <span class="ow">in</span> <span class="n">res</span> <span class="ow">or</span> <span class="s1">&#39;无效的&#39;</span> <span class="ow">in</span> <span class="n">res</span> <span class="ow">or</span> <span class="s1">&#39;然后&#39;</span> <span class="ow">in</span> <span class="n">res</span> <span class="ow">or</span> <span class="s1">&#39;不能&#39;</span> <span class="ow">in</span> <span class="n">res</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">exp</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">line</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">cnt</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">result</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">hash_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;;&#39;</span><span class="p">)):</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="n">cnt</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">result</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="n">line</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl"><span class="n">t</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">hash_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">    <span class="n">t</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">run</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="n">cnt</span><span class="p">,)))</span>
+</span></span><span class="line"><span class="cl">    <span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="n">cnt</span> <span class="o">+=</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">cnt</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">t</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">x</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="n">t</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">cnt</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;result.json&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">dumps</span><span class="p">(</span><span class="n">result</span><span class="p">))</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p><sub>好羡慕你们坚实的代码基础啊</sub></p>
+<h4 id="逻辑分析" class="heading-element"><span>逻辑分析</span>
+  <a href="#%e9%80%bb%e8%be%91%e5%88%86%e6%9e%90" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>在反混淆后的对应代码中，大部分都是恶意代码，但是可以发现如下形式的代码：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="n">iex</span><span class="p">(</span><span class="nv">$M</span><span class="p">[</span><span class="vm">@</span><span class="p">(</span><span class="mf">103029045898495106128140488393279490731</span><span class="p">,</span><span class="mf">283962955136589324103060025895380071615</span><span class="p">,</span><span class="mf">100347917729209686340069745617547349730</span><span class="p">,</span><span class="mf">238405316955808243927606563710399446649</span><span class="p">,</span><span class="mf">218698919069890324731296928086576483285</span><span class="p">,</span><span class="mf">13940646367990748425698245588557690704</span><span class="p">,</span><span class="mf">233558059221060425999304675733838234320</span><span class="p">,</span><span class="mf">129692624346663502335241542240082220070</span><span class="p">,</span><span class="mf">35082001525670982399453018046361223701</span><span class="p">,</span><span class="mf">328520292299326032765832843219896353365</span><span class="p">,</span><span class="mf">22937617477989053507015679147587112829</span><span class="p">,</span><span class="mf">83375175731001160297499272972594268643</span><span class="p">,</span><span class="mf">181113447597478873176042023659491087625</span><span class="p">,</span><span class="mf">133078815375884196401153883379379993112</span><span class="p">,</span><span class="mf">222768486184364264889018742183865405471</span><span class="p">,</span><span class="mf">180102119900859063039430119683397492538</span><span class="p">)[</span><span class="nv">$tt</span><span class="p">.</span><span class="py">Dequeue</span><span class="p">()]]);</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>结合之前对输入的处理：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="p">[</span><span class="no">System.Collections.Queue</span><span class="p">]</span><span class="nv">$tt</span><span class="p">=([</span><span class="no">byte[]][char[]</span><span class="p">]</span><span class="nv">$t</span><span class="p">|%{</span><span class="nv">$_</span> <span class="n">-shr</span> <span class="mf">4</span><span class="p">;</span><span class="nv">$_</span><span class="k">%</span><span class="mf">16</span><span class="p">});</span>
+</span></span><span class="line"><span class="cl"><span class="n">iex</span><span class="p">(</span><span class="nv">$M</span><span class="p">[</span><span class="mf">129693309641433576095262078804193086780</span><span class="p">])</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>不难发现就是把flag每一位按照高四位和低四位拆开作为每次跳转的索引，恢复出每个<code>key</code>对应的跳转目标找到跳转路径即可。</p>
+<p>可以发现93920216895015486878992607137045760151对应的代码是输出<code>Congratulations! you get the correct flag</code>字符串，程序的入口是<code>129693309641433576095262078804193086780</code>，反向寻找路径并组合。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">json</span>
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&#34;result.json&#34;</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">dic</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">now</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">dic</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">dic</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="s2">&#34;$tt.Dequeue()&#34;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">			<span class="n">now</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">9</span><span class="p">:</span><span class="o">-</span><span class="mi">19</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&#34;,&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">start</span> <span class="o">=</span> <span class="s1">&#39;93920216895015486878992607137045760151&#39;</span>
+</span></span><span class="line"><span class="cl"><span class="n">fin</span> <span class="o">=</span> <span class="s1">&#39;129693309641433576095262078804193086780&#39;</span>
+</span></span><span class="line"><span class="cl"><span class="n">flag</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl"><span class="k">while</span> <span class="n">start</span> <span class="o">!=</span> <span class="n">fin</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">now</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="n">start</span> <span class="ow">in</span> <span class="n">now</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
+</span></span><span class="line"><span class="cl">			<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">now</span><span class="p">[</span><span class="n">key</span><span class="p">])):</span>
+</span></span><span class="line"><span class="cl">				<span class="k">if</span> <span class="n">now</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">start</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">					<span class="n">flag</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">					<span class="k">break</span>
+</span></span><span class="line"><span class="cl">			<span class="n">start</span> <span class="o">=</span> <span class="n">key</span>
+</span></span><span class="line"><span class="cl">			<span class="k">break</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">i</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+</span></span><span class="line"><span class="cl"><span class="k">while</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">c</span> <span class="o">=</span> <span class="p">(</span><span class="n">flag</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">4</span><span class="p">)</span> <span class="o">+</span> <span class="n">flag</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">	<span class="nb">print</span><span class="p">(</span><span class="nb">chr</span><span class="p">(</span><span class="n">c</span><span class="p">),</span> <span class="n">end</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="n">i</span> <span class="o">-=</span> <span class="mi">2</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="总结" class="heading-element"><span>总结</span>
+  <a href="#%e6%80%bb%e7%bb%93" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>虽然看起来是狗屎但是其实做起来还好（如果有思路的话），但是这平台是烂的我不好说。</p>
+</div><div class="post-footer" id="post-footer">
+  <div class="post-info">
+    <div class="post-info-line">
+      <div class="post-info-mod">
+        <span title="Updated on 2023-05-28 22:35:33">Updated on 2023-05-28&nbsp;</span>
+      </div><div class="post-info-license">
+            <span><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a></span>
+          </div></div><div class="post-info-line">
+        <div class="post-info-md"><span><a href="/posts/pwsh/index.md" title="Read Markdown" class="link-to-markdown">Read Markdown</a></span></div>
+        <div class="post-info-share">
+          <span><a href="javascript:void(0);" title="Share on X" data-sharer="twitter" data-url="https://www.sh1no.icu/posts/pwsh/" data-title="Ciscn2023-Pwsh Powershell反混淆对抗实战" data-via="ShinoLeah"><i class="fa-brands fa-x-twitter fa-fw" aria-hidden="true"></i></a>
+  <a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="https://www.sh1no.icu/posts/pwsh/"><i class="fa-brands fa-facebook-square fa-fw" aria-hidden="true"></i></a>
+  <a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.sh1no.icu/posts/pwsh/" data-title="Ciscn2023-Pwsh Powershell反混淆对抗实战"><i class="fa-brands fa-weibo fa-fw" aria-hidden="true"></i></a>
+  </span>
+        </div>
+      </div></div>
+
+  <div class="post-info-more">
+    <section class="post-tags"></section>
+    <section>
+      <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+    </section>
+  </div><div class="post-nav"><a href="/posts/wdb2022/" class="post-nav-item" rel="prev" title="网鼎杯2022总决赛-Secret 全栈CTFer的自我修养(？)"><i class="fa-solid fa-angle-left fa-fw" aria-hidden="true"></i>网鼎杯2022总决赛-Secret 全栈CTFer的自我修养(？)</a><a href="/posts/gson/" class="post-nav-item" rel="next" title="SCTF2023 - SycGson">SCTF2023 - SycGson<i class="fa-solid fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article>
+
+  <aside class="toc" id="toc-auto" aria-label="Contents"><h2 class="toc-title">Contents&nbsp;<i class="toc-icon fa-solid fa-angle-down fa-fw" aria-hidden="true"></i></h2>
+      <div class="toc-content" id="toc-content-auto"></div></aside></main><footer class="footer">
+    <div class="footer-container"><div class="footer-line powered">Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow noopener noreferrer" title="Hugo 0.144.2"><img class="hugo-icon" src="/images/hugo.min.svg" alt="Hugo logo" /> Hugo</a> | Theme - <a href="https://github.com/hugo-fixit/FixIt" target="_blank" rel="external" title="FixIt v0.3.17-8b402129"><img class="fixit-icon" src="/images/fixit.min.svg" alt="FixIt logo" /> FixIt</a>
+        </div><div class="footer-line copyright" itemscope itemtype="http://schema.org/CreativeWork"><i class="fa-regular fa-copyright fa-fw" aria-hidden="true"></i>
+            <span itemprop="copyrightYear">2020 - 2025</span><span class="author" itemprop="copyrightHolder">
+              <a href="/">Shino</a></span></div></div>
+  </footer></div><div class="widgets"><div class="fixed-buttons animate__faster d-none"><div class="fixed-button back-to-top" role="button" aria-label="Back to Top"><i class="fa-solid fa-arrow-up fa-fw" aria-hidden="true"></i><span class="variant-numeric d-none">0%</span>
+        </div></div><div id="mask"></div><div class="reading-progress-bar" style="left: 0;top: 0;"></div><noscript>
+    <div class="noscript-warning">This website works best with JavaScript enabled.</div>
+  </noscript>
+</div><link rel="preload" href="/lib/katex/katex.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/katex/katex.min.css"></noscript><script src="/lib/autocomplete/autocomplete.min.js" defer></script><script src="/lib/fuse/fuse.min.js" defer></script><script src="/lib/sharer/sharer.min.js" async defer></script><script src="/lib/katex/katex.min.js" defer></script><script src="/lib/katex/auto-render.min.js" defer></script><script src="/lib/katex/copy-tex.min.js" defer></script><script src="/lib/katex/mhchem.min.js" defer></script><script>var postChatConfig={"addButton":true,"backgroundColor":"","blackDom":[".expiration-reminder","meting-js",".lnt"],"bottom":"","defaultChatQuestions":[],"defaultInput":false,"defaultSearchQuestions":[],"fill":"","frameHeight":"","frameWidth":"","height":"","left":"","showInviteLink":true,"upLoadWeb":true,"userDesc":"","userIcon":"","userMode":"magic","userTitle":"","width":""}</script><script src="https://ai.tianli0.top/static/public/postChatUser.min.js" defer data-postChat_key="94e33c8ca2fc6b925063d733c79bb98c27972f8f"></script><script>window.config={"code":{"copyTitle":"Copy to clipboard","editLockTitle":"Lock editable code block","editUnLockTitle":"Unlock editable code block","editable":true,"maxShownLines":10},"comment":{"enable":false},"enablePWA":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"distance":100,"findAllMatches":false,"fuseIndexURL":"/search.json","highlightTag":"em","ignoreFieldNorm":false,"ignoreLocation":false,"isCaseSensitive":false,"location":0,"maxResultLength":10,"minMatchCharLength":2,"noResultsFound":"No results found","snippetLength":30,"threshold":0.3,"type":"fuse","useExtendedSearch":false},"version":"v0.3.17-8b402129"};</script><script src="/js/theme.min.js" defer></script></body>
+</html>

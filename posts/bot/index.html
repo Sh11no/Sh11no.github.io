@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <head>
+    
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+    <meta name="robots" content="noodp" />
+    <title>使用Nonebot2和Gocq搭建QQ机器人并部署到服务器 - Shino Channel</title><meta name="author" content="Shino">
+<meta name="description" content="配置机器人QQ机器人的基本架构这里引用一个看到过的例子：
+">
+  <meta itemprop="name" content="使用Nonebot2和Gocq搭建QQ机器人并部署到服务器">
+  <meta itemprop="description" content="配置机器人QQ机器人的基本架构这里引用一个看到过的例子：">
+  <meta itemprop="datePublished" content="2021-11-08T20:34:09+08:00">
+  <meta itemprop="dateModified" content="2021-11-08T20:34:09+08:00">
+  <meta itemprop="wordCount" content="336">
+  <meta itemprop="image" content="https://www.sh1no.icu/avr.png"><meta property="og:url" content="https://www.sh1no.icu/posts/bot/">
+  <meta property="og:site_name" content="Shino Channel">
+  <meta property="og:title" content="使用Nonebot2和Gocq搭建QQ机器人并部署到服务器">
+  <meta property="og:description" content="配置机器人QQ机器人的基本架构这里引用一个看到过的例子：">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2021-11-08T20:34:09+08:00">
+    <meta property="article:modified_time" content="2021-11-08T20:34:09+08:00">
+    <meta property="og:image" content="https://www.sh1no.icu/avr.png">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://www.sh1no.icu/avr.png">
+  <meta name="twitter:title" content="使用Nonebot2和Gocq搭建QQ机器人并部署到服务器">
+  <meta name="twitter:description" content="配置机器人QQ机器人的基本架构这里引用一个看到过的例子：">
+      <meta name="twitter:site" content="@ShinoLeah">
+<meta name="twitter:creator" content="@ShinoLeah" /><meta name="application-name" content="Shino Channel">
+<meta name="apple-mobile-web-app-title" content="Shino Channel"><meta name="theme-color" data-light="#f8f8f8" data-dark="#252627" content="#f8f8f8"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" type="text/html" href="https://www.sh1no.icu/posts/bot/" title="使用Nonebot2和Gocq搭建QQ机器人并部署到服务器 - Shino Channel" /><link rel="prev" type="text/html" href="https://www.sh1no.icu/posts/go/" title="Go语言乱学速成学习笔记" /><link rel="next" type="text/html" href="https://www.sh1no.icu/posts/matrix/" title="线性代数与空间解析几何 女娲补天复习笔记" /><link rel="alternate" type="text/markdown" href="https://www.sh1no.icu/posts/bot/index.md" title="使用Nonebot2和Gocq搭建QQ机器人并部署到服务器 - Shino Channel"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="/lib/fontawesome-free/all.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" href="/lib/animate/animate.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
+  {
+    "@context": "http://schema.org",
+    "@type": "BlogPosting",
+    "headline": "使用Nonebot2和Gocq搭建QQ机器人并部署到服务器",
+    "inLanguage": "zh-CN",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https:\/\/www.sh1no.icu\/posts\/bot\/"
+    },"genre": "posts","wordcount":  336 ,
+    "url": "https:\/\/www.sh1no.icu\/posts\/bot\/","datePublished": "2021-11-08T20:34:09+08:00","dateModified": "2021-11-08T20:34:09+08:00","publisher": {
+      "@type": "Organization",
+      "name": ""},"author": {
+        "@type": "Person",
+        "name": "Shino"
+      },"description": ""
+  }
+  </script><script src="/js/head/color-scheme.min.js"></script></head>
+  <body data-header-desktop="sticky" data-header-mobile="auto"><div class="wrapper" data-page-style="normal"><header class="desktop animate__faster" id="header-desktop">
+  <div class="header-wrapper">
+    <div class="header-title">
+      <a href="/" title="Shino Channel"><span class="header-title-text">Shino</span></a><span class="header-subtitle"></span></div>
+    <nav>
+      <ul class="menu"><li class="menu-item">
+              <a class="menu-link" href="https://www.youtube.com/@anoofficialchannel" rel="noopener noreferrer" target="_blank"></a></li><li class="menu-item">
+              <a class="menu-link" href="https://www.nu1l.com/" title="Nu1L" rel="noopener noreferrer" target="_blank"><i class="fa-solid fa-paperclip fa-fw fa-sm" aria-hidden="true"></i> Nu1L</a></li><li class="menu-item">
+              <a class="menu-link" href="https://cnss.io/" title="CNSS" rel="noopener noreferrer" target="_blank"><i class="fa-solid fa-paperclip fa-fw fa-sm" aria-hidden="true"></i> CNSS</a></li><li class="menu-item">
+              <a class="menu-link" href="/posts/friends/" title="About"><i class="fa-solid fa-user-group fa-fw fa-sm" aria-hidden="true"></i> About</a></li><li class="menu-item delimiter"></li><li class="menu-item search" id="search-desktop">
+            <input type="text" placeholder="Search..." id="search-input-desktop">
+            <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+              <i class="fa-solid fa-search fa-fw" aria-hidden="true"></i>
+            </a>
+            <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+              <i class="fa-solid fa-times-circle fa-fw" aria-hidden="true"></i>
+            </a>
+            <span class="search-button search-loading" id="search-loading-desktop">
+              <i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+            </span>
+          </li><li class="menu-item theme-switch" title="Switch Theme">
+          <i class="fa-solid fa-adjust fa-fw" aria-hidden="true"></i>
+        </li></ul>
+    </nav>
+  </div>
+</header><header class="mobile animate__faster" id="header-mobile">
+  <div class="header-container">
+    <div class="header-wrapper">
+      <div class="header-title">
+        <a href="/" title="Shino Channel"><span class="header-title-text">Shino</span></a><span class="header-subtitle"></span></div>
+      <div class="menu-toggle" id="menu-toggle-mobile">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+    <nav>
+      <ul class="menu" id="menu-mobile"><li class="search-wrapper">
+            <div class="search mobile" id="search-mobile">
+              <input type="text" placeholder="Search..." id="search-input-mobile">
+              <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                <i class="fa-solid fa-search fa-fw" aria-hidden="true"></i>
+              </a>
+              <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                <i class="fa-solid fa-times-circle fa-fw" aria-hidden="true"></i>
+              </a>
+              <span class="search-button search-loading" id="search-loading-mobile">
+                <i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+              </span>
+            </div>
+            <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+              Cancel
+            </a>
+          </li><li class="menu-item"><a class="menu-link" href="https://www.youtube.com/@anoofficialchannel" rel="noopener noreferrer" target="_blank"></a></li><li class="menu-item"><a class="menu-link" href="https://www.nu1l.com/" title="Nu1L" rel="noopener noreferrer" target="_blank"><i class="fa-solid fa-paperclip fa-fw fa-sm" aria-hidden="true"></i> Nu1L</a></li><li class="menu-item"><a class="menu-link" href="https://cnss.io/" title="CNSS" rel="noopener noreferrer" target="_blank"><i class="fa-solid fa-paperclip fa-fw fa-sm" aria-hidden="true"></i> CNSS</a></li><li class="menu-item"><a class="menu-link" href="/posts/friends/" title="About"><i class="fa-solid fa-user-group fa-fw fa-sm" aria-hidden="true"></i> About</a></li><li class="menu-item menu-system">
+          <span class="menu-system-item theme-switch" title="Switch Theme"><i class="fa-solid fa-adjust fa-fw" aria-hidden="true"></i></span></li>
+      </ul>
+    </nav>
+  </div>
+</header><div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+  </div>
+  <div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+  </div><main class="container"><aside class="aside-collection animate__animated animate__fadeIn animate__faster" aria-label="Collections"></aside>
+
+  <article class="page single">
+    <div class="header"><h1 class="single-title animate__animated animate__flipInX"><span>使用Nonebot2和Gocq搭建QQ机器人并部署到服务器</span>
+      </h1></div><div class="post-meta">
+      <div class="post-meta-line"><span class="post-author"><span class="author"><img loading="lazy" src="/avr.png" alt="Shino" data-title="Shino" width="20" height="20" class="avatar" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>&nbsp;Shino</span></span></div><div class="post-meta-line"><span title="published on 2021-11-08 20:34:09"><i class="fa-solid fa-calendar-days fa-fw me-1" aria-hidden="true"></i><time datetime="2021-11-08">2021-11-08</time></span>&nbsp;<span title="336 words"><i class="fa-solid fa-pencil-alt fa-fw me-1" aria-hidden="true"></i>About 400 words</span>&nbsp;<span><i class="fa-regular fa-clock fa-fw me-1" aria-hidden="true"></i>2 minutes</span>&nbsp;</div>
+    </div><div class="details toc" id="toc-static" data-kept="false">
+        <div class="details-summary toc-title">
+          <span>Contents</span>
+          <span><i class="details-icon fa-solid fa-angle-right" aria-hidden="true"></i></span>
+        </div>
+        <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#配置机器人">配置机器人</a>
+      <ul>
+        <li><a href="#qq机器人的基本架构">QQ机器人的基本架构</a></li>
+        <li><a href="#准备">准备</a>
+          <ul>
+            <li><a href="#安装系统镜像python">安装系统镜像&amp;python</a></li>
+            <li><a href="#安装nonebot2">安装nonebot2</a></li>
+            <li><a href="#安装go-cqhttp">安装go-cqhttp</a>
+              <ul>
+                <li><a href="#下载go-cqhttp">下载go-cqhttp</a></li>
+                <li><a href="#将go-cqhttp上传至服务器">将go-cqhttp上传至服务器</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+        <li><a href="#配置">配置</a>
+          <ul>
+            <li><a href="#配置go-cqhttp">配置go-cqhttp</a></li>
+            <li><a href="#配置nonebot2">配置nonebot2</a></li>
+          </ul>
+        </li>
+        <li><a href="#运行机器人">运行机器人</a></li>
+      </ul>
+    </li>
+    <li><a href="#编写插件-实现你想要的功能">编写插件-实现你想要的功能</a></li>
+  </ul>
+</nav></div>
+      </div><div class="content" id="content"><h2 id="配置机器人" class="heading-element"><span>配置机器人</span>
+  <a href="#%e9%85%8d%e7%bd%ae%e6%9c%ba%e5%99%a8%e4%ba%ba" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><h3 id="qq机器人的基本架构" class="heading-element"><span>QQ机器人的基本架构</span>
+  <a href="#qq%e6%9c%ba%e5%99%a8%e4%ba%ba%e7%9a%84%e5%9f%ba%e6%9c%ac%e6%9e%b6%e6%9e%84" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>这里引用一个看到过的例子：</p>
+<p>在一个餐馆中，你点了一盘菜。此时会发生什么事情呢？</p>
+<blockquote>
+<p>1、服务员接受你点的菜</p>
+<p>2、服务员把你点的菜告诉大厨</p>
+<p>3、大厨进行一个烹饪</p>
+<p>4、服务员把菜端到你桌上</p></blockquote>
+<p>在一个QQ机器人中，<code>go-cqhttp</code>就类似于一个服务员，负责接收消息、把消息传达给<code>nonebot2</code>、发送消息。而<code>nonebot2</code> 就相当于一个大厨，负责“思考”对消息该做出什么反应。</p>
+<p>那么<code>go-cqhttp</code>如何将消息传达给<code>nonebot2</code>呢？</p>
+<p>这里我们使用的是反向<code>websocket</code>连接：<code>go-cqhttp</code>会主动寻找<code>nonebot2</code>的程序，并将消息通过<code>websocket</code>推送给<code>nonebot2</code>。当然，如果你只是想要做出一个QQ机器人，你可以不需要深入了解该通信方式。</p>
+<h3 id="准备" class="heading-element"><span>准备</span>
+  <a href="#%e5%87%86%e5%a4%87" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>我们需要：一个云服务器，nonebot2，go-cqhttp</p>
+<p>由于nonebot2是基于python3.7+的，所以我们还需要配置一个python。</p>
+<p><strong>我推荐在服务器上执行命令前先使用<code>sudo -i</code>切换到管理员账户来避免一些麻烦</strong></p>
+<h4 id="安装系统镜像python" class="heading-element"><span>安装系统镜像&amp;python</span>
+  <a href="#%e5%ae%89%e8%a3%85%e7%b3%bb%e7%bb%9f%e9%95%9c%e5%83%8fpython" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>首先你需要一个云服务器，并安装系统镜像。我这里选用的是<code>Ubuntu20.07</code>系统镜像，因为<code>Ubuntu20.07</code>自带一个Python3.8.10，可以省去python的配置步骤。</p>
+<p>这一步按理来说是可以一键完成的，起码腾讯云和阿里云都有一键安装的入口。</p>
+<h4 id="安装nonebot2" class="heading-element"><span>安装nonebot2</span>
+  <a href="#%e5%ae%89%e8%a3%85nonebot2" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>执行以下命令：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">pip3 install nb-cli
+</span></span><span class="line"><span class="cl">pip3 install nonebot-adapter-cqhttp</span></span></code></pre></td></tr></table>
+</div>
+</div><p>如果找不到库的话，可以试试换源：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">pip3 install nb-cli -i https://pypi.org/simple
+</span></span><span class="line"><span class="cl">pip3 install nonebot-adapter-cqhttp -i https://pypi.org/simple</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="安装go-cqhttp" class="heading-element"><span>安装go-cqhttp</span>
+  <a href="#%e5%ae%89%e8%a3%85go-cqhttp" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><h5 id="下载go-cqhttp" class="heading-element"><span>下载go-cqhttp</span>
+  <a href="#%e4%b8%8b%e8%bd%bdgo-cqhttp" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h5><p>在go-cqhttp的<a href = "https://github.com/Mrs4s/go-cqhttp/releases">Release页面</a>找到<code>go-cqhttp_linux_386.tar.gz</code>并下载。</p>
+<p>或者直接点击<a href = "https://github.com/Mrs4s/go-cqhttp/releases/download/v1.0.0-beta7-fix2/go-cqhttp_linux_386.tar.gz">这里</a>下载。</p>
+<p>这里下载的是适用于Linux的32位<code>go-cqhttp</code>，如果你是64位，请找到并下载<code>go-cqhttp_linux_amd64.tar.gz</code></p>
+<h5 id="将go-cqhttp上传至服务器" class="heading-element"><span>将go-cqhttp上传至服务器</span>
+  <a href="#%e5%b0%86go-cqhttp%e4%b8%8a%e4%bc%a0%e8%87%b3%e6%9c%8d%e5%8a%a1%e5%99%a8" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h5><p>这里使用宝塔Linux面板辅助上传。宝塔yyds。</p>
+<p>这是宝塔官网，可以在上面找到对应系统镜像的安装脚本：https://www.bt.cn/download/linux.html</p>
+<p>如果你和我一样使用Ubuntu，直接执行以下命令吧：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="n">wget</span> <span class="o">-</span><span class="n">O</span> <span class="n">install</span><span class="o">.</span><span class="n">sh</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">download</span><span class="o">.</span><span class="n">bt</span><span class="o">.</span><span class="n">cn</span><span class="o">/</span><span class="n">install</span><span class="o">/</span><span class="n">install</span><span class="o">-</span><span class="n">ubuntu_6</span><span class="o">.</span><span class="mf">0.</span><span class="n">sh</span> <span class="o">&amp;&amp;</span> <span class="n">sudo</span> <span class="n">bash</span> <span class="n">install</span><span class="o">.</span><span class="n">sh</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>执行完成后在服务器上执行<code>bt</code>来配置用户名和密码。</p>
+<p>执行<code>/etc/init.d/bt default</code>查看面板入口，一般是<code>你的ip:8888/xxxxxx</code>的形式并访问，用你刚刚的用户名密码登录。</p>
+<p>配置好宝塔之后，点击左边菜单栏中“文件“即可进行文件管理、编辑和上传。</p>
+<p>我们在根目录新建一个<code>/bot</code>文件夹，上传go-cqhttp并解压。</p>
+<p>如果你的宝塔并没有帮你解压成功，你可以在服务器上执行以下命令：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">cd go-cq所在文件目录（例如cd /bot）
+</span></span><span class="line"><span class="cl">tar -xzvf 文件名</span></span></code></pre></td></tr></table>
+</div>
+</div><p>或者你也可以解压完之后再上传，反正也没有几个文件。</p>
+<p>至此，我们需要的东西就准备好了。</p>
+<h3 id="配置" class="heading-element"><span>配置</span>
+  <a href="#%e9%85%8d%e7%bd%ae" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><h4 id="配置go-cqhttp" class="heading-element"><span>配置go-cqhttp</span>
+  <a href="#%e9%85%8d%e7%bd%aego-cqhttp" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>先跑一下。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">cd go-cq所在文件目录
+</span></span><span class="line"><span class="cl">./go-cqhttp</span></span></code></pre></td></tr></table>
+</div>
+</div><p>出现：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">未找到配置文件，正在为您生成配置文件中！
+</span></span><span class="line"><span class="cl">请选择你需要的通信方式:
+</span></span><span class="line"><span class="cl">&gt; 1: HTTP通信
+</span></span><span class="line"><span class="cl">&gt; 2: 正向 Websocket 通信
+</span></span><span class="line"><span class="cl">&gt; 3: 反向 Websocket 通信
+</span></span><span class="line"><span class="cl">&gt; 4: pprof 性能分析服务器
+</span></span><span class="line"><span class="cl">请输入你需要的编号，可输入多个，同一编号也可输入多个(如: 233)
+</span></span><span class="line"><span class="cl">您的选择是:</span></span></code></pre></td></tr></table>
+</div>
+</div><p>输入3然后按回车，此时我们就会发现go-cq的文件夹里生成了一个<code>config.yml</code>，编辑并修改以下几处：</p>
+<p>我这里是直接用宝塔进行的编辑，我也推荐各位直接使用宝塔。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">account: # 账号相关
+</span></span><span class="line"><span class="cl">  uin: 1233456 # QQ账号</span></span></code></pre></td></tr></table>
+</div>
+</div><p>把<code>uin</code>改为<code>bot</code>的QQ账号。不建议填写password，在不填写password时第一次将会使用扫码登录，可以避免密码登录造成的一些问题（比如滑块验证）。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">servers:
+</span></span><span class="line"><span class="cl">  # 添加方式，同一连接方式可添加多个，具体配置说明请查看文档
+</span></span><span class="line"><span class="cl">  #- http: # http 通信
+</span></span><span class="line"><span class="cl">  #- ws:   # 正向 Websocket
+</span></span><span class="line"><span class="cl">  #- ws-reverse: # 反向 Websocket
+</span></span><span class="line"><span class="cl">  #- pprof: #性能分析服务器
+</span></span><span class="line"><span class="cl">  # 反向WS设置
+</span></span><span class="line"><span class="cl">  - ws-reverse:
+</span></span><span class="line"><span class="cl">      # 反向WS Universal 地址
+</span></span><span class="line"><span class="cl">      # 注意 设置了此项地址后下面两项将会被忽略
+</span></span><span class="line"><span class="cl">      universal: ws://127.0.0.1:xxxx/cqhttp/ws    #修改的位置！！！
+</span></span><span class="line"><span class="cl">      # 反向WS API 地址
+</span></span><span class="line"><span class="cl">      api: ws://your_websocket_api.server
+</span></span><span class="line"><span class="cl">      # 反向WS Event 地址
+</span></span><span class="line"><span class="cl">      event: ws://your_websocket_event.server
+</span></span><span class="line"><span class="cl">      # 重连间隔 单位毫秒
+</span></span><span class="line"><span class="cl">      reconnect-interval: 3000
+</span></span><span class="line"><span class="cl">      middlewares:
+</span></span><span class="line"><span class="cl">        &lt;&lt;: *default # 引用默认中间件</span></span></code></pre></td></tr></table>
+</div>
+</div><p>此处把xxxx替换为端口号其他不变。不建议使用会冲突的端口号，建议从<code>5000-65535</code>取值。随意填一个数就行。</p>
+<p>此时你可以试着运行一下go-cq</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">cd go-cq所在文件目录
+</span></span><span class="line"><span class="cl">./go-cqhttp</span></span></code></pre></td></tr></table>
+</div>
+</div><p>如果你看到这个：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">[INFO]: アトリは、高性能ですから!</span></span></code></pre></td></tr></table>
+</div>
+</div><p>说明你成功啦！</p>
+<h4 id="配置nonebot2" class="heading-element"><span>配置nonebot2</span>
+  <a href="#%e9%85%8d%e7%bd%aenonebot2" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>你需要新建一个文件夹给<code>nonebot2</code>。不推荐使用中文文件夹名字。这里同样使用宝塔完成操作。</p>
+<p>新建一个<code>bot.py</code>，写入以下代码：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="ch">#!/usr/bin/env python3</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># -*- coding: utf-8 -*-</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">nonebot</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">nonebot.adapters.cqhttp</span> <span class="kn">import</span> <span class="n">Bot</span> <span class="k">as</span> <span class="n">CQHTTPBot</span>
+</span></span><span class="line"><span class="cl"><span class="c1">#初始化nb</span>
+</span></span><span class="line"><span class="cl"><span class="n">nonebot</span><span class="o">.</span><span class="n">init</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">app</span> <span class="o">=</span> <span class="n">nonebot</span><span class="o">.</span><span class="n">get_asgi</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="c1">#连接驱动</span>
+</span></span><span class="line"><span class="cl"><span class="n">driver</span> <span class="o">=</span> <span class="n">nonebot</span><span class="o">.</span><span class="n">get_driver</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">driver</span><span class="o">.</span><span class="n">register_adapter</span><span class="p">(</span><span class="s2">&#34;cqhttp&#34;</span><span class="p">,</span> <span class="n">CQHTTPBot</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="c1">#加载插件(除此处其他配置不建议更改)</span>
+</span></span><span class="line"><span class="cl"><span class="n">nonebot</span><span class="o">.</span><span class="n">load_builtin_plugins</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">nonebot</span><span class="o">.</span><span class="n">load_plugins</span><span class="p">(</span><span class="s1">&#39;src/plugins&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="c1">#启动bot</span>
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&#34;__main__&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">nonebot</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&#34;Always use `nb run` to start the bot instead of manually running!&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">nonebot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">app</span><span class="o">=</span><span class="s2">&#34;__mp_main__:app&#34;</span><span class="p">)</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>在相同目录下创建<code>.env</code>文件，写入以下内容：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">HOST=127.0.0.1
+</span></span><span class="line"><span class="cl">PORT=xxxx
+</span></span><span class="line"><span class="cl">DEBUG=False
+</span></span><span class="line"><span class="cl">SUPERUSERS=[&#34;管理员账号1&#34;,&#34;管理员账号2&#34;]
+</span></span><span class="line"><span class="cl">COMMAND_START=[&#34;/&#34;,&#34;!!&#34;]</span></span></code></pre></td></tr></table>
+</div>
+</div><p>其中<code>PORT</code>修改为刚刚你在<code>go-cq</code>配置过程中输入的端口号。</p>
+<p><code>COMMAND_START</code>字段是命令的起始符号，以该符号开头的将会被识别为”命令“被处理。我一般喜欢使用&quot;&quot;，即所有文字都被nonebot接收并处理。</p>
+<p>然后我们在该目录下新建一个<code>src</code>文件夹，在<code>src</code>内再新建一个<code>plugins</code>文件夹。这里就是你存放你写的<code>nonebot2</code>插件的地方啦。</p>
+<h3 id="运行机器人" class="heading-element"><span>运行机器人</span>
+  <a href="#%e8%bf%90%e8%a1%8c%e6%9c%ba%e5%99%a8%e4%ba%ba" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>没意外的话到这里我们的机器人就已经准备好了，直接开始运行吧！</p>
+<p>在服务器上，以腾讯云为例，每次按”登录“只会打开一个界面。但我们需要运行两个程序。咋办呢？</p>
+<p>首先执行：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">sudo -i
+</span></span><span class="line"><span class="cl">cd bot.py所在文件目录
+</span></span><span class="line"><span class="cl">screen
+</span></span><span class="line"><span class="cl">python bot.py</span></span></code></pre></td></tr></table>
+</div>
+</div><p>重新打开，执行：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">sudo -i
+</span></span><span class="line"><span class="cl">cd go-cqhhtp所在文件目录
+</span></span><span class="line"><span class="cl">screen
+</span></span><span class="line"><span class="cl">./go-cqhttp</span></span></code></pre></td></tr></table>
+</div>
+</div><p>重新打开，执行：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">sudo -i
+</span></span><span class="line"><span class="cl">screen -ls</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这个时候你应该看到有两个进程正在运行。</p>
+<p>用QQ给你的机器人发送：<code>/echo Hello_World!</code></p>
+<p>收到机器人的回复了！至此我们的机器人就算配置完毕了。</p>
+<h2 id="编写插件-实现你想要的功能" class="heading-element"><span>编写插件-实现你想要的功能</span>
+  <a href="#%e7%bc%96%e5%86%99%e6%8f%92%e4%bb%b6-%e5%ae%9e%e7%8e%b0%e4%bd%a0%e6%83%b3%e8%a6%81%e7%9a%84%e5%8a%9f%e8%83%bd" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>先鸽了。</p>
+</div><div class="post-footer" id="post-footer">
+  <div class="post-info">
+    <div class="post-info-line">
+      <div class="post-info-mod">
+        <span title="Updated on 2021-11-08 20:34:09">Updated on 2021-11-08&nbsp;</span>
+      </div><div class="post-info-license">
+            <span><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a></span>
+          </div></div><div class="post-info-line">
+        <div class="post-info-md"><span><a href="/posts/bot/index.md" title="Read Markdown" class="link-to-markdown">Read Markdown</a></span></div>
+        <div class="post-info-share">
+          <span><a href="javascript:void(0);" title="Share on X" data-sharer="twitter" data-url="https://www.sh1no.icu/posts/bot/" data-title="使用Nonebot2和Gocq搭建QQ机器人并部署到服务器" data-via="ShinoLeah"><i class="fa-brands fa-x-twitter fa-fw" aria-hidden="true"></i></a>
+  <a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="https://www.sh1no.icu/posts/bot/"><i class="fa-brands fa-facebook-square fa-fw" aria-hidden="true"></i></a>
+  <a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.sh1no.icu/posts/bot/" data-title="使用Nonebot2和Gocq搭建QQ机器人并部署到服务器"><i class="fa-brands fa-weibo fa-fw" aria-hidden="true"></i></a>
+  </span>
+        </div>
+      </div></div>
+
+  <div class="post-info-more">
+    <section class="post-tags"></section>
+    <section>
+      <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+    </section>
+  </div><div class="post-nav"><a href="/posts/go/" class="post-nav-item" rel="prev" title="Go语言乱学速成学习笔记"><i class="fa-solid fa-angle-left fa-fw" aria-hidden="true"></i>Go语言乱学速成学习笔记</a><a href="/posts/matrix/" class="post-nav-item" rel="next" title="线性代数与空间解析几何 女娲补天复习笔记">线性代数与空间解析几何 女娲补天复习笔记<i class="fa-solid fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article>
+
+  <aside class="toc" id="toc-auto" aria-label="Contents"><h2 class="toc-title">Contents&nbsp;<i class="toc-icon fa-solid fa-angle-down fa-fw" aria-hidden="true"></i></h2>
+      <div class="toc-content" id="toc-content-auto"></div></aside></main><footer class="footer">
+    <div class="footer-container"><div class="footer-line powered">Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow noopener noreferrer" title="Hugo 0.144.2"><img class="hugo-icon" src="/images/hugo.min.svg" alt="Hugo logo" /> Hugo</a> | Theme - <a href="https://github.com/hugo-fixit/FixIt" target="_blank" rel="external" title="FixIt v0.3.17-8b402129"><img class="fixit-icon" src="/images/fixit.min.svg" alt="FixIt logo" /> FixIt</a>
+        </div><div class="footer-line copyright" itemscope itemtype="http://schema.org/CreativeWork"><i class="fa-regular fa-copyright fa-fw" aria-hidden="true"></i>
+            <span itemprop="copyrightYear">2020 - 2025</span><span class="author" itemprop="copyrightHolder">
+              <a href="/">Shino</a></span></div></div>
+  </footer></div><div class="widgets"><div class="fixed-buttons animate__faster d-none"><div class="fixed-button back-to-top" role="button" aria-label="Back to Top"><i class="fa-solid fa-arrow-up fa-fw" aria-hidden="true"></i><span class="variant-numeric d-none">0%</span>
+        </div></div><div id="mask"></div><div class="reading-progress-bar" style="left: 0;top: 0;"></div><noscript>
+    <div class="noscript-warning">This website works best with JavaScript enabled.</div>
+  </noscript>
+</div><link rel="preload" href="/lib/katex/katex.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/katex/katex.min.css"></noscript><script src="/lib/autocomplete/autocomplete.min.js" defer></script><script src="/lib/fuse/fuse.min.js" defer></script><script src="/lib/sharer/sharer.min.js" async defer></script><script src="/lib/katex/katex.min.js" defer></script><script src="/lib/katex/auto-render.min.js" defer></script><script src="/lib/katex/copy-tex.min.js" defer></script><script src="/lib/katex/mhchem.min.js" defer></script><script>var postChatConfig={"addButton":true,"backgroundColor":"","blackDom":[".expiration-reminder","meting-js",".lnt"],"bottom":"","defaultChatQuestions":[],"defaultInput":false,"defaultSearchQuestions":[],"fill":"","frameHeight":"","frameWidth":"","height":"","left":"","showInviteLink":true,"upLoadWeb":true,"userDesc":"","userIcon":"","userMode":"magic","userTitle":"","width":""}</script><script src="https://ai.tianli0.top/static/public/postChatUser.min.js" defer data-postChat_key="94e33c8ca2fc6b925063d733c79bb98c27972f8f"></script><script>window.config={"code":{"copyTitle":"Copy to clipboard","editLockTitle":"Lock editable code block","editUnLockTitle":"Unlock editable code block","editable":true,"maxShownLines":10},"comment":{"enable":false},"enablePWA":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"distance":100,"findAllMatches":false,"fuseIndexURL":"/search.json","highlightTag":"em","ignoreFieldNorm":false,"ignoreLocation":false,"isCaseSensitive":false,"location":0,"maxResultLength":10,"minMatchCharLength":2,"noResultsFound":"No results found","snippetLength":30,"threshold":0.3,"type":"fuse","useExtendedSearch":false},"version":"v0.3.17-8b402129"};</script><script src="/js/theme.min.js" defer></script></body>
+</html>

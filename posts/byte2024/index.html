@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <head>
+    
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+    <meta name="robots" content="noodp" />
+    <title>ByteCTF2024 Reverse Wps - Shino Channel</title><meta name="author" content="Shino">
+<meta name="description" content="碎碎念好久没打 CTF 感觉能力退化了不少，遇到不是 Android 的题都有点不会做了，甚至卡了一题光荣成为战犯(?)。想了半天为什么 10 解的题我都不会做，后来发现原来现在还有可以直接去除的 ollvm 混淆&hellip;. 平时看到的 ollvm 混淆基本都是加强过的根本没法直接跑轮子去除就根本没往这方面想，还是有点太唐了。
+">
+  <meta itemprop="name" content="ByteCTF2024 Reverse wps">
+  <meta itemprop="description" content="碎碎念好久没打 CTF 感觉能力退化了不少，遇到不是 Android 的题都有点不会做了，甚至卡了一题光荣成为战犯(?)。想了半天为什么 10 解的题我都不会做，后来发现原来现在还有可以直接去除的 ollvm 混淆…. 平时看到的 ollvm 混淆基本都是加强过的根本没法直接跑轮子去除就根本没往这方面想，还是有点太唐了。">
+  <meta itemprop="datePublished" content="2024-09-22T19:55:39+08:00">
+  <meta itemprop="dateModified" content="2024-09-22T19:55:39+08:00">
+  <meta itemprop="wordCount" content="2389">
+  <meta itemprop="image" content="https://www.sh1no.icu/avr.png"><meta property="og:url" content="https://www.sh1no.icu/posts/byte2024/">
+  <meta property="og:site_name" content="Shino Channel">
+  <meta property="og:title" content="ByteCTF2024 Reverse wps">
+  <meta property="og:description" content="碎碎念好久没打 CTF 感觉能力退化了不少，遇到不是 Android 的题都有点不会做了，甚至卡了一题光荣成为战犯(?)。想了半天为什么 10 解的题我都不会做，后来发现原来现在还有可以直接去除的 ollvm 混淆…. 平时看到的 ollvm 混淆基本都是加强过的根本没法直接跑轮子去除就根本没往这方面想，还是有点太唐了。">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2024-09-22T19:55:39+08:00">
+    <meta property="article:modified_time" content="2024-09-22T19:55:39+08:00">
+    <meta property="og:image" content="https://www.sh1no.icu/avr.png">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://www.sh1no.icu/avr.png">
+  <meta name="twitter:title" content="ByteCTF2024 Reverse wps">
+  <meta name="twitter:description" content="碎碎念好久没打 CTF 感觉能力退化了不少，遇到不是 Android 的题都有点不会做了，甚至卡了一题光荣成为战犯(?)。想了半天为什么 10 解的题我都不会做，后来发现原来现在还有可以直接去除的 ollvm 混淆…. 平时看到的 ollvm 混淆基本都是加强过的根本没法直接跑轮子去除就根本没往这方面想，还是有点太唐了。">
+      <meta name="twitter:site" content="@ShinoLeah">
+<meta name="twitter:creator" content="@ShinoLeah" /><meta name="application-name" content="Shino Channel">
+<meta name="apple-mobile-web-app-title" content="Shino Channel"><meta name="theme-color" data-light="#f8f8f8" data-dark="#252627" content="#f8f8f8"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" type="text/html" href="https://www.sh1no.icu/posts/byte2024/" title="ByteCTF2024 Reverse wps - Shino Channel" /><link rel="prev" type="text/html" href="https://www.sh1no.icu/posts/chromium/" title="Chromium 内核 hook 抓包实战记录" /><link rel="alternate" type="text/markdown" href="https://www.sh1no.icu/posts/byte2024/index.md" title="ByteCTF2024 Reverse wps - Shino Channel"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="/lib/fontawesome-free/all.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" href="/lib/animate/animate.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
+  {
+    "@context": "http://schema.org",
+    "@type": "BlogPosting",
+    "headline": "ByteCTF2024 Reverse wps",
+    "inLanguage": "zh-CN",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https:\/\/www.sh1no.icu\/posts\/byte2024\/"
+    },"genre": "posts","wordcount":  2389 ,
+    "url": "https:\/\/www.sh1no.icu\/posts\/byte2024\/","datePublished": "2024-09-22T19:55:39+08:00","dateModified": "2024-09-22T19:55:39+08:00","publisher": {
+      "@type": "Organization",
+      "name": ""},"author": {
+        "@type": "Person",
+        "name": "Shino"
+      },"description": ""
+  }
+  </script><script src="/js/head/color-scheme.min.js"></script></head>
+  <body data-header-desktop="sticky" data-header-mobile="auto"><div class="wrapper" data-page-style="normal"><header class="desktop animate__faster" id="header-desktop">
+  <div class="header-wrapper">
+    <div class="header-title">
+      <a href="/" title="Shino Channel"><span class="header-title-text">Shino</span></a><span class="header-subtitle"></span></div>
+    <nav>
+      <ul class="menu"><li class="menu-item">
+              <a class="menu-link" href="https://www.youtube.com/@anoofficialchannel" rel="noopener noreferrer" target="_blank"></a></li><li class="menu-item">
+              <a class="menu-link" href="https://www.nu1l.com/" title="Nu1L" rel="noopener noreferrer" target="_blank"><i class="fa-solid fa-paperclip fa-fw fa-sm" aria-hidden="true"></i> Nu1L</a></li><li class="menu-item">
+              <a class="menu-link" href="https://cnss.io/" title="CNSS" rel="noopener noreferrer" target="_blank"><i class="fa-solid fa-paperclip fa-fw fa-sm" aria-hidden="true"></i> CNSS</a></li><li class="menu-item">
+              <a class="menu-link" href="/posts/friends/" title="About"><i class="fa-solid fa-user-group fa-fw fa-sm" aria-hidden="true"></i> About</a></li><li class="menu-item delimiter"></li><li class="menu-item search" id="search-desktop">
+            <input type="text" placeholder="Search..." id="search-input-desktop">
+            <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+              <i class="fa-solid fa-search fa-fw" aria-hidden="true"></i>
+            </a>
+            <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+              <i class="fa-solid fa-times-circle fa-fw" aria-hidden="true"></i>
+            </a>
+            <span class="search-button search-loading" id="search-loading-desktop">
+              <i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+            </span>
+          </li><li class="menu-item theme-switch" title="Switch Theme">
+          <i class="fa-solid fa-adjust fa-fw" aria-hidden="true"></i>
+        </li></ul>
+    </nav>
+  </div>
+</header><header class="mobile animate__faster" id="header-mobile">
+  <div class="header-container">
+    <div class="header-wrapper">
+      <div class="header-title">
+        <a href="/" title="Shino Channel"><span class="header-title-text">Shino</span></a><span class="header-subtitle"></span></div>
+      <div class="menu-toggle" id="menu-toggle-mobile">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+    <nav>
+      <ul class="menu" id="menu-mobile"><li class="search-wrapper">
+            <div class="search mobile" id="search-mobile">
+              <input type="text" placeholder="Search..." id="search-input-mobile">
+              <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                <i class="fa-solid fa-search fa-fw" aria-hidden="true"></i>
+              </a>
+              <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                <i class="fa-solid fa-times-circle fa-fw" aria-hidden="true"></i>
+              </a>
+              <span class="search-button search-loading" id="search-loading-mobile">
+                <i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+              </span>
+            </div>
+            <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+              Cancel
+            </a>
+          </li><li class="menu-item"><a class="menu-link" href="https://www.youtube.com/@anoofficialchannel" rel="noopener noreferrer" target="_blank"></a></li><li class="menu-item"><a class="menu-link" href="https://www.nu1l.com/" title="Nu1L" rel="noopener noreferrer" target="_blank"><i class="fa-solid fa-paperclip fa-fw fa-sm" aria-hidden="true"></i> Nu1L</a></li><li class="menu-item"><a class="menu-link" href="https://cnss.io/" title="CNSS" rel="noopener noreferrer" target="_blank"><i class="fa-solid fa-paperclip fa-fw fa-sm" aria-hidden="true"></i> CNSS</a></li><li class="menu-item"><a class="menu-link" href="/posts/friends/" title="About"><i class="fa-solid fa-user-group fa-fw fa-sm" aria-hidden="true"></i> About</a></li><li class="menu-item menu-system">
+          <span class="menu-system-item theme-switch" title="Switch Theme"><i class="fa-solid fa-adjust fa-fw" aria-hidden="true"></i></span></li>
+      </ul>
+    </nav>
+  </div>
+</header><div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+  </div>
+  <div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+  </div><main class="container"><aside class="aside-collection animate__animated animate__fadeIn animate__faster" aria-label="Collections"></aside>
+
+  <article class="page single">
+    <div class="header"><h1 class="single-title animate__animated animate__flipInX"><span>ByteCTF2024 Reverse Wps</span>
+      </h1></div><div class="post-meta">
+      <div class="post-meta-line"><span class="post-author"><span class="author"><img loading="lazy" src="/avr.png" alt="Shino" data-title="Shino" width="20" height="20" class="avatar" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>&nbsp;Shino</span></span></div><div class="post-meta-line"><span title="published on 2024-09-22 19:55:39"><i class="fa-solid fa-calendar-days fa-fw me-1" aria-hidden="true"></i><time datetime="2024-09-22">2024-09-22</time></span>&nbsp;<span title="2389 words"><i class="fa-solid fa-pencil-alt fa-fw me-1" aria-hidden="true"></i>About 2400 words</span>&nbsp;<span><i class="fa-regular fa-clock fa-fw me-1" aria-hidden="true"></i>12 minutes</span>&nbsp;</div>
+    </div><div class="details toc" id="toc-static" data-kept="false">
+        <div class="details-summary toc-title">
+          <span>Contents</span>
+          <span><i class="details-icon fa-solid fa-angle-right" aria-hidden="true"></i></span>
+        </div>
+        <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#碎碎念">碎碎念</a></li>
+    <li><a href="#babyapk">babyAPK</a></li>
+    <li><a href="#bytebuffer">ByteBuffer</a></li>
+    <li><a href="#bytekit">ByteKit</a></li>
+  </ul>
+</nav></div>
+      </div><div class="content" id="content"><h2 id="碎碎念" class="heading-element"><span>碎碎念</span>
+  <a href="#%e7%a2%8e%e7%a2%8e%e5%bf%b5" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>好久没打 CTF 感觉能力退化了不少，遇到不是 Android 的题都有点不会做了，甚至卡了一题光荣成为战犯(?)。想了半天为什么 10 解的题我都不会做，后来发现原来现在还有可以直接去除的 ollvm 混淆&hellip;. 平时看到的 ollvm 混淆基本都是加强过的根本没法直接跑轮子去除就根本没往这方面想，还是有点太唐了。</p>
+<h2 id="babyapk" class="heading-element"><span>babyAPK</span>
+  <a href="#babyapk" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>上来肯定是先把 Android 秒了(x</p>
+<p>经典 flutter，直接跑一下 blutter。 main.dart 里可以看到一个明显的相关逻辑：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">  1
+</span><span class="lnt">  2
+</span><span class="lnt">  3
+</span><span class="lnt">  4
+</span><span class="lnt">  5
+</span><span class="lnt">  6
+</span><span class="lnt">  7
+</span><span class="lnt">  8
+</span><span class="lnt">  9
+</span><span class="lnt"> 10
+</span><span class="lnt"> 11
+</span><span class="lnt"> 12
+</span><span class="lnt"> 13
+</span><span class="lnt"> 14
+</span><span class="lnt"> 15
+</span><span class="lnt"> 16
+</span><span class="lnt"> 17
+</span><span class="lnt"> 18
+</span><span class="lnt"> 19
+</span><span class="lnt"> 20
+</span><span class="lnt"> 21
+</span><span class="lnt"> 22
+</span><span class="lnt"> 23
+</span><span class="lnt"> 24
+</span><span class="lnt"> 25
+</span><span class="lnt"> 26
+</span><span class="lnt"> 27
+</span><span class="lnt"> 28
+</span><span class="lnt"> 29
+</span><span class="lnt"> 30
+</span><span class="lnt"> 31
+</span><span class="lnt"> 32
+</span><span class="lnt"> 33
+</span><span class="lnt"> 34
+</span><span class="lnt"> 35
+</span><span class="lnt"> 36
+</span><span class="lnt"> 37
+</span><span class="lnt"> 38
+</span><span class="lnt"> 39
+</span><span class="lnt"> 40
+</span><span class="lnt"> 41
+</span><span class="lnt"> 42
+</span><span class="lnt"> 43
+</span><span class="lnt"> 44
+</span><span class="lnt"> 45
+</span><span class="lnt"> 46
+</span><span class="lnt"> 47
+</span><span class="lnt"> 48
+</span><span class="lnt"> 49
+</span><span class="lnt"> 50
+</span><span class="lnt"> 51
+</span><span class="lnt"> 52
+</span><span class="lnt"> 53
+</span><span class="lnt"> 54
+</span><span class="lnt"> 55
+</span><span class="lnt"> 56
+</span><span class="lnt"> 57
+</span><span class="lnt"> 58
+</span><span class="lnt"> 59
+</span><span class="lnt"> 60
+</span><span class="lnt"> 61
+</span><span class="lnt"> 62
+</span><span class="lnt"> 63
+</span><span class="lnt"> 64
+</span><span class="lnt"> 65
+</span><span class="lnt"> 66
+</span><span class="lnt"> 67
+</span><span class="lnt"> 68
+</span><span class="lnt"> 69
+</span><span class="lnt"> 70
+</span><span class="lnt"> 71
+</span><span class="lnt"> 72
+</span><span class="lnt"> 73
+</span><span class="lnt"> 74
+</span><span class="lnt"> 75
+</span><span class="lnt"> 76
+</span><span class="lnt"> 77
+</span><span class="lnt"> 78
+</span><span class="lnt"> 79
+</span><span class="lnt"> 80
+</span><span class="lnt"> 81
+</span><span class="lnt"> 82
+</span><span class="lnt"> 83
+</span><span class="lnt"> 84
+</span><span class="lnt"> 85
+</span><span class="lnt"> 86
+</span><span class="lnt"> 87
+</span><span class="lnt"> 88
+</span><span class="lnt"> 89
+</span><span class="lnt"> 90
+</span><span class="lnt"> 91
+</span><span class="lnt"> 92
+</span><span class="lnt"> 93
+</span><span class="lnt"> 94
+</span><span class="lnt"> 95
+</span><span class="lnt"> 96
+</span><span class="lnt"> 97
+</span><span class="lnt"> 98
+</span><span class="lnt"> 99
+</span><span class="lnt">100
+</span><span class="lnt">101
+</span><span class="lnt">102
+</span><span class="lnt">103
+</span><span class="lnt">104
+</span><span class="lnt">105
+</span><span class="lnt">106
+</span><span class="lnt">107
+</span><span class="lnt">108
+</span><span class="lnt">109
+</span><span class="lnt">110
+</span><span class="lnt">111
+</span><span class="lnt">112
+</span><span class="lnt">113
+</span><span class="lnt">114
+</span><span class="lnt">115
+</span><span class="lnt">116
+</span><span class="lnt">117
+</span><span class="lnt">118
+</span><span class="lnt">119
+</span><span class="lnt">120
+</span><span class="lnt">121
+</span><span class="lnt">122
+</span><span class="lnt">123
+</span><span class="lnt">124
+</span><span class="lnt">125
+</span><span class="lnt">126
+</span><span class="lnt">127
+</span><span class="lnt">128
+</span><span class="lnt">129
+</span><span class="lnt">130
+</span><span class="lnt">131
+</span><span class="lnt">132
+</span><span class="lnt">133
+</span><span class="lnt">134
+</span><span class="lnt">135
+</span><span class="lnt">136
+</span><span class="lnt">137
+</span><span class="lnt">138
+</span><span class="lnt">139
+</span><span class="lnt">140
+</span><span class="lnt">141
+</span><span class="lnt">142
+</span><span class="lnt">143
+</span><span class="lnt">144
+</span><span class="lnt">145
+</span><span class="lnt">146
+</span><span class="lnt">147
+</span><span class="lnt">148
+</span><span class="lnt">149
+</span><span class="lnt">150
+</span><span class="lnt">151
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="n">_</span> <span class="n">test</span><span class="p">(</span><span class="o">/*</span> <span class="n">No</span> <span class="n">info</span> <span class="o">*/</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="o">**</span> <span class="n">addr</span><span class="p">:</span> <span class="mh">0x264c0c</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="mh">0x17c</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264c0c</span><span class="p">:</span> <span class="n">EnterFrame</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264c0c</span><span class="p">:</span> <span class="n">stp</span>             <span class="n">fp</span><span class="p">,</span> <span class="n">lr</span><span class="p">,</span> <span class="p">[</span><span class="n">SP</span><span class="p">,</span> <span class="c1">#-0x10]!</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264c10</span><span class="p">:</span> <span class="n">mov</span>             <span class="n">fp</span><span class="p">,</span> <span class="n">SP</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264c14</span><span class="p">:</span> <span class="n">AllocStack</span><span class="p">(</span><span class="mh">0x28</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264c14</span><span class="p">:</span> <span class="n">sub</span>             <span class="n">SP</span><span class="p">,</span> <span class="n">SP</span><span class="p">,</span> <span class="c1">#0x28</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264c18</span><span class="p">:</span> <span class="n">CheckStackOverflow</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264c18</span><span class="p">:</span> <span class="n">ldr</span>             <span class="n">x16</span><span class="p">,</span> <span class="p">[</span><span class="n">THR</span><span class="p">,</span> <span class="c1">#0x38]  ; THR::stack_limit</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264c1c</span><span class="p">:</span> <span class="n">cmp</span>             <span class="n">SP</span><span class="p">,</span> <span class="n">x16</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264c20</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">ls</span>            <span class="c1">#0x264d78</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264c24</span><span class="p">:</span> <span class="n">LoadField</span><span class="p">:</span> <span class="n">r0</span> <span class="o">=</span> <span class="n">r1</span><span class="o">-&gt;</span><span class="n">field_13</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264c24</span><span class="p">:</span> <span class="n">ldur</span>            <span class="n">w0</span><span class="p">,</span> <span class="p">[</span><span class="n">x1</span><span class="p">,</span> <span class="c1">#0x13]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264c28</span><span class="p">:</span> <span class="n">DecompressPointer</span> <span class="n">r0</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264c28</span><span class="p">:</span> <span class="n">add</span>             <span class="n">x0</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">HEAP</span><span class="p">,</span> <span class="n">lsl</span> <span class="c1">#32</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264c2c</span><span class="p">:</span> <span class="n">LoadField</span><span class="p">:</span> <span class="n">r1</span> <span class="o">=</span> <span class="n">r0</span><span class="o">-&gt;</span><span class="n">field_27</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264c2c</span><span class="p">:</span> <span class="n">ldur</span>            <span class="n">w1</span><span class="p">,</span> <span class="p">[</span><span class="n">x0</span><span class="p">,</span> <span class="c1">#0x27]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264c30</span><span class="p">:</span> <span class="n">DecompressPointer</span> <span class="n">r1</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264c30</span><span class="p">:</span> <span class="n">add</span>             <span class="n">x1</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">HEAP</span><span class="p">,</span> <span class="n">lsl</span> <span class="c1">#32</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264c34</span><span class="p">:</span> <span class="n">LoadField</span><span class="p">:</span> <span class="n">r0</span> <span class="o">=</span> <span class="n">r1</span><span class="o">-&gt;</span><span class="n">field_7</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264c34</span><span class="p">:</span> <span class="n">ldur</span>            <span class="n">w0</span><span class="p">,</span> <span class="p">[</span><span class="n">x1</span><span class="p">,</span> <span class="c1">#7]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264c38</span><span class="p">:</span> <span class="n">DecompressPointer</span> <span class="n">r0</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264c38</span><span class="p">:</span> <span class="n">add</span>             <span class="n">x0</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">HEAP</span><span class="p">,</span> <span class="n">lsl</span> <span class="c1">#32</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264c3c</span><span class="p">:</span> <span class="n">mov</span>             <span class="n">x1</span><span class="p">,</span> <span class="n">x0</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264c40</span><span class="p">:</span> <span class="n">stur</span>            <span class="n">x0</span><span class="p">,</span> <span class="p">[</span><span class="n">fp</span><span class="p">,</span> <span class="c1">#-8]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264c44</span><span class="p">:</span> <span class="n">r2</span> <span class="o">=</span> <span class="s2">&#34;ByteCTF{&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264c44</span><span class="p">:</span> <span class="n">add</span>             <span class="n">x2</span><span class="p">,</span> <span class="n">PP</span><span class="p">,</span> <span class="c1">#0xc, lsl #12  ; [pp+0xcfb0] &#34;ByteCTF{&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264c48</span><span class="p">:</span> <span class="n">ldr</span>             <span class="n">x2</span><span class="p">,</span> <span class="p">[</span><span class="n">x2</span><span class="p">,</span> <span class="c1">#0xfb0]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264c4c</span><span class="p">:</span> <span class="n">r4</span> <span class="o">=</span> <span class="k">const</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mh">0x2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mh">0x2</span><span class="p">,</span> <span class="n">null</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264c4c</span><span class="p">:</span> <span class="n">ldr</span>             <span class="n">x4</span><span class="p">,</span> <span class="p">[</span><span class="n">PP</span><span class="p">,</span> <span class="c1">#0x170]  ; [pp+0x170] List(5) [0, 0x2, 0, 0x2, Null]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264c50</span><span class="p">:</span> <span class="n">r0</span> <span class="o">=</span> <span class="n">startsWith</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264c50</span><span class="p">:</span> <span class="n">bl</span>              <span class="c1">#0x198d18  ; [dart:core] _StringBase::startsWith</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264c54</span><span class="p">:</span> <span class="n">tbnz</span>            <span class="n">w0</span><span class="p">,</span> <span class="c1">#4, #0x264d58</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264c58</span><span class="p">:</span> <span class="n">ldur</span>            <span class="n">x1</span><span class="p">,</span> <span class="p">[</span><span class="n">fp</span><span class="p">,</span> <span class="c1">#-8]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264c5c</span><span class="p">:</span> <span class="n">LoadField</span><span class="p">:</span> <span class="n">r0</span> <span class="o">=</span> <span class="n">r1</span><span class="o">-&gt;</span><span class="n">field_7</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264c5c</span><span class="p">:</span> <span class="n">ldur</span>            <span class="n">w0</span><span class="p">,</span> <span class="p">[</span><span class="n">x1</span><span class="p">,</span> <span class="c1">#7]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264c60</span><span class="p">:</span> <span class="n">r2</span> <span class="o">=</span> <span class="n">LoadInt32Instr</span><span class="p">(</span><span class="n">r0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264c60</span><span class="p">:</span> <span class="n">sbfx</span>            <span class="n">x2</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="c1">#1, #0x1f</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264c64</span><span class="p">:</span> <span class="n">stur</span>            <span class="n">x2</span><span class="p">,</span> <span class="p">[</span><span class="n">fp</span><span class="p">,</span> <span class="c1">#-0x10]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264c68</span><span class="p">:</span> <span class="n">sub</span>             <span class="n">x0</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="c1">#1</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264c6c</span><span class="p">:</span> <span class="n">lsl</span>             <span class="n">x3</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="c1">#1</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264c70</span><span class="p">:</span> <span class="n">stp</span>             <span class="n">x3</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="p">[</span><span class="n">SP</span><span class="p">,</span> <span class="c1">#8]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264c74</span><span class="p">:</span> <span class="n">r16</span> <span class="o">=</span> <span class="s2">&#34;}&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264c74</span><span class="p">:</span> <span class="n">add</span>             <span class="n">x16</span><span class="p">,</span> <span class="n">PP</span><span class="p">,</span> <span class="c1">#8, lsl #12  ; [pp+0x8a40] &#34;}&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264c78</span><span class="p">:</span> <span class="n">ldr</span>             <span class="n">x16</span><span class="p">,</span> <span class="p">[</span><span class="n">x16</span><span class="p">,</span> <span class="c1">#0xa40]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264c7c</span><span class="p">:</span> <span class="nb">str</span>             <span class="n">x16</span><span class="p">,</span> <span class="p">[</span><span class="n">SP</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264c80</span><span class="p">:</span> <span class="n">r0</span> <span class="o">=</span> <span class="n">_substringMatches</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264c80</span><span class="p">:</span> <span class="n">bl</span>              <span class="c1">#0x198df8  ; [dart:core] _StringBase::_substringMatches</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264c84</span><span class="p">:</span> <span class="n">tbnz</span>            <span class="n">w0</span><span class="p">,</span> <span class="c1">#4, #0x264d58</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264c88</span><span class="p">:</span> <span class="n">ldur</span>            <span class="n">x0</span><span class="p">,</span> <span class="p">[</span><span class="n">fp</span><span class="p">,</span> <span class="c1">#-0x10]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264c8c</span><span class="p">:</span> <span class="n">cmp</span>             <span class="n">x0</span><span class="p">,</span> <span class="c1">#0x2d</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264c90</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">ne</span>            <span class="c1">#0x264d58</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264c94</span><span class="p">:</span> <span class="n">ldur</span>            <span class="n">x1</span><span class="p">,</span> <span class="p">[</span><span class="n">fp</span><span class="p">,</span> <span class="c1">#-8]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264c98</span><span class="p">:</span> <span class="n">r0</span> <span class="o">=</span> <span class="n">LoadClassIdInstr</span><span class="p">(</span><span class="n">r1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264c98</span><span class="p">:</span> <span class="n">ldur</span>            <span class="n">x0</span><span class="p">,</span> <span class="p">[</span><span class="n">x1</span><span class="p">,</span> <span class="c1">#-1]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264c9c</span><span class="p">:</span> <span class="n">ubfx</span>            <span class="n">x0</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="c1">#0xc, #0x14</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264ca0</span><span class="p">:</span> <span class="n">r2</span> <span class="o">=</span> <span class="s2">&#34;{&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264ca0</span><span class="p">:</span> <span class="n">add</span>             <span class="n">x2</span><span class="p">,</span> <span class="n">PP</span><span class="p">,</span> <span class="c1">#8, lsl #12  ; [pp+0x8a18] &#34;{&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264ca4</span><span class="p">:</span> <span class="n">ldr</span>             <span class="n">x2</span><span class="p">,</span> <span class="p">[</span><span class="n">x2</span><span class="p">,</span> <span class="c1">#0xa18]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264ca8</span><span class="p">:</span> <span class="n">r0</span> <span class="o">=</span> <span class="n">GDT</span><span class="p">[</span><span class="n">cid_x0</span> <span class="o">+</span> <span class="o">-</span><span class="mh">0x1000</span><span class="p">]()</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264ca8</span><span class="p">:</span> <span class="n">sub</span>             <span class="n">lr</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="c1">#1, lsl #12</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264cac</span><span class="p">:</span> <span class="n">ldr</span>             <span class="n">lr</span><span class="p">,</span> <span class="p">[</span><span class="n">x21</span><span class="p">,</span> <span class="n">lr</span><span class="p">,</span> <span class="n">lsl</span> <span class="c1">#3]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264cb0</span><span class="p">:</span> <span class="n">blr</span>             <span class="n">lr</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264cb4</span><span class="p">:</span> <span class="n">mov</span>             <span class="n">x2</span><span class="p">,</span> <span class="n">x0</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264cb8</span><span class="p">:</span> <span class="n">LoadField</span><span class="p">:</span> <span class="n">r0</span> <span class="o">=</span> <span class="n">r2</span><span class="o">-&gt;</span><span class="n">field_b</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264cb8</span><span class="p">:</span> <span class="n">ldur</span>            <span class="n">w0</span><span class="p">,</span> <span class="p">[</span><span class="n">x2</span><span class="p">,</span> <span class="c1">#0xb]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264cbc</span><span class="p">:</span> <span class="n">r1</span> <span class="o">=</span> <span class="n">LoadInt32Instr</span><span class="p">(</span><span class="n">r0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264cbc</span><span class="p">:</span> <span class="n">sbfx</span>            <span class="n">x1</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="c1">#1, #0x1f</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264cc0</span><span class="p">:</span> <span class="n">mov</span>             <span class="n">x0</span><span class="p">,</span> <span class="n">x1</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264cc4</span><span class="p">:</span> <span class="n">r1</span> <span class="o">=</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264cc4</span><span class="p">:</span> <span class="n">movz</span>            <span class="n">x1</span><span class="p">,</span> <span class="c1">#0x1</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264cc8</span><span class="p">:</span> <span class="n">cmp</span>             <span class="n">x1</span><span class="p">,</span> <span class="n">x0</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264ccc</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">hs</span>            <span class="c1">#0x264d80</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264cd0</span><span class="p">:</span> <span class="n">LoadField</span><span class="p">:</span> <span class="n">r0</span> <span class="o">=</span> <span class="n">r2</span><span class="o">-&gt;</span><span class="n">field_f</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264cd0</span><span class="p">:</span> <span class="n">ldur</span>            <span class="n">w0</span><span class="p">,</span> <span class="p">[</span><span class="n">x2</span><span class="p">,</span> <span class="c1">#0xf]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264cd4</span><span class="p">:</span> <span class="n">DecompressPointer</span> <span class="n">r0</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264cd4</span><span class="p">:</span> <span class="n">add</span>             <span class="n">x0</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">HEAP</span><span class="p">,</span> <span class="n">lsl</span> <span class="c1">#32</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264cd8</span><span class="p">:</span> <span class="n">LoadField</span><span class="p">:</span> <span class="n">r1</span> <span class="o">=</span> <span class="n">r0</span><span class="o">-&gt;</span><span class="n">field_13</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264cd8</span><span class="p">:</span> <span class="n">ldur</span>            <span class="n">w1</span><span class="p">,</span> <span class="p">[</span><span class="n">x0</span><span class="p">,</span> <span class="c1">#0x13]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264cdc</span><span class="p">:</span> <span class="n">DecompressPointer</span> <span class="n">r1</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264cdc</span><span class="p">:</span> <span class="n">add</span>             <span class="n">x1</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">HEAP</span><span class="p">,</span> <span class="n">lsl</span> <span class="c1">#32</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264ce0</span><span class="p">:</span> <span class="n">r0</span> <span class="o">=</span> <span class="n">LoadClassIdInstr</span><span class="p">(</span><span class="n">r1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264ce0</span><span class="p">:</span> <span class="n">ldur</span>            <span class="n">x0</span><span class="p">,</span> <span class="p">[</span><span class="n">x1</span><span class="p">,</span> <span class="c1">#-1]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264ce4</span><span class="p">:</span> <span class="n">ubfx</span>            <span class="n">x0</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="c1">#0xc, #0x14</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264ce8</span><span class="p">:</span> <span class="n">r2</span> <span class="o">=</span> <span class="s2">&#34;}&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264ce8</span><span class="p">:</span> <span class="n">add</span>             <span class="n">x2</span><span class="p">,</span> <span class="n">PP</span><span class="p">,</span> <span class="c1">#8, lsl #12  ; [pp+0x8a40] &#34;}&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264cec</span><span class="p">:</span> <span class="n">ldr</span>             <span class="n">x2</span><span class="p">,</span> <span class="p">[</span><span class="n">x2</span><span class="p">,</span> <span class="c1">#0xa40]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264cf0</span><span class="p">:</span> <span class="n">r0</span> <span class="o">=</span> <span class="n">GDT</span><span class="p">[</span><span class="n">cid_x0</span> <span class="o">+</span> <span class="o">-</span><span class="mh">0x1000</span><span class="p">]()</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264cf0</span><span class="p">:</span> <span class="n">sub</span>             <span class="n">lr</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="c1">#1, lsl #12</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264cf4</span><span class="p">:</span> <span class="n">ldr</span>             <span class="n">lr</span><span class="p">,</span> <span class="p">[</span><span class="n">x21</span><span class="p">,</span> <span class="n">lr</span><span class="p">,</span> <span class="n">lsl</span> <span class="c1">#3]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264cf8</span><span class="p">:</span> <span class="n">blr</span>             <span class="n">lr</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264cfc</span><span class="p">:</span> <span class="n">mov</span>             <span class="n">x2</span><span class="p">,</span> <span class="n">x0</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264d00</span><span class="p">:</span> <span class="n">LoadField</span><span class="p">:</span> <span class="n">r0</span> <span class="o">=</span> <span class="n">r2</span><span class="o">-&gt;</span><span class="n">field_b</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264d00</span><span class="p">:</span> <span class="n">ldur</span>            <span class="n">w0</span><span class="p">,</span> <span class="p">[</span><span class="n">x2</span><span class="p">,</span> <span class="c1">#0xb]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264d04</span><span class="p">:</span> <span class="n">r1</span> <span class="o">=</span> <span class="n">LoadInt32Instr</span><span class="p">(</span><span class="n">r0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264d04</span><span class="p">:</span> <span class="n">sbfx</span>            <span class="n">x1</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="c1">#1, #0x1f</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264d08</span><span class="p">:</span> <span class="n">mov</span>             <span class="n">x0</span><span class="p">,</span> <span class="n">x1</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264d0c</span><span class="p">:</span> <span class="n">r1</span> <span class="o">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264d0c</span><span class="p">:</span> <span class="n">movz</span>            <span class="n">x1</span><span class="p">,</span> <span class="c1">#0</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264d10</span><span class="p">:</span> <span class="n">cmp</span>             <span class="n">x1</span><span class="p">,</span> <span class="n">x0</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264d14</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">hs</span>            <span class="c1">#0x264d84</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264d18</span><span class="p">:</span> <span class="n">LoadField</span><span class="p">:</span> <span class="n">r0</span> <span class="o">=</span> <span class="n">r2</span><span class="o">-&gt;</span><span class="n">field_f</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264d18</span><span class="p">:</span> <span class="n">ldur</span>            <span class="n">w0</span><span class="p">,</span> <span class="p">[</span><span class="n">x2</span><span class="p">,</span> <span class="c1">#0xf]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264d1c</span><span class="p">:</span> <span class="n">DecompressPointer</span> <span class="n">r0</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264d1c</span><span class="p">:</span> <span class="n">add</span>             <span class="n">x0</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">HEAP</span><span class="p">,</span> <span class="n">lsl</span> <span class="c1">#32</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264d20</span><span class="p">:</span> <span class="n">LoadField</span><span class="p">:</span> <span class="n">r1</span> <span class="o">=</span> <span class="n">r0</span><span class="o">-&gt;</span><span class="n">field_f</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264d20</span><span class="p">:</span> <span class="n">ldur</span>            <span class="n">w1</span><span class="p">,</span> <span class="p">[</span><span class="n">x0</span><span class="p">,</span> <span class="c1">#0xf]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264d24</span><span class="p">:</span> <span class="n">DecompressPointer</span> <span class="n">r1</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264d24</span><span class="p">:</span> <span class="n">add</span>             <span class="n">x1</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">HEAP</span><span class="p">,</span> <span class="n">lsl</span> <span class="c1">#32</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264d28</span><span class="p">:</span> <span class="n">r0</span> <span class="o">=</span> <span class="n">m3N4B5V6</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264d28</span><span class="p">:</span> <span class="n">bl</span>              <span class="c1">#0x265088  ; [package:babyapk/src/rust/api/simple.dart] ::m3N4B5V6</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264d2c</span><span class="p">:</span> <span class="n">tbnz</span>            <span class="n">w0</span><span class="p">,</span> <span class="c1">#4, #0x264d44</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264d30</span><span class="p">:</span> <span class="n">r1</span> <span class="o">=</span> <span class="s2">&#34;You Got it!!!!&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264d30</span><span class="p">:</span> <span class="n">add</span>             <span class="n">x1</span><span class="p">,</span> <span class="n">PP</span><span class="p">,</span> <span class="c1">#0xc, lsl #12  ; [pp+0xcfb8] &#34;You Got it!!!!&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264d34</span><span class="p">:</span> <span class="n">ldr</span>             <span class="n">x1</span><span class="p">,</span> <span class="p">[</span><span class="n">x1</span><span class="p">,</span> <span class="c1">#0xfb8]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264d38</span><span class="p">:</span> <span class="n">r4</span> <span class="o">=</span> <span class="k">const</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mh">0x1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mh">0x1</span><span class="p">,</span> <span class="n">null</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264d38</span><span class="p">:</span> <span class="n">ldr</span>             <span class="n">x4</span><span class="p">,</span> <span class="p">[</span><span class="n">PP</span><span class="p">,</span> <span class="c1">#0x430]  ; [pp+0x430] List(5) [0, 0x1, 0, 0x1, Null]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264d3c</span><span class="p">:</span> <span class="n">r0</span> <span class="o">=</span> <span class="n">showToast</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264d3c</span><span class="p">:</span> <span class="n">bl</span>              <span class="c1">#0x264d88  ; [package:fluttertoast/fluttertoast.dart] Fluttertoast::showToast</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264d40</span><span class="p">:</span> <span class="n">b</span>               <span class="c1">#0x264d68</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264d44</span><span class="p">:</span> <span class="n">r1</span> <span class="o">=</span> <span class="s2">&#34;wrong flag&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264d44</span><span class="p">:</span> <span class="n">add</span>             <span class="n">x1</span><span class="p">,</span> <span class="n">PP</span><span class="p">,</span> <span class="c1">#0xc, lsl #12  ; [pp+0xcfc0] &#34;wrong flag&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264d48</span><span class="p">:</span> <span class="n">ldr</span>             <span class="n">x1</span><span class="p">,</span> <span class="p">[</span><span class="n">x1</span><span class="p">,</span> <span class="c1">#0xfc0]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264d4c</span><span class="p">:</span> <span class="n">r4</span> <span class="o">=</span> <span class="k">const</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mh">0x1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mh">0x1</span><span class="p">,</span> <span class="n">null</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264d4c</span><span class="p">:</span> <span class="n">ldr</span>             <span class="n">x4</span><span class="p">,</span> <span class="p">[</span><span class="n">PP</span><span class="p">,</span> <span class="c1">#0x430]  ; [pp+0x430] List(5) [0, 0x1, 0, 0x1, Null]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264d50</span><span class="p">:</span> <span class="n">r0</span> <span class="o">=</span> <span class="n">showToast</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264d50</span><span class="p">:</span> <span class="n">bl</span>              <span class="c1">#0x264d88  ; [package:fluttertoast/fluttertoast.dart] Fluttertoast::showToast</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264d54</span><span class="p">:</span> <span class="n">b</span>               <span class="c1">#0x264d68</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264d58</span><span class="p">:</span> <span class="n">r1</span> <span class="o">=</span> <span class="s2">&#34;wrong flag&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264d58</span><span class="p">:</span> <span class="n">add</span>             <span class="n">x1</span><span class="p">,</span> <span class="n">PP</span><span class="p">,</span> <span class="c1">#0xc, lsl #12  ; [pp+0xcfc0] &#34;wrong flag&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264d5c</span><span class="p">:</span> <span class="n">ldr</span>             <span class="n">x1</span><span class="p">,</span> <span class="p">[</span><span class="n">x1</span><span class="p">,</span> <span class="c1">#0xfc0]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264d60</span><span class="p">:</span> <span class="n">r4</span> <span class="o">=</span> <span class="k">const</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mh">0x1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mh">0x1</span><span class="p">,</span> <span class="n">null</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264d60</span><span class="p">:</span> <span class="n">ldr</span>             <span class="n">x4</span><span class="p">,</span> <span class="p">[</span><span class="n">PP</span><span class="p">,</span> <span class="c1">#0x430]  ; [pp+0x430] List(5) [0, 0x1, 0, 0x1, Null]</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264d64</span><span class="p">:</span> <span class="n">r0</span> <span class="o">=</span> <span class="n">showToast</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264d64</span><span class="p">:</span> <span class="n">bl</span>              <span class="c1">#0x264d88  ; [package:fluttertoast/fluttertoast.dart] Fluttertoast::showToast</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264d68</span><span class="p">:</span> <span class="n">r0</span> <span class="o">=</span> <span class="n">Null</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264d68</span><span class="p">:</span> <span class="n">mov</span>             <span class="n">x0</span><span class="p">,</span> <span class="n">NULL</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264d6c</span><span class="p">:</span> <span class="n">LeaveFrame</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264d6c</span><span class="p">:</span> <span class="n">mov</span>             <span class="n">SP</span><span class="p">,</span> <span class="n">fp</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264d70</span><span class="p">:</span> <span class="n">ldp</span>             <span class="n">fp</span><span class="p">,</span> <span class="n">lr</span><span class="p">,</span> <span class="p">[</span><span class="n">SP</span><span class="p">],</span> <span class="c1">#0x10</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264d74</span><span class="p">:</span> <span class="n">ret</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264d74</span><span class="p">:</span> <span class="n">ret</span>             
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264d78</span><span class="p">:</span> <span class="n">r0</span> <span class="o">=</span> <span class="n">StackOverflowSharedWithoutFPURegs</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264d78</span><span class="p">:</span> <span class="n">bl</span>              <span class="c1">#0x3bbe84  ; StackOverflowSharedWithoutFPURegsStub</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264d7c</span><span class="p">:</span> <span class="n">b</span>               <span class="c1">#0x264c24</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264d80</span><span class="p">:</span> <span class="n">r0</span> <span class="o">=</span> <span class="n">RangeErrorSharedWithoutFPURegs</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264d80</span><span class="p">:</span> <span class="n">bl</span>              <span class="c1">#0x3bc2cc  ; RangeErrorSharedWithoutFPURegsStub</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span> <span class="mh">0x264d84</span><span class="p">:</span> <span class="n">r0</span> <span class="o">=</span> <span class="n">RangeErrorSharedWithoutFPURegs</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="o">//</span>     <span class="mh">0x264d84</span><span class="p">:</span> <span class="n">bl</span>              <span class="c1">#0x3bc2cc  ; RangeErrorSharedWithoutFPURegsStub</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>大概就是 check 了一下 flag 格式和长度 45，直接进入<code>[package:babyapk/src/rust/api/simple.dart] ::m3N4B5V6</code>执行校验逻辑。这里可以看到是使用了一个 flutter 和 rust 结合的框架 <a href="https://github.com/fzyzcjy/flutter_rust_bridge"target="_blank" rel="external nofollow noopener noreferrer">https://github.com/fzyzcjy/flutter_rust_bridge</a></p>
+<p>直接找源码来看，大概的逻辑是对所有的 rust 函数做一个中间层，大概的调用顺序如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">package:babyapk/src/rust/api/simple.dart::m3N4B5V6
+</span></span><span class="line"><span class="cl">package:babyapk/src/rust/frb_generated.dart::crateApiSimpleM3N4B5V6</span></span></code></pre></td></tr></table>
+</div>
+</div><p>示例工程里的调用代码：https://github.com/fzyzcjy/flutter_rust_bridge/blob/fffbb1f9ab7e4586ec2e3cd7f1f0b94219161ee1/frb_example/dart_minimal/lib/src/rust/frb_generated.dart#L96</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-dart" data-lang="dart"><span class="line"><span class="cl">  <span class="err">@</span><span class="n">override</span>
+</span></span><span class="line"><span class="cl">  <span class="n">Future</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">crateApiMinimalInitApp</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">handler</span><span class="p">.</span><span class="n">executeNormal</span><span class="p">(</span><span class="n">NormalTask</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">      <span class="nl">callFfi:</span> <span class="p">(</span><span class="n">port_</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="kd">final</span> <span class="n">serializer</span> <span class="o">=</span> <span class="n">SseSerializer</span><span class="p">(</span><span class="n">generalizedFrbRustBinding</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">pdeCallFfi</span><span class="p">(</span><span class="n">generalizedFrbRustBinding</span><span class="p">,</span> <span class="n">serializer</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="nl">funcId:</span> <span class="m">1</span><span class="p">,</span> <span class="nl">port:</span> <span class="n">port_</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">      <span class="p">},</span>
+</span></span><span class="line"><span class="cl">      <span class="nl">codec:</span> <span class="n">SseCodec</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="nl">decodeSuccessData:</span> <span class="n">sse_decode_unit</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="nl">decodeErrorData:</span> <span class="kc">null</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="p">),</span>
+</span></span><span class="line"><span class="cl">      <span class="nl">constMeta:</span> <span class="n">kCrateApiMinimalInitAppConstMeta</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="nl">argValues:</span> <span class="p">[],</span>
+</span></span><span class="line"><span class="cl">      <span class="nl">apiImpl:</span> <span class="k">this</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="p">));</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>可以看到是调用 pdeCallFfi 后根据函数 ID 来调用函数。根据官方文档，序列化的一些东西只给 rust 访问 dart 对象的能力，所以可以不管他。</p>
+<p>在 ida 里经过一系列 F7 分析后可以发现跳过一些异步的操作后直接走到了 CallNativeThroughSafepointStub_1815ac 来进行一个统一的调用，最后跳入 <code>librust_lib_babyapk.so+0x350b8</code> 再根据函数ID执行具体的函数逻辑。</p>
+<p>出题人在这个 so 里留了一个 <code>m3N4B5V6</code> 的字符串，感觉之前的努力全部都像小丑，还好我起床的时候血都没了不然肯定要红温&hellip;</p>
+<p>后面的逻辑是先 check 了 uuid 格式，然后 8 个一组解方程，感觉这 rust 和没有也一样。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">z3</span> <span class="kn">import</span> <span class="o">*</span>
+</span></span><span class="line"><span class="cl"><span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">Int</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;x</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">)]</span>
+</span></span><span class="line"><span class="cl"><span class="n">c</span> <span class="o">=</span> <span class="p">[</span><span class="mh">0x45158</span><span class="p">,</span> <span class="o">-</span><span class="mh">0x109A</span><span class="p">,</span> <span class="mh">0x1D3F</span><span class="p">,</span> <span class="mh">0x4C46B</span><span class="p">,</span> <span class="o">-</span><span class="mh">0x686</span><span class="p">,</span> <span class="mh">0x1BFD</span><span class="p">,</span> <span class="o">-</span><span class="mh">0x45DCB</span><span class="p">,</span> <span class="mh">0x1ED2</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="n">s</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">128</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">-</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span> <span class="o">==</span> <span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl"><span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">==</span> <span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl"><span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">-</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="n">c</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl"><span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="n">c</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl"><span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">-</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="n">c</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl"><span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">7</span><span class="p">])</span> <span class="o">==</span> <span class="n">c</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl"><span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="n">c</span><span class="p">[</span><span class="mi">6</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl"><span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span> <span class="o">-</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">c</span><span class="p">[</span><span class="mi">7</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">check</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl"><span class="n">m</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">model</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="nb">chr</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span><span class="o">.</span><span class="n">as_long</span><span class="p">()),</span> <span class="n">end</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="bytebuffer" class="heading-element"><span>ByteBuffer</span>
+  <a href="#bytebuffer" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>不知道什么是 flatbuffer，但是一看有边有点多半就是画图，那么需要的信息就是边连接的两个点和点的坐标。直接大眼观察一下哪个像就可以了。大概内存布局：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">Edge(3b0h)
+</span></span><span class="line"><span class="cl">0x10000000: pivot
+</span></span><span class="line"><span class="cl">0x77: 左端点编号
+</span></span><span class="line"><span class="cl">0x75: 右端点编号
+</span></span><span class="line"><span class="cl">0x4: 不知道
+</span></span><span class="line"><span class="cl">0x9: 名字长度
+</span></span><span class="line"><span class="cl">string: Edge #103(8byte对齐）
+</span></span><span class="line"><span class="cl">0xfffff1cc: 不知道
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">Dot(1234h)
+</span></span><span class="line"><span class="cl">0x640: x坐标
+</span></span><span class="line"><span class="cl">0x4b: y坐标
+</span></span><span class="line"><span class="cl">0x4: 不知道
+</span></span><span class="line"><span class="cl">0x8: 名字长度
+</span></span><span class="line"><span class="cl">string: Dot #120(8byte对齐)
+</span></span><span class="line"><span class="cl">0xfffff2c8: 不知道</span></span></code></pre></td></tr></table>
+</div>
+</div><p>直接画图。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">EDGE_START</span> <span class="o">=</span> <span class="mh">0x3b0</span>
+</span></span><span class="line"><span class="cl"><span class="n">EDGE_END</span> <span class="o">=</span> <span class="mh">0x1234</span>
+</span></span><span class="line"><span class="cl"><span class="n">DOT_START</span> <span class="o">=</span> <span class="mh">0x1234</span>
+</span></span><span class="line"><span class="cl"><span class="n">DOT_END</span> <span class="o">=</span> <span class="mh">0x1fb0</span>
+</span></span><span class="line"><span class="cl"><span class="n">EDGE_SIZE</span> <span class="o">=</span> <span class="mh">0x24</span>
+</span></span><span class="line"><span class="cl"><span class="n">DOT_SIZE</span> <span class="o">=</span> <span class="mh">0x20</span>
+</span></span><span class="line"><span class="cl"><span class="n">DOT_CNT</span> <span class="o">=</span> <span class="mi">120</span>
+</span></span><span class="line"><span class="cl"><span class="n">EDGE_CNT</span> <span class="o">=</span> <span class="mi">103</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&#34;ByteBuffer.bin&#34;</span><span class="p">,</span> <span class="s2">&#34;rb&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">c</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">dots</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">DOT_CNT</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+</span></span><span class="line"><span class="cl"><span class="n">index</span> <span class="o">=</span> <span class="n">DOT_CNT</span>
+</span></span><span class="line"><span class="cl"><span class="n">i</span> <span class="o">=</span> <span class="n">DOT_START</span>
+</span></span><span class="line"><span class="cl"><span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">DOT_END</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">x</span> <span class="o">=</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">4</span><span class="p">],</span> <span class="s1">&#39;little&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="n">y</span> <span class="o">=</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">4</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">8</span><span class="p">],</span> <span class="s1">&#39;little&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="n">dots</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="n">index</span> <span class="o">-=</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">	<span class="n">i</span> <span class="o">+=</span> <span class="mi">16</span>
+</span></span><span class="line"><span class="cl">	<span class="k">while</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">4</span><span class="p">],</span> <span class="s1">&#39;little&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span> <span class="ow">and</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">DOT_END</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">		<span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">	<span class="n">i</span> <span class="o">-=</span> <span class="mi">8</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">dots</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">edges</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl"><span class="n">i</span> <span class="o">=</span> <span class="n">EDGE_START</span>
+</span></span><span class="line"><span class="cl"><span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">EDGE_END</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">4</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">12</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">	<span class="n">x</span> <span class="o">=</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">4</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">8</span><span class="p">],</span> <span class="s1">&#39;little&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="n">y</span> <span class="o">=</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">8</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">12</span><span class="p">],</span> <span class="s1">&#39;little&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="n">edges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">	<span class="n">i</span> <span class="o">+=</span> <span class="mi">20</span>
+</span></span><span class="line"><span class="cl">	<span class="k">while</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">4</span><span class="p">],</span> <span class="s1">&#39;little&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="mh">0x1000000</span> <span class="ow">and</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">EDGE_END</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">		<span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span></span></span></code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+</span></span><span class="line"><span class="cl"><span class="n">dots</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">(</span><span class="mi">75</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">25</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">75</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">25</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">25</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">75</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">150</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">150</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">150</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">175</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">175</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">225</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">225</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">225</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">250</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">250</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">250</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">325</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">325</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">375</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">375</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">375</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">450</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">450</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">450</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">475</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">475</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">475</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">525</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">550</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">550</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">600</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">600</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">550</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">600</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">625</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">625</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">675</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">675</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">625</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">675</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">700</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">700</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">750</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">750</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">750</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">700</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">775</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">775</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">825</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">825</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">775</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">825</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">850</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">850</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">900</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">900</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">850</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">900</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">925</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">925</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">975</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">975</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">925</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">975</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">1050</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">1050</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">1050</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">1075</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">1075</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">1125</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">1125</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">1125</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">1075</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">1150</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">1150</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">1200</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">1200</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">1200</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">1225</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">1225</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">1225</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">1275</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">1300</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">1300</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">1350</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">1350</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">1300</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">1350</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">1375</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">1375</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">1425</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">1425</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">1375</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">1425</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">1450</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">1450</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">1500</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">1500</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">1450</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">1500</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">1525</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">1525</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">1575</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">1575</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">1525</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">1575</span><span class="p">,</span> <span class="mi">125</span><span class="p">),</span> <span class="p">(</span><span class="mi">1600</span><span class="p">,</span> <span class="mi">75</span><span class="p">)]</span>
+</span></span><span class="line"><span class="cl"><span class="n">edges</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">119</span><span class="p">,</span> <span class="mi">117</span><span class="p">),</span> <span class="p">(</span><span class="mi">119</span><span class="p">,</span> <span class="mi">118</span><span class="p">),</span> <span class="p">(</span><span class="mi">117</span><span class="p">,</span> <span class="mi">114</span><span class="p">),</span> <span class="p">(</span><span class="mi">116</span><span class="p">,</span> <span class="mi">115</span><span class="p">),</span> <span class="p">(</span><span class="mi">115</span><span class="p">,</span> <span class="mi">114</span><span class="p">),</span> <span class="p">(</span><span class="mi">113</span><span class="p">,</span> <span class="mi">111</span><span class="p">),</span> <span class="p">(</span><span class="mi">113</span><span class="p">,</span> <span class="mi">112</span><span class="p">),</span> <span class="p">(</span><span class="mi">112</span><span class="p">,</span> <span class="mi">108</span><span class="p">),</span> <span class="p">(</span><span class="mi">111</span><span class="p">,</span> <span class="mi">108</span><span class="p">),</span> <span class="p">(</span><span class="mi">110</span><span class="p">,</span> <span class="mi">109</span><span class="p">),</span> <span class="p">(</span><span class="mi">109</span><span class="p">,</span> <span class="mi">108</span><span class="p">),</span> <span class="p">(</span><span class="mi">107</span><span class="p">,</span> <span class="mi">105</span><span class="p">),</span> <span class="p">(</span><span class="mi">107</span><span class="p">,</span> <span class="mi">106</span><span class="p">),</span> <span class="p">(</span><span class="mi">106</span><span class="p">,</span> <span class="mi">102</span><span class="p">),</span> <span class="p">(</span><span class="mi">105</span><span class="p">,</span> <span class="mi">102</span><span class="p">),</span> <span class="p">(</span><span class="mi">105</span><span class="p">,</span> <span class="mi">104</span><span class="p">),</span> <span class="p">(</span><span class="mi">104</span><span class="p">,</span> <span class="mi">103</span><span class="p">),</span> <span class="p">(</span><span class="mi">103</span><span class="p">,</span> <span class="mi">102</span><span class="p">),</span> <span class="p">(</span><span class="mi">101</span><span class="p">,</span> <span class="mi">99</span><span class="p">),</span> <span class="p">(</span><span class="mi">101</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="p">(</span><span class="mi">99</span><span class="p">,</span> <span class="mi">96</span><span class="p">),</span> <span class="p">(</span><span class="mi">98</span><span class="p">,</span> <span class="mi">97</span><span class="p">),</span> <span class="p">(</span><span class="mi">97</span><span class="p">,</span> <span class="mi">96</span><span class="p">),</span> <span class="p">(</span><span class="mi">94</span><span class="p">,</span> <span class="mi">92</span><span class="p">),</span> <span class="p">(</span><span class="mi">93</span><span class="p">,</span> <span class="mi">92</span><span class="p">),</span> <span class="p">(</span><span class="mi">91</span><span class="p">,</span> <span class="mi">90</span><span class="p">),</span> <span class="p">(</span><span class="mi">90</span><span class="p">,</span> <span class="mi">89</span><span class="p">),</span> <span class="p">(</span><span class="mi">89</span><span class="p">,</span> <span class="mi">88</span><span class="p">),</span> <span class="p">(</span><span class="mi">86</span><span class="p">,</span> <span class="mi">81</span><span class="p">),</span> <span class="p">(</span><span class="mi">86</span><span class="p">,</span> <span class="mi">85</span><span class="p">),</span> <span class="p">(</span><span class="mi">85</span><span class="p">,</span> <span class="mi">84</span><span class="p">),</span> <span class="p">(</span><span class="mi">84</span><span class="p">,</span> <span class="mi">83</span><span class="p">),</span> <span class="p">(</span><span class="mi">83</span><span class="p">,</span> <span class="mi">82</span><span class="p">),</span> <span class="p">(</span><span class="mi">82</span><span class="p">,</span> <span class="mi">81</span><span class="p">),</span> <span class="p">(</span><span class="mi">80</span><span class="p">,</span> <span class="mi">78</span><span class="p">),</span> <span class="p">(</span><span class="mi">80</span><span class="p">,</span> <span class="mi">79</span><span class="p">),</span> <span class="p">(</span><span class="mi">78</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">78</span><span class="p">,</span> <span class="mi">77</span><span class="p">),</span> <span class="p">(</span><span class="mi">77</span><span class="p">,</span> <span class="mi">76</span><span class="p">),</span> <span class="p">(</span><span class="mi">76</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="p">(</span><span class="mi">74</span><span class="p">,</span> <span class="mi">73</span><span class="p">),</span> <span class="p">(</span><span class="mi">73</span><span class="p">,</span> <span class="mi">69</span><span class="p">),</span> <span class="p">(</span><span class="mi">72</span><span class="p">,</span> <span class="mi">69</span><span class="p">),</span> <span class="p">(</span><span class="mi">72</span><span class="p">,</span> <span class="mi">71</span><span class="p">),</span> <span class="p">(</span><span class="mi">71</span><span class="p">,</span> <span class="mi">70</span><span class="p">),</span> <span class="p">(</span><span class="mi">68</span><span class="p">,</span> <span class="mi">66</span><span class="p">),</span> <span class="p">(</span><span class="mi">68</span><span class="p">,</span> <span class="mi">67</span><span class="p">),</span> <span class="p">(</span><span class="mi">66</span><span class="p">,</span> <span class="mi">63</span><span class="p">),</span> <span class="p">(</span><span class="mi">66</span><span class="p">,</span> <span class="mi">65</span><span class="p">),</span> <span class="p">(</span><span class="mi">65</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span> <span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">63</span><span class="p">),</span> <span class="p">(</span><span class="mi">62</span><span class="p">,</span> <span class="mi">60</span><span class="p">),</span> <span class="p">(</span><span class="mi">62</span><span class="p">,</span> <span class="mi">61</span><span class="p">),</span> <span class="p">(</span><span class="mi">61</span><span class="p">,</span> <span class="mi">57</span><span class="p">),</span> <span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="mi">57</span><span class="p">),</span> <span class="p">(</span><span class="mi">59</span><span class="p">,</span> <span class="mi">58</span><span class="p">),</span> <span class="p">(</span><span class="mi">58</span><span class="p">,</span> <span class="mi">57</span><span class="p">),</span> <span class="p">(</span><span class="mi">56</span><span class="p">,</span> <span class="mi">51</span><span class="p">),</span> <span class="p">(</span><span class="mi">56</span><span class="p">,</span> <span class="mi">55</span><span class="p">),</span> <span class="p">(</span><span class="mi">55</span><span class="p">,</span> <span class="mi">54</span><span class="p">),</span> <span class="p">(</span><span class="mi">54</span><span class="p">,</span> <span class="mi">53</span><span class="p">),</span> <span class="p">(</span><span class="mi">53</span><span class="p">,</span> <span class="mi">52</span><span class="p">),</span> <span class="p">(</span><span class="mi">52</span><span class="p">,</span> <span class="mi">51</span><span class="p">),</span> <span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">48</span><span class="p">),</span> <span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">49</span><span class="p">),</span> <span class="p">(</span><span class="mi">48</span><span class="p">,</span> <span class="mi">45</span><span class="p">),</span> <span class="p">(</span><span class="mi">47</span><span class="p">,</span> <span class="mi">46</span><span class="p">),</span> <span class="p">(</span><span class="mi">46</span><span class="p">,</span> <span class="mi">45</span><span class="p">),</span> <span class="p">(</span><span class="mi">44</span><span class="p">,</span> <span class="mi">42</span><span class="p">),</span> <span class="p">(</span><span class="mi">44</span><span class="p">,</span> <span class="mi">43</span><span class="p">),</span> <span class="p">(</span><span class="mi">43</span><span class="p">,</span> <span class="mi">39</span><span class="p">),</span> <span class="p">(</span><span class="mi">42</span><span class="p">,</span> <span class="mi">39</span><span class="p">),</span> <span class="p">(</span><span class="mi">42</span><span class="p">,</span> <span class="mi">41</span><span class="p">),</span> <span class="p">(</span><span class="mi">41</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span> <span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">39</span><span class="p">),</span> <span class="p">(</span><span class="mi">37</span><span class="p">,</span> <span class="mi">35</span><span class="p">),</span> <span class="p">(</span><span class="mi">36</span><span class="p">,</span> <span class="mi">35</span><span class="p">),</span> <span class="p">(</span><span class="mi">34</span><span class="p">,</span> <span class="mi">33</span><span class="p">),</span> <span class="p">(</span><span class="mi">33</span><span class="p">,</span> <span class="mi">29</span><span class="p">),</span> <span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">29</span><span class="p">),</span> <span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">31</span><span class="p">),</span> <span class="p">(</span><span class="mi">31</span><span class="p">,</span> <span class="mi">30</span><span class="p">),</span> <span class="p">(</span><span class="mi">28</span><span class="p">,</span> <span class="mi">26</span><span class="p">),</span> <span class="p">(</span><span class="mi">27</span><span class="p">,</span> <span class="mi">26</span><span class="p">),</span> <span class="p">(</span><span class="mi">26</span><span class="p">,</span> <span class="mi">24</span><span class="p">),</span> <span class="p">(</span><span class="mi">25</span><span class="p">,</span> <span class="mi">24</span><span class="p">),</span> <span class="p">(</span><span class="mi">23</span><span class="p">,</span> <span class="mi">21</span><span class="p">),</span> <span class="p">(</span><span class="mi">23</span><span class="p">,</span> <span class="mi">22</span><span class="p">),</span> <span class="p">(</span><span class="mi">21</span><span class="p">,</span> <span class="mi">18</span><span class="p">),</span> <span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">19</span><span class="p">),</span> <span class="p">(</span><span class="mi">19</span><span class="p">,</span> <span class="mi">18</span><span class="p">),</span> <span class="p">(</span><span class="mi">17</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span> <span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span> <span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">14</span><span class="p">),</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">11</span><span class="p">),</span> <span class="p">(</span><span class="mi">11</span><span class="p">,</span> <span class="mi">7</span><span class="p">),</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">7</span><span class="p">),</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">9</span><span class="p">),</span> <span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">dots</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">dots</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="n">dots</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">dots</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="mi">1</span><span class="p">]],</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>这题之所以放在 Reverse 标签内大概是因为最后需要把图翻转 180 度再水平翻转吧。</p>
+<h2 id="bytekit" class="heading-element"><span>ByteKit</span>
+  <a href="#bytekit" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>给了一个 qemu 镜像和 bios，先看看 getflag.sh</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="cp">#!/bin/bash
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="nv">BYTECTF_INPUT_GUID</span><span class="o">=</span>93e91ed6-1a7a-46a1-b880-c5d281700ea2
+</span></span><span class="line"><span class="cl"><span class="nv">BYTECTF_OUTPUT_GUID</span><span class="o">=</span>93e91ed6-1a7a-46a1-b880-c5c281700ea2
+</span></span><span class="line"><span class="cl"><span class="nv">BYTECTF_INPUT_VAR_FILE</span><span class="o">=</span><span class="s2">&#34;/sys/firmware/efi/efivars/ByteCTFIn-</span><span class="nv">$BYTECTF_INPUT_GUID</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="nv">BYTECTF_OUTPUT_VAR_FILE</span><span class="o">=</span><span class="s2">&#34;/sys/firmware/efi/efivars/ByteCTFOut-</span><span class="nv">$BYTECTF_OUTPUT_GUID</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="o">[</span> <span class="s2">&#34;</span><span class="nv">$1</span><span class="s2">&#34;</span> <span class="o">==</span> <span class="s2">&#34;&#34;</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">echo</span> <span class="s2">&#34;</span><span class="nv">$0</span><span class="s2"> &lt;your input&gt;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">exit</span> <span class="m">1</span>
+</span></span><span class="line"><span class="cl"><span class="k">fi</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nv">input</span><span class="o">=</span><span class="nv">$1</span>
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s2">&#34;your input is </span><span class="nv">$input</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="o">[</span> -f <span class="nv">$BYTECTF_OUTPUT_VAR_FILE</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
+</span></span><span class="line"><span class="cl">    <span class="nv">flag1</span><span class="o">=</span><span class="nv">$input</span>
+</span></span><span class="line"><span class="cl">    <span class="nv">flag2</span><span class="o">=</span><span class="sb">`</span>cat <span class="nv">$BYTECTF_OUTPUT_VAR_FILE</span> <span class="p">|</span> base64 <span class="p">|</span> cut -c -24<span class="sb">`</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">echo</span> <span class="s2">&#34;ByteCTF{</span><span class="nv">$flag1$flag2</span><span class="s2">}&#34;</span>
+</span></span><span class="line"><span class="cl">    chattr -i <span class="nv">$BYTECTF_OUTPUT_VAR_FILE</span>
+</span></span><span class="line"><span class="cl">    rm -f <span class="nv">$BYTECTF_OUTPUT_VAR_FILE</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">exit</span> <span class="m">0</span>
+</span></span><span class="line"><span class="cl"><span class="k">fi</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="o">[</span> -f <span class="nv">$BYTECTF_INPUT_VAR_FILE</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
+</span></span><span class="line"><span class="cl">    chattr -i <span class="nv">$BYTECTF_INPUT_VAR_FILE</span>
+</span></span><span class="line"><span class="cl">    rm -f <span class="nv">$BYTECTF_INPUT_VAR_FILE</span>
+</span></span><span class="line"><span class="cl"><span class="k">fi</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> -en <span class="s2">&#34;\x07\x00\x00\x00</span><span class="nv">$input</span><span class="s2">&#34;</span> <span class="p">|</span> sudo tee <span class="nv">$BYTECTF_INPUT_VAR_FILE</span> &gt; /dev/null
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s2">&#34;system will reboot in 10 seconds&#34;</span>
+</span></span><span class="line"><span class="cl">sh -c <span class="s2">&#34;sleep 10; reboot&#34;</span> <span class="p">&amp;</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>根据题目描述，运行这个脚本设置了 ByteCTFIn 之后重启，根据有没有 ByteCTFOut 来判定 flag 是否正确。这里写的是 /efi/efivars，可以判断和 uefi 相关，应该是在 bios.bin 里做的校验。用 UEFI Tools 解包了一下可以发现下面两个有趣的东西：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">VSS entry       | Auth                  | 00004F64 | 00000055 | C3C482FF | --- 93E91ED6-1A7A-46A1-B880-C5D281700EA2 | ByteCTFIn
+</span></span><span class="line"><span class="cl">File            | DXE driver            |   N/A    | 0001CF4E | 6489F051 | ------ FB08605D-6B57-409B-A195-C67992ECF0EE | ByteKitLoaderDxe</span></span></code></pre></td></tr></table>
+</div>
+</div><p>dump 出 ByteKitLoaderDxe 之后直接逆向分析，有 ollvm 混淆，crc32 和 smc 的异或混在一起，已经逆了两个题神志不清的我直接忽略了 smc 的那个异或干瞪了好一会啥都没看出来，又因为完全没有接触过 uefi 相关的东西根本不会调试，遂躺床上昏迷成为战犯。赛后经好心人提点知道这个 ollvm 可以直接用 d810 去除（真没想到 2024 年了还有能被完美去除的 ollvm 混淆&hellip;）</p>
+<p>去除混淆后可以发现是一个简单的异或解密了另一个 module 然后 load 进来执行，里面的逻辑也是简单异或。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">key</span> <span class="o">=</span> <span class="p">[</span><span class="mh">0x62</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mh">0x0B</span><span class="p">,</span> <span class="mh">0x79</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mh">0x74</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mh">0x65</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mh">0x0E</span><span class="p">,</span> <span class="mh">0x64</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mh">0x0D</span><span class="p">,</span> <span class="mh">0x61</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mh">0x0A</span><span class="p">,</span> <span class="mh">0x6E</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mh">0x0F</span><span class="p">,</span> <span class="mh">0x63</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mh">0x0C</span><span class="p">,</span> <span class="mh">0x65</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mh">0x0A</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="n">cip</span> <span class="o">=</span> <span class="p">[</span>  <span class="mh">0x4B</span><span class="p">,</span> <span class="mh">0x27</span><span class="p">,</span> <span class="mh">0x42</span><span class="p">,</span> <span class="mh">0x55</span><span class="p">,</span> <span class="mh">0x48</span><span class="p">,</span> <span class="mh">0x6E</span><span class="p">,</span> <span class="mh">0x41</span><span class="p">,</span> <span class="mh">0x29</span><span class="p">,</span> <span class="mh">0x1F</span><span class="p">,</span> <span class="mh">0x5E</span><span class="p">,</span> 
+</span></span><span class="line"><span class="cl">  <span class="mh">0x04</span><span class="p">,</span> <span class="mh">0x04</span><span class="p">,</span> <span class="mh">0x6B</span><span class="p">,</span> <span class="mh">0x3E</span><span class="p">,</span> <span class="mh">0x57</span><span class="p">,</span> <span class="mh">0x5F</span><span class="p">,</span> <span class="mh">0x08</span><span class="p">,</span> <span class="mh">0x07</span><span class="p">,</span> <span class="mh">0x5F</span><span class="p">,</span> <span class="mh">0x3A</span><span class="p">,</span> 
+</span></span><span class="line"><span class="cl">  <span class="mh">0x31</span><span class="p">,</span> <span class="mh">0x17</span><span class="p">,</span> <span class="mh">0x40</span><span class="p">,</span> <span class="mh">0x30</span><span class="p">,</span> <span class="mh">0x5F</span><span class="p">,</span> <span class="mh">0x7A</span><span class="p">,</span> <span class="mh">0x75</span><span class="p">,</span> <span class="mh">0x67</span><span class="p">,</span> <span class="mh">0x36</span><span class="p">,</span> <span class="mh">0x36</span><span class="p">,</span> 
+</span></span><span class="line"><span class="cl">  <span class="mh">0x36</span><span class="p">,</span> <span class="mh">0x36</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="mi">3</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">key</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">key</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">key</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">2</span><span class="p">]):</span>
+</span></span><span class="line"><span class="cl">		<span class="n">cip</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="nb">bytearray</span><span class="p">(</span><span class="n">cip</span><span class="p">))</span></span></span></code></pre></td></tr></table>
+</div>
+</div></div><div class="post-footer" id="post-footer">
+  <div class="post-info">
+    <div class="post-info-line">
+      <div class="post-info-mod">
+        <span title="Updated on 2024-09-22 19:55:39">Updated on 2024-09-22&nbsp;</span>
+      </div><div class="post-info-license">
+            <span><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a></span>
+          </div></div><div class="post-info-line">
+        <div class="post-info-md"><span><a href="/posts/byte2024/index.md" title="Read Markdown" class="link-to-markdown">Read Markdown</a></span></div>
+        <div class="post-info-share">
+          <span><a href="javascript:void(0);" title="Share on X" data-sharer="twitter" data-url="https://www.sh1no.icu/posts/byte2024/" data-title="ByteCTF2024 Reverse Wps" data-via="ShinoLeah"><i class="fa-brands fa-x-twitter fa-fw" aria-hidden="true"></i></a>
+  <a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="https://www.sh1no.icu/posts/byte2024/"><i class="fa-brands fa-facebook-square fa-fw" aria-hidden="true"></i></a>
+  <a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.sh1no.icu/posts/byte2024/" data-title="ByteCTF2024 Reverse Wps"><i class="fa-brands fa-weibo fa-fw" aria-hidden="true"></i></a>
+  </span>
+        </div>
+      </div></div>
+
+  <div class="post-info-more">
+    <section class="post-tags"></section>
+    <section>
+      <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+    </section>
+  </div><div class="post-nav"><a href="/posts/chromium/" class="post-nav-item" rel="prev" title="Chromium 内核 Hook 抓包实战记录"><i class="fa-solid fa-angle-left fa-fw" aria-hidden="true"></i>Chromium 内核 Hook 抓包实战记录</a></div>
+</div>
+</article>
+
+  <aside class="toc" id="toc-auto" aria-label="Contents"><h2 class="toc-title">Contents&nbsp;<i class="toc-icon fa-solid fa-angle-down fa-fw" aria-hidden="true"></i></h2>
+      <div class="toc-content" id="toc-content-auto"></div></aside></main><footer class="footer">
+    <div class="footer-container"><div class="footer-line powered">Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow noopener noreferrer" title="Hugo 0.144.2"><img class="hugo-icon" src="/images/hugo.min.svg" alt="Hugo logo" /> Hugo</a> | Theme - <a href="https://github.com/hugo-fixit/FixIt" target="_blank" rel="external" title="FixIt v0.3.17-8b402129"><img class="fixit-icon" src="/images/fixit.min.svg" alt="FixIt logo" /> FixIt</a>
+        </div><div class="footer-line copyright" itemscope itemtype="http://schema.org/CreativeWork"><i class="fa-regular fa-copyright fa-fw" aria-hidden="true"></i>
+            <span itemprop="copyrightYear">2020 - 2025</span><span class="author" itemprop="copyrightHolder">
+              <a href="/">Shino</a></span></div></div>
+  </footer></div><div class="widgets"><div class="fixed-buttons animate__faster d-none"><div class="fixed-button back-to-top" role="button" aria-label="Back to Top"><i class="fa-solid fa-arrow-up fa-fw" aria-hidden="true"></i><span class="variant-numeric d-none">0%</span>
+        </div></div><div id="mask"></div><div class="reading-progress-bar" style="left: 0;top: 0;"></div><noscript>
+    <div class="noscript-warning">This website works best with JavaScript enabled.</div>
+  </noscript>
+</div><link rel="preload" href="/lib/katex/katex.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/katex/katex.min.css"></noscript><script src="/lib/autocomplete/autocomplete.min.js" defer></script><script src="/lib/fuse/fuse.min.js" defer></script><script src="/lib/sharer/sharer.min.js" async defer></script><script src="/lib/katex/katex.min.js" defer></script><script src="/lib/katex/auto-render.min.js" defer></script><script src="/lib/katex/copy-tex.min.js" defer></script><script src="/lib/katex/mhchem.min.js" defer></script><script>var postChatConfig={"addButton":true,"backgroundColor":"","blackDom":[".expiration-reminder","meting-js",".lnt"],"bottom":"","defaultChatQuestions":[],"defaultInput":false,"defaultSearchQuestions":[],"fill":"","frameHeight":"","frameWidth":"","height":"","left":"","showInviteLink":true,"upLoadWeb":true,"userDesc":"","userIcon":"","userMode":"magic","userTitle":"","width":""}</script><script src="https://ai.tianli0.top/static/public/postChatUser.min.js" defer data-postChat_key="94e33c8ca2fc6b925063d733c79bb98c27972f8f"></script><script>window.config={"code":{"copyTitle":"Copy to clipboard","editLockTitle":"Lock editable code block","editUnLockTitle":"Unlock editable code block","editable":true,"maxShownLines":10},"comment":{"enable":false},"enablePWA":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"distance":100,"findAllMatches":false,"fuseIndexURL":"/search.json","highlightTag":"em","ignoreFieldNorm":false,"ignoreLocation":false,"isCaseSensitive":false,"location":0,"maxResultLength":10,"minMatchCharLength":2,"noResultsFound":"No results found","snippetLength":30,"threshold":0.3,"type":"fuse","useExtendedSearch":false},"version":"v0.3.17-8b402129"};</script><script src="/js/theme.min.js" defer></script></body>
+</html>
