@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <head>
+    
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+    <meta name="robots" content="noodp" />
+    <title>基于eBPF的安卓CLI调试器——eDBG - Shino Channel</title><meta name="author" content="Shino">
+<meta name="description" content="简介eDBG 是一款基于 eBPF 技术实现的调试工具，为强对抗场景下的安卓 native 逆向工作打造，提供调试器应有的基本功能，在调试时不产生任何附加到目标进程的行为，不使用传统的调试方案，调试器与被调试程序相互独立，仅各自与内核产生交互行为，难以被目标进程调试或干扰。
+除此之外，eDBG 和被调试程序运行状态互不干扰，断点注册不基于运行时地址，即使一方意外退出或重启，另一方也依旧能正常工作。
+eDBG 的使用方式与 gdb 的使用方式几乎相同，无需学习便可直接上手使用。
+项目地址：https://github.com/ShinoLeah/eDBG
+">
+  <meta itemprop="name" content="基于eBPF的安卓CLI调试器——eDBG">
+  <meta itemprop="description" content="简介eDBG 是一款基于 eBPF 技术实现的调试工具，为强对抗场景下的安卓 native 逆向工作打造，提供调试器应有的基本功能，在调试时不产生任何附加到目标进程的行为，不使用传统的调试方案，调试器与被调试程序相互独立，仅各自与内核产生交互行为，难以被目标进程调试或干扰。
+除此之外，eDBG 和被调试程序运行状态互不干扰，断点注册不基于运行时地址，即使一方意外退出或重启，另一方也依旧能正常工作。
+eDBG 的使用方式与 gdb 的使用方式几乎相同，无需学习便可直接上手使用。
+项目地址：https://github.com/ShinoLeah/eDBG">
+  <meta itemprop="datePublished" content="2025-03-21T14:29:36+08:00">
+  <meta itemprop="dateModified" content="2025-03-21T14:29:36+08:00">
+  <meta itemprop="wordCount" content="96">
+  <meta itemprop="image" content="https://www.sh1no.icu/avr.png"><meta property="og:url" content="https://www.sh1no.icu/posts/74a6f54/">
+  <meta property="og:site_name" content="Shino Channel">
+  <meta property="og:title" content="基于eBPF的安卓CLI调试器——eDBG">
+  <meta property="og:description" content="简介eDBG 是一款基于 eBPF 技术实现的调试工具，为强对抗场景下的安卓 native 逆向工作打造，提供调试器应有的基本功能，在调试时不产生任何附加到目标进程的行为，不使用传统的调试方案，调试器与被调试程序相互独立，仅各自与内核产生交互行为，难以被目标进程调试或干扰。
+除此之外，eDBG 和被调试程序运行状态互不干扰，断点注册不基于运行时地址，即使一方意外退出或重启，另一方也依旧能正常工作。
+eDBG 的使用方式与 gdb 的使用方式几乎相同，无需学习便可直接上手使用。
+项目地址：https://github.com/ShinoLeah/eDBG">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2025-03-21T14:29:36+08:00">
+    <meta property="article:modified_time" content="2025-03-21T14:29:36+08:00">
+    <meta property="og:image" content="https://www.sh1no.icu/avr.png">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://www.sh1no.icu/avr.png">
+  <meta name="twitter:title" content="基于eBPF的安卓CLI调试器——eDBG">
+  <meta name="twitter:description" content="简介eDBG 是一款基于 eBPF 技术实现的调试工具，为强对抗场景下的安卓 native 逆向工作打造，提供调试器应有的基本功能，在调试时不产生任何附加到目标进程的行为，不使用传统的调试方案，调试器与被调试程序相互独立，仅各自与内核产生交互行为，难以被目标进程调试或干扰。
+除此之外，eDBG 和被调试程序运行状态互不干扰，断点注册不基于运行时地址，即使一方意外退出或重启，另一方也依旧能正常工作。
+eDBG 的使用方式与 gdb 的使用方式几乎相同，无需学习便可直接上手使用。
+项目地址：https://github.com/ShinoLeah/eDBG">
+      <meta name="twitter:site" content="@ShinoLeah">
+<meta name="twitter:creator" content="@ShinoLeah" /><meta name="application-name" content="Shino Channel">
+<meta name="apple-mobile-web-app-title" content="Shino Channel"><meta name="theme-color" data-light="#f8f8f8" data-dark="#252627" content="#f8f8f8"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" type="text/html" href="https://www.sh1no.icu/posts/74a6f54/" title="基于eBPF的安卓CLI调试器——eDBG - Shino Channel" /><link rel="prev" type="text/html" href="https://www.sh1no.icu/posts/byte2024/" title="ByteCTF2024 Reverse wps" /><link rel="next" type="text/html" href="https://www.sh1no.icu/posts/28348c4/" title="eDBG 使用进阶：避免 uprobes 产生可被察觉的特征" /><link rel="alternate" type="text/markdown" href="https://www.sh1no.icu/posts/74a6f54/index.md" title="基于eBPF的安卓CLI调试器——eDBG - Shino Channel"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="/lib/fontawesome-free/all.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" href="/lib/animate/animate.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
+  {
+    "@context": "http://schema.org",
+    "@type": "BlogPosting",
+    "headline": "基于eBPF的安卓CLI调试器——eDBG",
+    "inLanguage": "zh-CN",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https:\/\/www.sh1no.icu\/posts\/74a6f54\/"
+    },"genre": "posts","wordcount":  96 ,
+    "url": "https:\/\/www.sh1no.icu\/posts\/74a6f54\/","datePublished": "2025-03-21T14:29:36+08:00","dateModified": "2025-03-21T14:29:36+08:00","publisher": {
+      "@type": "Organization",
+      "name": ""},"author": {
+        "@type": "Person",
+        "name": "Shino"
+      },"description": ""
+  }
+  </script><script src="/js/head/color-scheme.min.js"></script></head>
+  <body data-header-desktop="sticky" data-header-mobile="auto"><div class="wrapper" data-page-style="normal"><header class="desktop animate__faster" id="header-desktop">
+  <div class="header-wrapper">
+    <div class="header-title">
+      <a href="/" title="Shino Channel"><span class="header-title-text">Shino</span></a><span class="header-subtitle"></span></div>
+    <nav>
+      <ul class="menu"><li class="menu-item">
+              <a class="menu-link" href="https://www.youtube.com/@anoofficialchannel" rel="noopener noreferrer" target="_blank"></a></li><li class="menu-item">
+              <a class="menu-link" href="https://www.nu1l.com/" title="Nu1L" rel="noopener noreferrer" target="_blank"><i class="fa-solid fa-paperclip fa-fw fa-sm" aria-hidden="true"></i> Nu1L</a></li><li class="menu-item">
+              <a class="menu-link" href="https://cnss.io/" title="CNSS" rel="noopener noreferrer" target="_blank"><i class="fa-solid fa-paperclip fa-fw fa-sm" aria-hidden="true"></i> CNSS</a></li><li class="menu-item">
+              <a class="menu-link" href="/posts/abooout/" title="About"><i class="fa-solid fa-user fa-fw fa-sm" aria-hidden="true"></i> About</a></li><li class="menu-item">
+              <a class="menu-link" href="/posts/friends/" title="Friends"><i class="fa-solid fa-user-group fa-fw fa-sm" aria-hidden="true"></i> Friends</a></li><li class="menu-item delimiter"></li><li class="menu-item search" id="search-desktop">
+            <input type="text" placeholder="Search..." id="search-input-desktop">
+            <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+              <i class="fa-solid fa-search fa-fw" aria-hidden="true"></i>
+            </a>
+            <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+              <i class="fa-solid fa-times-circle fa-fw" aria-hidden="true"></i>
+            </a>
+            <span class="search-button search-loading" id="search-loading-desktop">
+              <i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+            </span>
+          </li><li class="menu-item theme-switch" title="Switch Theme">
+          <i class="fa-solid fa-adjust fa-fw" aria-hidden="true"></i>
+        </li></ul>
+    </nav>
+  </div>
+</header><header class="mobile animate__faster" id="header-mobile">
+  <div class="header-container">
+    <div class="header-wrapper">
+      <div class="header-title">
+        <a href="/" title="Shino Channel"><span class="header-title-text">Shino</span></a><span class="header-subtitle"></span></div>
+      <div class="menu-toggle" id="menu-toggle-mobile">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+    <nav>
+      <ul class="menu" id="menu-mobile"><li class="search-wrapper">
+            <div class="search mobile" id="search-mobile">
+              <input type="text" placeholder="Search..." id="search-input-mobile">
+              <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                <i class="fa-solid fa-search fa-fw" aria-hidden="true"></i>
+              </a>
+              <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                <i class="fa-solid fa-times-circle fa-fw" aria-hidden="true"></i>
+              </a>
+              <span class="search-button search-loading" id="search-loading-mobile">
+                <i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+              </span>
+            </div>
+            <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+              Cancel
+            </a>
+          </li><li class="menu-item"><a class="menu-link" href="https://www.youtube.com/@anoofficialchannel" rel="noopener noreferrer" target="_blank"></a></li><li class="menu-item"><a class="menu-link" href="https://www.nu1l.com/" title="Nu1L" rel="noopener noreferrer" target="_blank"><i class="fa-solid fa-paperclip fa-fw fa-sm" aria-hidden="true"></i> Nu1L</a></li><li class="menu-item"><a class="menu-link" href="https://cnss.io/" title="CNSS" rel="noopener noreferrer" target="_blank"><i class="fa-solid fa-paperclip fa-fw fa-sm" aria-hidden="true"></i> CNSS</a></li><li class="menu-item"><a class="menu-link" href="/posts/abooout/" title="About"><i class="fa-solid fa-user fa-fw fa-sm" aria-hidden="true"></i> About</a></li><li class="menu-item"><a class="menu-link" href="/posts/friends/" title="Friends"><i class="fa-solid fa-user-group fa-fw fa-sm" aria-hidden="true"></i> Friends</a></li><li class="menu-item menu-system">
+          <span class="menu-system-item theme-switch" title="Switch Theme"><i class="fa-solid fa-adjust fa-fw" aria-hidden="true"></i></span></li>
+      </ul>
+    </nav>
+  </div>
+</header><div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+  </div>
+  <div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+  </div><main class="container"><aside class="aside-collection animate__animated animate__fadeIn animate__faster" aria-label="Collections"></aside>
+
+  <article class="page single">
+    <div class="header"><h1 class="single-title animate__animated animate__flipInX"><span>基于eBPF的安卓CLI调试器——eDBG</span>
+      </h1></div><div class="post-meta">
+      <div class="post-meta-line"><span class="post-author"><span class="author"><img loading="lazy" src="/avr.png" alt="Shino" data-title="Shino" width="20" height="20" class="avatar" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>&nbsp;Shino</span></span></div><div class="post-meta-line"><span title="published on 2025-03-21 14:29:36"><i class="fa-solid fa-calendar-days fa-fw me-1" aria-hidden="true"></i><time datetime="2025-03-21">2025-03-21</time></span>&nbsp;<span title="96 words"><i class="fa-solid fa-pencil-alt fa-fw me-1" aria-hidden="true"></i>About 100 words</span>&nbsp;<span><i class="fa-regular fa-clock fa-fw me-1" aria-hidden="true"></i>One minute</span>&nbsp;</div>
+    </div><div class="details toc" id="toc-static" data-kept="false">
+        <div class="details-summary toc-title">
+          <span>Contents</span>
+          <span><i class="details-icon fa-solid fa-angle-right" aria-hidden="true"></i></span>
+        </div>
+        <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#简介">简介</a></li>
+    <li><a href="#主要功能">主要功能</a></li>
+    <li><a href="#运行环境">运行环境</a></li>
+    <li><a href="#功能演示">功能演示</a></li>
+    <li><a href="#进阶使用">进阶使用</a></li>
+    <li><a href="#其他">其他</a></li>
+  </ul>
+</nav></div>
+      </div><div class="content" id="content"><h2 id="简介" class="heading-element"><span>简介</span>
+  <a href="#%e7%ae%80%e4%bb%8b" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>eDBG 是一款基于 eBPF 技术实现的调试工具，为强对抗场景下的安卓 native 逆向工作打造，提供调试器应有的基本功能，在调试时<strong>不产生任何附加到目标进程的行为</strong>，不使用传统的调试方案，调试器与被调试程序<strong>相互独立</strong>，仅各自与内核产生交互行为，难以被目标进程调试或干扰。</p>
+<p>除此之外，eDBG 和被调试程序运行状态互不干扰，断点注册不基于运行时地址，即使一方意外退出或重启，另一方也依旧能正常工作。</p>
+<p>eDBG 的使用方式与 gdb 的使用方式几乎相同，无需学习便可直接上手使用。</p>
+<p>项目地址：https://github.com/ShinoLeah/eDBG</p>
+<h2 id="主要功能" class="heading-element"><span>主要功能</span>
+  <a href="#%e4%b8%bb%e8%a6%81%e5%8a%9f%e8%83%bd" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>主要支持的功能如下：</p>
+<ul>
+<li>断点：基于 uprobes 功能实现，在断点处可暂停程序并且读取任意想要的上下文。</li>
+<li>单步调试：支持步入或步过。</li>
+<li>内存读写：在断点触发时可以读取任意地址内存，也可以自由写入任意有写权限的地址。</li>
+<li>线程过滤：你可以仅调试一个或多个想要的线程。</li>
+<li>符号解析、反汇编等其他调试器应该有的功能。</li>
+</ul>
+<p>支持的 gdb 指令列表：<code>break / continue / step / next / finish  / until / examine / display / quit / list / info / thread</code></p>
+<p>额外的，你可以使用 <code>write</code> 指令写入内存，<code>set</code> 指令为指定的地址标注你的自定义符号。</p>
+<p>eDBG 也支持将你的进度保存到文件或读取工程文件，以便下一次调试。</p>
+<p>详细的使用方式请移步：https://github.com/ShinoLeah/eDBG/blob/main/README.md</p>
+<h2 id="运行环境" class="heading-element"><span>运行环境</span>
+  <a href="#%e8%bf%90%e8%a1%8c%e7%8e%af%e5%a2%83" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><ul>
+<li>目前仅支持 ARM64 架构的 Android 系统，需要 ROOT 权限，推荐搭配 <a href="https://github.com/tiann/KernelSU"target="_blank" rel="external nofollow noopener noreferrer">KernelSU</a> 使用</li>
+<li>系统内核版本5.10+ （可执行<code>uname -r</code>查看）</li>
+</ul>
+<h2 id="功能演示" class="heading-element"><span>功能演示</span>
+  <a href="#%e5%8a%9f%e8%83%bd%e6%bc%94%e7%a4%ba" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>整体的界面设计和信息展示参考了 <a href="https://github.com/pwndbg/pwndbg"target="_blank" rel="external nofollow noopener noreferrer">pwndbg</a>，会在断点处自动分析当前代码和寄存器信息，当然你可以在选项里关掉这些显示。</p>
+<p><img loading="lazy" src="https://github.com/ShinoLeah/eDBG/blob/main/demo.png?raw=true" alt="https://github.com/ShinoLeah/eDBG/blob/main/demo.png?raw=true" srcset="https://github.com/ShinoLeah/eDBG/blob/main/demo.png?raw=true&amp;size=small, https://github.com/ShinoLeah/eDBG/blob/main/demo.png?raw=true&amp;size=medium 1.5x, https://github.com/ShinoLeah/eDBG/blob/main/demo.png?raw=true&amp;size=large 2x" data-title="https://github.com/ShinoLeah/eDBG/blob/main/demo.png?raw=true" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></p>
+<h2 id="进阶使用" class="heading-element"><span>进阶使用</span>
+  <a href="#%e8%bf%9b%e9%98%b6%e4%bd%bf%e7%94%a8" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p><a href="https://www.sh1no.icu/posts/edbg_uprobes"target="_blank" rel="external nofollow noopener noreferrer">eDBG 使用进阶：避免 uprobes 产生可被察觉的特征</a></p>
+<h2 id="其他" class="heading-element"><span>其他</span>
+  <a href="#%e5%85%b6%e4%bb%96" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>本项目主要受到 <a href="https://github.com/SeeFlowerX/stackplz"target="_blank" rel="external nofollow noopener noreferrer">stackplz</a> 启发，在实际逆向工作中我常常使用 stackplz 辅助 ida 进行动态调试，但常常被堆积如山的反调试手段或蜜罐打得鼻青脸肿&hellip;(菜菜)，因此突发奇想将 eBPF 技术直接用于打造一个调试器，虽然比 ida 缺少了图形化界面和反编译（但是现在的 app 还有可以直接 F5 的吗），但是我认为功能也足够作为一个逆向辅助工具进行日常使用。</p>
+<p>喜欢的话可以赏个小星星 QAQ → <a href="https://github.com/ShinoLeah/eDBG"target="_blank" rel="external nofollow noopener noreferrer">https://github.com/ShinoLeah/eDBG</a></p></div><div class="post-footer" id="post-footer">
+  <div class="post-info">
+    <div class="post-info-line">
+      <div class="post-info-mod">
+        <span title="Updated on 2025-03-21 14:29:36">Updated on 2025-03-21&nbsp;</span>
+      </div><div class="post-info-license">
+            <span><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a></span>
+          </div></div><div class="post-info-line">
+        <div class="post-info-md"><span><a href="/posts/74a6f54/index.md" title="Read Markdown" class="link-to-markdown">Read Markdown</a></span></div>
+        <div class="post-info-share">
+          <span><a href="javascript:void(0);" title="Share on X" data-sharer="twitter" data-url="https://www.sh1no.icu/posts/74a6f54/" data-title="基于eBPF的安卓CLI调试器——eDBG" data-via="ShinoLeah"><i class="fa-brands fa-x-twitter fa-fw" aria-hidden="true"></i></a>
+  <a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="https://www.sh1no.icu/posts/74a6f54/"><i class="fa-brands fa-facebook-square fa-fw" aria-hidden="true"></i></a>
+  <a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.sh1no.icu/posts/74a6f54/" data-title="基于eBPF的安卓CLI调试器——eDBG"><i class="fa-brands fa-weibo fa-fw" aria-hidden="true"></i></a>
+  </span>
+        </div>
+      </div></div>
+
+  <div class="post-info-more">
+    <section class="post-tags"></section>
+    <section>
+      <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+    </section>
+  </div><div class="post-nav"><a href="/posts/byte2024/" class="post-nav-item" rel="prev" title="ByteCTF2024 Reverse Wps"><i class="fa-solid fa-angle-left fa-fw" aria-hidden="true"></i>ByteCTF2024 Reverse Wps</a><a href="/posts/28348c4/" class="post-nav-item" rel="next" title="EDBG 使用进阶：避免 Uprobes 产生可被察觉的特征">EDBG 使用进阶：避免 Uprobes 产生可被察觉的特征<i class="fa-solid fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article>
+
+  <aside class="toc" id="toc-auto" aria-label="Contents"><h2 class="toc-title">Contents&nbsp;<i class="toc-icon fa-solid fa-angle-down fa-fw" aria-hidden="true"></i></h2>
+      <div class="toc-content" id="toc-content-auto"></div></aside></main><footer class="footer">
+    <div class="footer-container"><div class="footer-line powered">Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow noopener noreferrer" title="Hugo 0.144.2"><img class="hugo-icon" src="/images/hugo.min.svg" alt="Hugo logo" /> Hugo</a> | Theme - <a href="https://github.com/hugo-fixit/FixIt" target="_blank" rel="external" title="FixIt v0.3.17-8b402129"><img class="fixit-icon" src="/images/fixit.min.svg" alt="FixIt logo" /> FixIt</a>
+        </div><div class="footer-line copyright" itemscope itemtype="http://schema.org/CreativeWork"><i class="fa-regular fa-copyright fa-fw" aria-hidden="true"></i>
+            <span itemprop="copyrightYear">2020 - 2025</span><span class="author" itemprop="copyrightHolder">
+              <a href="/">Shino</a></span></div></div>
+  </footer></div><div class="widgets"><div class="fixed-buttons animate__faster d-none"><div class="fixed-button back-to-top" role="button" aria-label="Back to Top"><i class="fa-solid fa-arrow-up fa-fw" aria-hidden="true"></i><span class="variant-numeric d-none">0%</span>
+        </div></div><div id="mask"></div><div class="reading-progress-bar" style="left: 0;top: 0;"></div><noscript>
+    <div class="noscript-warning">This website works best with JavaScript enabled.</div>
+  </noscript>
+</div><link rel="preload" href="/lib/katex/katex.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/katex/katex.min.css"></noscript><script src="/lib/autocomplete/autocomplete.min.js" defer></script><script src="/lib/fuse/fuse.min.js" defer></script><script src="/lib/sharer/sharer.min.js" async defer></script><script src="/lib/katex/katex.min.js" defer></script><script src="/lib/katex/auto-render.min.js" defer></script><script src="/lib/katex/copy-tex.min.js" defer></script><script src="/lib/katex/mhchem.min.js" defer></script><script>var postChatConfig={"addButton":true,"backgroundColor":"","blackDom":[".expiration-reminder","meting-js",".lnt"],"bottom":"","defaultChatQuestions":["Shino 是谁？","本站有什么内容？","随便推荐一篇文章"],"defaultInput":false,"defaultSearchQuestions":[],"fill":"","frameHeight":"","frameWidth":"","height":"","left":"","showInviteLink":true,"upLoadWeb":true,"userDesc":"","userIcon":"","userMode":"magic","userTitle":"","width":""}</script><script src="https://ai.tianli0.top/static/public/postChatUser.min.js" defer data-postChat_key="94e33c8ca2fc6b925063d733c79bb98c27972f8f"></script><script>window.config={"code":{"copyTitle":"Copy to clipboard","editLockTitle":"Lock editable code block","editUnLockTitle":"Unlock editable code block","editable":true,"maxShownLines":10},"comment":{"enable":false},"enablePWA":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"distance":100,"findAllMatches":false,"fuseIndexURL":"/search.json","highlightTag":"em","ignoreFieldNorm":false,"ignoreLocation":false,"isCaseSensitive":false,"location":0,"maxResultLength":10,"minMatchCharLength":2,"noResultsFound":"No results found","snippetLength":30,"threshold":0.3,"type":"fuse","useExtendedSearch":false},"version":"v0.3.17-8b402129"};</script><script src="/js/theme.min.js" defer></script></body>
+</html>

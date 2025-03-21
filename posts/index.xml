@@ -8,8 +8,22 @@
     <language>zh-CN</language>
     <managingEditor>akalineblog@163.com (Shino)</managingEditor>
     <webMaster>akalineblog@163.com (Shino)</webMaster>
-    <lastBuildDate>Sun, 22 Sep 2024 19:55:39 +0800</lastBuildDate>
+    <lastBuildDate>Fri, 21 Mar 2025 14:55:17 +0800</lastBuildDate>
     <atom:link href="https://www.sh1no.icu/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>eDBG 使用进阶：避免 uprobes 产生可被察觉的特征</title>
+      <link>https://www.sh1no.icu/posts/28348c4/</link>
+      <pubDate>Fri, 21 Mar 2025 14:55:17 +0800</pubDate><author>akalineblog@163.com (Shino)</author>
+      <guid>https://www.sh1no.icu/posts/28348c4/</guid>
+      <description>&lt;h2 id=&#34;填坑中&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;填坑中&lt;/span&gt;&#xD;&#xA;  &lt;a href=&#34;#%e5%a1%ab%e5%9d%91%e4%b8%ad&#34; class=&#34;heading-mark&#34;&gt;&#xD;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xD;&#xA;  &lt;/a&gt;&#xD;&#xA;&lt;/h2&gt;&lt;p&gt;再等一下，马上就写好了&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>基于eBPF的安卓CLI调试器——eDBG</title>
+      <link>https://www.sh1no.icu/posts/74a6f54/</link>
+      <pubDate>Fri, 21 Mar 2025 14:29:36 +0800</pubDate><author>akalineblog@163.com (Shino)</author>
+      <guid>https://www.sh1no.icu/posts/74a6f54/</guid>
+      <description>&lt;h2 id=&#34;简介&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;简介&lt;/span&gt;&#xD;&#xA;  &lt;a href=&#34;#%e7%ae%80%e4%bb%8b&#34; class=&#34;heading-mark&#34;&gt;&#xD;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xD;&#xA;  &lt;/a&gt;&#xD;&#xA;&lt;/h2&gt;&lt;p&gt;eDBG 是一款基于 eBPF 技术实现的调试工具，为强对抗场景下的安卓 native 逆向工作打造，提供调试器应有的基本功能，在调试时&lt;strong&gt;不产生任何附加到目标进程的行为&lt;/strong&gt;，不使用传统的调试方案，调试器与被调试程序&lt;strong&gt;相互独立&lt;/strong&gt;，仅各自与内核产生交互行为，难以被目标进程调试或干扰。&lt;/p&gt;&#xA;&lt;p&gt;除此之外，eDBG 和被调试程序运行状态互不干扰，断点注册不基于运行时地址，即使一方意外退出或重启，另一方也依旧能正常工作。&lt;/p&gt;&#xA;&lt;p&gt;eDBG 的使用方式与 gdb 的使用方式几乎相同，无需学习便可直接上手使用。&lt;/p&gt;&#xA;&lt;p&gt;项目地址：https://github.com/ShinoLeah/eDBG&lt;/p&gt;</description>
+    </item>
     <item>
       <title>ByteCTF2024 Reverse wps</title>
       <link>https://www.sh1no.icu/posts/byte2024/</link>
