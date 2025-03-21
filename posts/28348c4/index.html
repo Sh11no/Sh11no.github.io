@@ -5,18 +5,33 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
     <meta name="robots" content="noodp" />
-    <title>EDBG 使用进阶：避免 Uprobes 产生可被察觉的特征 - Shino Channel</title><meta name="author" content="Shino">
-<meta name="description" content="填坑中再等一下，马上就写好了
+    <title>EDBG 使用进阶：避免 Uprobes 产生可被察觉或检测的特征 - Shino Channel</title><meta name="author" content="Shino">
+<meta name="description" content="uprobes 特征目前我接触过的针对 uprobes 的检测手段无非两种：
+扫描 BRK 指令 检查 /proc/pid/maps中是否含有[uprobes]特征 其中第一种检测方案在实际 APP 中几乎不可行——运行时的完整性校验会带来巨大的时间开销，正常的 APP 基本无法容忍这种开销， 而对于 app 运行前的整体完整性校验，只需要稍晚附加 uprobes 便能直接绕过，因此本文不讨论这种探测方式。
+主要令人担心的是第二种：在使用 uprobes 时，会在/proc/pid/maps中产生类似 7ffffff000-80000000000 --xp 00000000 00:00 0 [uprobes]的字样，如果你有针对这部分检测的魔改 ROM 或者你会使用 eBPF 对 open 和 read 系统调用进行修改，那你可以直接跳过本文内容。
+但是，这种特征是怎么产生的？它在 uprobes 触发时总是会产生吗？答案是否定的。具体内容得分析一下这部分的源码。
+本文在 ARM64 安卓内核版本 5.15.94 下测试，旧版本可能有所不同。
+省流可以直接看后面的总结。
 ">
-  <meta itemprop="name" content="eDBG 使用进阶：避免 uprobes 产生可被察觉的特征">
-  <meta itemprop="description" content="填坑中再等一下，马上就写好了">
+  <meta itemprop="name" content="eDBG 使用进阶：避免 uprobes 产生可被察觉或检测的特征">
+  <meta itemprop="description" content="uprobes 特征目前我接触过的针对 uprobes 的检测手段无非两种：
+扫描 BRK 指令 检查 /proc/pid/maps中是否含有[uprobes]特征 其中第一种检测方案在实际 APP 中几乎不可行——运行时的完整性校验会带来巨大的时间开销，正常的 APP 基本无法容忍这种开销， 而对于 app 运行前的整体完整性校验，只需要稍晚附加 uprobes 便能直接绕过，因此本文不讨论这种探测方式。
+主要令人担心的是第二种：在使用 uprobes 时，会在/proc/pid/maps中产生类似 7ffffff000-80000000000 --xp 00000000 00:00 0 [uprobes]的字样，如果你有针对这部分检测的魔改 ROM 或者你会使用 eBPF 对 open 和 read 系统调用进行修改，那你可以直接跳过本文内容。
+但是，这种特征是怎么产生的？它在 uprobes 触发时总是会产生吗？答案是否定的。具体内容得分析一下这部分的源码。
+本文在 ARM64 安卓内核版本 5.15.94 下测试，旧版本可能有所不同。
+省流可以直接看后面的总结。">
   <meta itemprop="datePublished" content="2025-03-21T14:55:17+08:00">
   <meta itemprop="dateModified" content="2025-03-21T14:55:17+08:00">
-  <meta itemprop="wordCount" content="2">
+  <meta itemprop="wordCount" content="495">
   <meta itemprop="image" content="https://www.sh1no.icu/avr.png"><meta property="og:url" content="https://www.sh1no.icu/posts/28348c4/">
   <meta property="og:site_name" content="Shino Channel">
-  <meta property="og:title" content="eDBG 使用进阶：避免 uprobes 产生可被察觉的特征">
-  <meta property="og:description" content="填坑中再等一下，马上就写好了">
+  <meta property="og:title" content="eDBG 使用进阶：避免 uprobes 产生可被察觉或检测的特征">
+  <meta property="og:description" content="uprobes 特征目前我接触过的针对 uprobes 的检测手段无非两种：
+扫描 BRK 指令 检查 /proc/pid/maps中是否含有[uprobes]特征 其中第一种检测方案在实际 APP 中几乎不可行——运行时的完整性校验会带来巨大的时间开销，正常的 APP 基本无法容忍这种开销， 而对于 app 运行前的整体完整性校验，只需要稍晚附加 uprobes 便能直接绕过，因此本文不讨论这种探测方式。
+主要令人担心的是第二种：在使用 uprobes 时，会在/proc/pid/maps中产生类似 7ffffff000-80000000000 --xp 00000000 00:00 0 [uprobes]的字样，如果你有针对这部分检测的魔改 ROM 或者你会使用 eBPF 对 open 和 read 系统调用进行修改，那你可以直接跳过本文内容。
+但是，这种特征是怎么产生的？它在 uprobes 触发时总是会产生吗？答案是否定的。具体内容得分析一下这部分的源码。
+本文在 ARM64 安卓内核版本 5.15.94 下测试，旧版本可能有所不同。
+省流可以直接看后面的总结。">
   <meta property="og:locale" content="zh_CN">
   <meta property="og:type" content="article">
     <meta property="article:section" content="posts">
@@ -26,24 +41,29 @@
 
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://www.sh1no.icu/avr.png">
-  <meta name="twitter:title" content="eDBG 使用进阶：避免 uprobes 产生可被察觉的特征">
-  <meta name="twitter:description" content="填坑中再等一下，马上就写好了">
+  <meta name="twitter:title" content="eDBG 使用进阶：避免 uprobes 产生可被察觉或检测的特征">
+  <meta name="twitter:description" content="uprobes 特征目前我接触过的针对 uprobes 的检测手段无非两种：
+扫描 BRK 指令 检查 /proc/pid/maps中是否含有[uprobes]特征 其中第一种检测方案在实际 APP 中几乎不可行——运行时的完整性校验会带来巨大的时间开销，正常的 APP 基本无法容忍这种开销， 而对于 app 运行前的整体完整性校验，只需要稍晚附加 uprobes 便能直接绕过，因此本文不讨论这种探测方式。
+主要令人担心的是第二种：在使用 uprobes 时，会在/proc/pid/maps中产生类似 7ffffff000-80000000000 --xp 00000000 00:00 0 [uprobes]的字样，如果你有针对这部分检测的魔改 ROM 或者你会使用 eBPF 对 open 和 read 系统调用进行修改，那你可以直接跳过本文内容。
+但是，这种特征是怎么产生的？它在 uprobes 触发时总是会产生吗？答案是否定的。具体内容得分析一下这部分的源码。
+本文在 ARM64 安卓内核版本 5.15.94 下测试，旧版本可能有所不同。
+省流可以直接看后面的总结。">
       <meta name="twitter:site" content="@ShinoLeah">
 <meta name="twitter:creator" content="@ShinoLeah" /><meta name="application-name" content="Shino Channel">
 <meta name="apple-mobile-web-app-title" content="Shino Channel"><meta name="theme-color" data-light="#f8f8f8" data-dark="#252627" content="#f8f8f8"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" type="text/html" href="https://www.sh1no.icu/posts/28348c4/" title="eDBG 使用进阶：避免 uprobes 产生可被察觉的特征 - Shino Channel" /><link rel="prev" type="text/html" href="https://www.sh1no.icu/posts/74a6f54/" title="基于eBPF的安卓CLI调试器——eDBG" /><link rel="alternate" type="text/markdown" href="https://www.sh1no.icu/posts/28348c4/index.md" title="eDBG 使用进阶：避免 uprobes 产生可被察觉的特征 - Shino Channel"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="/lib/fontawesome-free/all.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" type="text/html" href="https://www.sh1no.icu/posts/28348c4/" title="eDBG 使用进阶：避免 uprobes 产生可被察觉或检测的特征 - Shino Channel" /><link rel="prev" type="text/html" href="https://www.sh1no.icu/posts/74a6f54/" title="基于eBPF的安卓CLI调试器——eDBG" /><link rel="alternate" type="text/markdown" href="https://www.sh1no.icu/posts/28348c4/index.md" title="eDBG 使用进阶：避免 uprobes 产生可被察觉或检测的特征 - Shino Channel"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="/lib/fontawesome-free/all.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" href="/lib/animate/animate.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
   {
     "@context": "http://schema.org",
     "@type": "BlogPosting",
-    "headline": "eDBG 使用进阶：避免 uprobes 产生可被察觉的特征",
+    "headline": "eDBG 使用进阶：避免 uprobes 产生可被察觉或检测的特征",
     "inLanguage": "zh-CN",
     "mainEntityOfPage": {
       "@type": "WebPage",
       "@id": "https:\/\/www.sh1no.icu\/posts\/28348c4\/"
-    },"genre": "posts","wordcount":  2 ,
+    },"genre": "posts","wordcount":  495 ,
     "url": "https:\/\/www.sh1no.icu\/posts\/28348c4\/","datePublished": "2025-03-21T14:55:17+08:00","dateModified": "2025-03-21T14:55:17+08:00","publisher": {
       "@type": "Organization",
       "name": ""},"author": {
@@ -117,9 +137,9 @@
   </div><main class="container"><aside class="aside-collection animate__animated animate__fadeIn animate__faster" aria-label="Collections"></aside>
 
   <article class="page single">
-    <div class="header"><h1 class="single-title animate__animated animate__flipInX"><span>EDBG 使用进阶：避免 Uprobes 产生可被察觉的特征</span>
+    <div class="header"><h1 class="single-title animate__animated animate__flipInX"><span>EDBG 使用进阶：避免 Uprobes 产生可被察觉或检测的特征</span>
       </h1></div><div class="post-meta">
-      <div class="post-meta-line"><span class="post-author"><span class="author"><img loading="lazy" src="/avr.png" alt="Shino" data-title="Shino" width="20" height="20" class="avatar" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>&nbsp;Shino</span></span></div><div class="post-meta-line"><span title="published on 2025-03-21 14:55:17"><i class="fa-solid fa-calendar-days fa-fw me-1" aria-hidden="true"></i><time datetime="2025-03-21">2025-03-21</time></span>&nbsp;<span title="2 words"><i class="fa-solid fa-pencil-alt fa-fw me-1" aria-hidden="true"></i>About 100 words</span>&nbsp;<span><i class="fa-regular fa-clock fa-fw me-1" aria-hidden="true"></i>One minute</span>&nbsp;</div>
+      <div class="post-meta-line"><span class="post-author"><span class="author"><img loading="lazy" src="/avr.png" alt="Shino" data-title="Shino" width="20" height="20" class="avatar" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>&nbsp;Shino</span></span></div><div class="post-meta-line"><span title="published on 2025-03-21 14:55:17"><i class="fa-solid fa-calendar-days fa-fw me-1" aria-hidden="true"></i><time datetime="2025-03-21">2025-03-21</time></span>&nbsp;<span title="495 words"><i class="fa-solid fa-pencil-alt fa-fw me-1" aria-hidden="true"></i>About 500 words</span>&nbsp;<span><i class="fa-regular fa-clock fa-fw me-1" aria-hidden="true"></i>3 minutes</span>&nbsp;</div>
     </div><div class="details toc" id="toc-static" data-kept="false">
         <div class="details-summary toc-title">
           <span>Contents</span>
@@ -127,14 +147,281 @@
         </div>
         <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
   <ul>
-    <li><a href="#填坑中">填坑中</a></li>
+    <li><a href="#uprobes-特征">uprobes 特征</a></li>
+    <li><a href="#分析">分析</a></li>
+    <li><a href="#总结">总结</a></li>
   </ul>
 </nav></div>
-      </div><div class="content" id="content"><h2 id="填坑中" class="heading-element"><span>填坑中</span>
-  <a href="#%e5%a1%ab%e5%9d%91%e4%b8%ad" class="heading-mark">
+      </div><div class="content" id="content"><h2 id="uprobes-特征" class="heading-element"><span>uprobes 特征</span>
+  <a href="#uprobes-%e7%89%b9%e5%be%81" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
-</h2><p>再等一下，马上就写好了</p></div><div class="post-footer" id="post-footer">
+</h2><p>目前我接触过的针对 uprobes 的检测手段无非两种：</p>
+<ol>
+<li>扫描 BRK 指令</li>
+<li>检查 <code>/proc/pid/maps</code>中是否含有<code>[uprobes]</code>特征</li>
+</ol>
+<p>其中第一种检测方案在实际 APP 中几乎不可行——<strong>运行时</strong>的完整性校验会带来巨大的时间开销，正常的 APP 基本无法容忍这种开销， 而对于 app 运行前的整体完整性校验，只需要稍晚附加 uprobes 便能直接绕过，因此本文不讨论这种探测方式。</p>
+<p>主要令人担心的是第二种：在使用 uprobes 时，会在<code>/proc/pid/maps</code>中产生类似 <code>7ffffff000-80000000000 --xp 00000000 00:00 0    [uprobes]</code>的字样，如果你有针对这部分检测的魔改 ROM 或者你会使用 eBPF 对 open 和 read 系统调用进行修改，那你可以直接跳过本文内容。</p>
+<p>但是，这种特征是怎么产生的？它在 uprobes 触发时总是会产生吗？<strong>答案是否定的</strong>。具体内容得分析一下这部分的源码。</p>
+<p>本文在 ARM64 安卓内核版本 5.15.94 下测试，旧版本可能有所不同。</p>
+<p>省流可以直接看后面的总结。</p>
+<h2 id="分析" class="heading-element"><span>分析</span>
+  <a href="#%e5%88%86%e6%9e%90" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>uprobes 事件被触发时，首先会执行这个 uprobe 的处理程序，这部分我们并不关心，重点是在执行 eBPF 程序之后。在网络上搜索资料可以简单得知该特征的大致产生原因：</p>
+<blockquote>
+<p>内核创建了一个特殊的内存映射，称为 <code>[uprobes]</code>，用于执行原始指令</p></blockquote>
+<p>通过查阅源码可知，这个特征产生于<code>pre_ssout()</code>，这个函数的作用是<strong>准备对被探测指令进行单步执行</strong>，由于原指令被替换成 BRK 指令，因此需要分配出一段新的空间来执行原指令。</p>
+<p>细节产生原因参考：https://www.cnxct.com/defeating-ebpf-uprobe-monitoring</p>
+<p>在执行完原指令后，内核需要将当前 PC 指针恢复到正确的位置。如果是非跳转指令，就需要设置到 PC+4，否则则需要设置到跳转的目标位置。</p>
+<p>也就是说大概的执行流程是：</p>
+<ol>
+<li>执行 uprobe 处理程序</li>
+<li>执行原指令</li>
+<li>预测并设置 PC</li>
+</ol>
+<p>在这里，我产生了一个大胆的猜想：</p>
+<p><strong>如果设置 uprobe 的位置是一条会改变 PC 指针的指令 (B / CBZ / RET 等)，那么内核将会在第 3 步中预测正确的 PC 指令。此时，第 2 步中的“执行原指令”是否还需要被处理？</strong></p>
+<p>我验证了多次，在跳转指令上设置 uprobe 断点，在 maps 中均无法找到 [uprobes] 特征。也就是说，答案是肯定的。我们在内核中也可以找到相应的验证：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">void</span> <span class="nf">handle_swbp</span><span class="p">(</span><span class="k">struct</span> <span class="nc">pt_regs</span> <span class="o">*</span><span class="n">regs</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">//... 不重要的预处理
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">	<span class="n">handler_chain</span><span class="p">(</span><span class="n">uprobe</span><span class="p">,</span> <span class="n">regs</span><span class="p">);</span> <span class="c1">// 执行 uprobes 处理程序
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">arch_uprobe_skip_sstep</span><span class="p">(</span><span class="o">&amp;</span><span class="n">uprobe</span><span class="o">-&gt;</span><span class="n">arch</span><span class="p">,</span> <span class="n">regs</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">		<span class="k">goto</span> <span class="n">out</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">pre_ssout</span><span class="p">(</span><span class="n">uprobe</span><span class="p">,</span> <span class="n">regs</span><span class="p">,</span> <span class="n">bp_vaddr</span><span class="p">))</span> <span class="c1">// 会在 /proc/xxx/maps 中产生 uprobes 特征的函数
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="cm">/* arch_uprobe_skip_sstep() succeeded, or restart if can&#39;t singlestep */</span>
+</span></span><span class="line"><span class="cl"><span class="nl">out</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">put_uprobe</span><span class="p">(</span><span class="n">uprobe</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>可以看到，有一个名为 <code>arch_uprobe_skip_sstep</code> 的函数，当这个函数返回 <code>true</code> 时，<code>pre_ssout</code> 将会被跳过，此时我们的 uprobe 断点在无法扫描运行代码的前提下<strong>可以做到真正的无痕</strong>。</p>
+<p>这个函数的定义根据架构有所不同，但我们进行 Android 相关的逆向一般都是在 ARM64 架构的系统下，因此可以找到这部分<a href="https://elixir.bootlin.com/linux/v5.15.94/source/arch/arm64/kernel/probes/uprobes.c#L103"target="_blank" rel="external nofollow noopener noreferrer">源码</a>。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">bool</span> <span class="nf">arch_uprobe_skip_sstep</span><span class="p">(</span><span class="k">struct</span> <span class="nc">arch_uprobe</span> <span class="o">*</span><span class="n">auprobe</span><span class="p">,</span> <span class="k">struct</span> <span class="nc">pt_regs</span> <span class="o">*</span><span class="n">regs</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="n">probe_opcode_t</span> <span class="n">insn</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">addr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">auprobe</span><span class="o">-&gt;</span><span class="n">simulate</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">insn</span> <span class="o">=</span> <span class="o">*</span><span class="p">(</span><span class="n">probe_opcode_t</span> <span class="o">*</span><span class="p">)(</span><span class="o">&amp;</span><span class="n">auprobe</span><span class="o">-&gt;</span><span class="n">insn</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">	<span class="n">addr</span> <span class="o">=</span> <span class="n">instruction_pointer</span><span class="p">(</span><span class="n">regs</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">auprobe</span><span class="o">-&gt;</span><span class="n">api</span><span class="p">.</span><span class="n">handler</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="n">auprobe</span><span class="o">-&gt;</span><span class="n">api</span><span class="p">.</span><span class="n">handler</span><span class="p">(</span><span class="n">insn</span><span class="p">,</span> <span class="n">addr</span><span class="p">,</span> <span class="n">regs</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>只需要 <code>auprobe-&gt;simulate</code> 被触发，我们就可以跳过会产生特征的 <code>pre_ssout</code>。这个参数在 <code>arch_uprobe_analyze_insn</code> 中被设定。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">arch_uprobe_analyze_insn</span><span class="p">(</span><span class="k">struct</span> <span class="nc">arch_uprobe</span> <span class="o">*</span><span class="n">auprobe</span><span class="p">,</span> <span class="k">struct</span> <span class="nc">mm_struct</span> <span class="o">*</span><span class="n">mm</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">addr</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="n">probe_opcode_t</span> <span class="n">insn</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="cm">/* TODO: Currently we do not support AARCH32 instruction probing */</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">mm</span><span class="o">-&gt;</span><span class="n">context</span><span class="p">.</span><span class="n">flags</span> <span class="o">&amp;</span> <span class="n">MMCF_AARCH32</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="o">-</span><span class="n">EOPNOTSUPP</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">IS_ALIGNED</span><span class="p">(</span><span class="n">addr</span><span class="p">,</span> <span class="n">AARCH64_INSN_SIZE</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="o">-</span><span class="n">EINVAL</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">insn</span> <span class="o">=</span> <span class="o">*</span><span class="p">(</span><span class="n">probe_opcode_t</span> <span class="o">*</span><span class="p">)(</span><span class="o">&amp;</span><span class="n">auprobe</span><span class="o">-&gt;</span><span class="n">insn</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">switch</span> <span class="p">(</span><span class="n">arm_probe_decode_insn</span><span class="p">(</span><span class="n">insn</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">auprobe</span><span class="o">-&gt;</span><span class="n">api</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">case</span> <span class="nl">INSN_REJECTED</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="o">-</span><span class="n">EINVAL</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">case</span> <span class="nl">INSN_GOOD_NO_SLOT</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">		<span class="n">auprobe</span><span class="o">-&gt;</span><span class="n">simulate</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">default</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">		<span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>那么，什么样的指令是 <code>INSN_GOOD_NO_SLOT</code> 的指令呢？</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="k">enum</span> <span class="nc">probe_insn</span> <span class="n">__kprobes</span>
+</span></span><span class="line"><span class="cl"><span class="nf">arm_probe_decode_insn</span><span class="p">(</span><span class="n">probe_opcode_t</span> <span class="n">insn</span><span class="p">,</span> <span class="k">struct</span> <span class="nc">arch_probe_insn</span> <span class="o">*</span><span class="n">api</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="cm">/*
+</span></span></span><span class="line"><span class="cl"><span class="cm">	 * Instructions reading or modifying the PC won&#39;t work from the XOL
+</span></span></span><span class="line"><span class="cl"><span class="cm">	 * slot.
+</span></span></span><span class="line"><span class="cl"><span class="cm">	 */</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">aarch64_insn_is_steppable</span><span class="p">(</span><span class="n">insn</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="n">INSN_GOOD</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">aarch64_insn_is_bcond</span><span class="p">(</span><span class="n">insn</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="n">api</span><span class="o">-&gt;</span><span class="n">handler</span> <span class="o">=</span> <span class="n">simulate_b_cond</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">aarch64_insn_is_cbz</span><span class="p">(</span><span class="n">insn</span><span class="p">)</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">	    <span class="n">aarch64_insn_is_cbnz</span><span class="p">(</span><span class="n">insn</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="n">api</span><span class="o">-&gt;</span><span class="n">handler</span> <span class="o">=</span> <span class="n">simulate_cbz_cbnz</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">aarch64_insn_is_tbz</span><span class="p">(</span><span class="n">insn</span><span class="p">)</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">	    <span class="n">aarch64_insn_is_tbnz</span><span class="p">(</span><span class="n">insn</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="n">api</span><span class="o">-&gt;</span><span class="n">handler</span> <span class="o">=</span> <span class="n">simulate_tbz_tbnz</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">aarch64_insn_is_adr_adrp</span><span class="p">(</span><span class="n">insn</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="n">api</span><span class="o">-&gt;</span><span class="n">handler</span> <span class="o">=</span> <span class="n">simulate_adr_adrp</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">aarch64_insn_is_b</span><span class="p">(</span><span class="n">insn</span><span class="p">)</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">	    <span class="n">aarch64_insn_is_bl</span><span class="p">(</span><span class="n">insn</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="n">api</span><span class="o">-&gt;</span><span class="n">handler</span> <span class="o">=</span> <span class="n">simulate_b_bl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">aarch64_insn_is_br</span><span class="p">(</span><span class="n">insn</span><span class="p">)</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">	    <span class="n">aarch64_insn_is_blr</span><span class="p">(</span><span class="n">insn</span><span class="p">)</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">	    <span class="n">aarch64_insn_is_ret</span><span class="p">(</span><span class="n">insn</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="n">api</span><span class="o">-&gt;</span><span class="n">handler</span> <span class="o">=</span> <span class="n">simulate_br_blr_ret</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">aarch64_insn_is_ldr_lit</span><span class="p">(</span><span class="n">insn</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="n">api</span><span class="o">-&gt;</span><span class="n">handler</span> <span class="o">=</span> <span class="n">simulate_ldr_literal</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">aarch64_insn_is_ldrsw_lit</span><span class="p">(</span><span class="n">insn</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="n">api</span><span class="o">-&gt;</span><span class="n">handler</span> <span class="o">=</span> <span class="n">simulate_ldrsw_literal</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="cm">/*
+</span></span></span><span class="line"><span class="cl"><span class="cm">		 * Instruction cannot be stepped out-of-line and we don&#39;t
+</span></span></span><span class="line"><span class="cl"><span class="cm">		 * (yet) simulate it.
+</span></span></span><span class="line"><span class="cl"><span class="cm">		 */</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="n">INSN_REJECTED</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="n">INSN_GOOD_NO_SLOT</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>这里我们可以看到所有白名单指令：</p>
+<ul>
+<li>B 跳转 / B 条件跳转</li>
+<li>CBZ/CBNZ/TBZ/TBNZ</li>
+<li>BL/BR/RET</li>
+<li>ADR/ADRP/LDR/LDRSW</li>
+</ul>
+<h2 id="总结" class="heading-element"><span>总结</span>
+  <a href="#%e6%80%bb%e7%bb%93" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>使用 uprobes 时，只需要尽量在上述白名单指令位置添加 uprobe 就不会引入 maps 中的特征。</p>
+<p><a href="https://github.com/ShinoLeah/eDBG"target="_blank" rel="external nofollow noopener noreferrer">eDBG</a> 提供了完备的内存读取功能，只需要找到离你想要的目标位置最近的一个跳转指令，即可做到无痕地读取目标程序的上下文。</p></div><div class="post-footer" id="post-footer">
   <div class="post-info">
     <div class="post-info-line">
       <div class="post-info-mod">
@@ -144,9 +431,9 @@
           </div></div><div class="post-info-line">
         <div class="post-info-md"><span><a href="/posts/28348c4/index.md" title="Read Markdown" class="link-to-markdown">Read Markdown</a></span></div>
         <div class="post-info-share">
-          <span><a href="javascript:void(0);" title="Share on X" data-sharer="twitter" data-url="https://www.sh1no.icu/posts/28348c4/" data-title="EDBG 使用进阶：避免 Uprobes 产生可被察觉的特征" data-via="ShinoLeah"><i class="fa-brands fa-x-twitter fa-fw" aria-hidden="true"></i></a>
+          <span><a href="javascript:void(0);" title="Share on X" data-sharer="twitter" data-url="https://www.sh1no.icu/posts/28348c4/" data-title="EDBG 使用进阶：避免 Uprobes 产生可被察觉或检测的特征" data-via="ShinoLeah"><i class="fa-brands fa-x-twitter fa-fw" aria-hidden="true"></i></a>
   <a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="https://www.sh1no.icu/posts/28348c4/"><i class="fa-brands fa-facebook-square fa-fw" aria-hidden="true"></i></a>
-  <a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.sh1no.icu/posts/28348c4/" data-title="EDBG 使用进阶：避免 Uprobes 产生可被察觉的特征"><i class="fa-brands fa-weibo fa-fw" aria-hidden="true"></i></a>
+  <a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.sh1no.icu/posts/28348c4/" data-title="EDBG 使用进阶：避免 Uprobes 产生可被察觉或检测的特征"><i class="fa-brands fa-weibo fa-fw" aria-hidden="true"></i></a>
   </span>
         </div>
       </div></div>
@@ -171,5 +458,5 @@
     <div class="noscript-warning">This website works best with JavaScript enabled.</div>
   </noscript>
 </div><link rel="preload" href="/lib/katex/katex.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="/lib/katex/katex.min.css"></noscript><script src="/lib/autocomplete/autocomplete.min.js" defer></script><script src="/lib/fuse/fuse.min.js" defer></script><script src="/lib/sharer/sharer.min.js" async defer></script><script src="/lib/katex/katex.min.js" defer></script><script src="/lib/katex/auto-render.min.js" defer></script><script src="/lib/katex/copy-tex.min.js" defer></script><script src="/lib/katex/mhchem.min.js" defer></script><script>var postChatConfig={"addButton":true,"backgroundColor":"","blackDom":[".expiration-reminder","meting-js",".lnt"],"bottom":"","defaultChatQuestions":["Shino 是谁？","本站有什么内容？","随便推荐一篇文章"],"defaultInput":false,"defaultSearchQuestions":[],"fill":"","frameHeight":"","frameWidth":"","height":"","left":"","showInviteLink":true,"upLoadWeb":true,"userDesc":"","userIcon":"","userMode":"magic","userTitle":"","width":""}</script><script src="https://ai.tianli0.top/static/public/postChatUser.min.js" defer data-postChat_key="94e33c8ca2fc6b925063d733c79bb98c27972f8f"></script><script>window.config={"code":{"copyTitle":"Copy to clipboard","editLockTitle":"Lock editable code block","editUnLockTitle":"Unlock editable code block","editable":true,"maxShownLines":10},"comment":{"enable":false},"enablePWA":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"distance":100,"findAllMatches":false,"fuseIndexURL":"/search.json","highlightTag":"em","ignoreFieldNorm":false,"ignoreLocation":false,"isCaseSensitive":false,"location":0,"maxResultLength":10,"minMatchCharLength":2,"noResultsFound":"No results found","snippetLength":30,"threshold":0.3,"type":"fuse","useExtendedSearch":false},"version":"v0.3.17-8b402129"};</script><script src="/js/theme.min.js" defer></script></body>
+    <noscript><link rel="stylesheet" href="/lib/katex/katex.min.css"></noscript><script src="/lib/autocomplete/autocomplete.min.js" defer></script><script src="/lib/fuse/fuse.min.js" defer></script><script src="/lib/sharer/sharer.min.js" async defer></script><script src="/lib/katex/katex.min.js" defer></script><script src="/lib/katex/auto-render.min.js" defer></script><script src="/lib/katex/copy-tex.min.js" defer></script><script src="/lib/katex/mhchem.min.js" defer></script><script>var postChatConfig={"addButton":true,"backgroundColor":"","blackDom":[".expiration-reminder","meting-js",".lnt"],"bottom":"","defaultChatQuestions":["Shino 是谁？","本站有什么内容？","随便推荐一篇文章"],"defaultInput":false,"defaultSearchQuestions":[],"fill":"","frameHeight":"","frameWidth":"","height":"","left":"","showInviteLink":true,"upLoadWeb":true,"userDesc":"","userIcon":"","userMode":"magic","userTitle":"","width":""}</script><script src="https://ai.tianli0.top/static/public/postChatUser.min.js" defer data-postChat_key="94e33c8ca2fc6b925063d733c79bb98c27972f8f"></script><script>window.config={"code":{"copyTitle":"Copy to clipboard","editLockTitle":"Lock editable code block","editUnLockTitle":"Unlock editable code block","editable":true,"maxShownLines":50},"comment":{"enable":false},"enablePWA":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"distance":100,"findAllMatches":false,"fuseIndexURL":"/search.json","highlightTag":"em","ignoreFieldNorm":false,"ignoreLocation":false,"isCaseSensitive":false,"location":0,"maxResultLength":10,"minMatchCharLength":2,"noResultsFound":"No results found","snippetLength":30,"threshold":0.3,"type":"fuse","useExtendedSearch":false},"version":"v0.3.17-8b402129"};</script><script src="/js/theme.min.js" defer></script></body>
 </html>

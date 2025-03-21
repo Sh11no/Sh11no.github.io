@@ -9,7 +9,7 @@ eDBG 是一款基于 eBPF 技术实现的调试工具，为强对抗场景下的
 
 eDBG 的使用方式与 gdb 的使用方式几乎相同，无需学习便可直接上手使用。
 
-项目地址：https://github.com/ShinoLeah/eDBG
+项目地址：[https://github.com/ShinoLeah/eDBG](https://github.com/ShinoLeah/eDBG)
 
 &lt;!--more--&gt;
 
@@ -44,13 +44,13 @@ eDBG 也支持将你的进度保存到文件或读取工程文件，以便下一
 
 ## 进阶使用
 
-[eDBG 使用进阶：避免 uprobes 产生可被察觉的特征](https://www.sh1no.icu/posts/edbg_uprobes)
+[eDBG 使用进阶：避免 uprobes 产生可被察觉的特征](https://www.sh1no.icu/posts/28348c4/)
 
 ## 其他
 
 本项目主要受到 [stackplz](https://github.com/SeeFlowerX/stackplz) 启发，在实际逆向工作中我常常使用 stackplz 辅助 ida 进行动态调试，但常常被堆积如山的反调试手段或蜜罐打得鼻青脸肿...(菜菜)，因此突发奇想将 eBPF 技术直接用于打造一个调试器，虽然比 ida 缺少了图形化界面和反编译（但是现在的 app 还有可以直接 F5 的吗），但是我认为功能也足够作为一个逆向辅助工具进行日常使用。
 
-喜欢的话可以赏个小星星 QAQ → https://github.com/ShinoLeah/eDBG
+喜欢的话可以赏个小星星 QAQ → [https://github.com/ShinoLeah/eDBG](https://github.com/ShinoLeah/eDBG)
 
 
 ---
