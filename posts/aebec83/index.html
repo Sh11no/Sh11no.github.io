@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <head>
+    
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+    <meta name="robots" content="noodp" />
+    <title>EDBG 开发笔记：从0开始用 EBPF 构建“隐身”的调试器 - Shino Channel</title><meta name="author" content="Shino">
+<meta name="description" content="前言本文主要介绍 eDBG 从 0 到 1（也许只是 0.5）的心路历程和设计过程，也许可能可以给大家一点点启发？
+碎碎念结束了总计时长将近一年的实习，经历了两次互联网大厂的拷打，从 Android 游戏安全做到风险环境和风控，在随手搞定秋招之后，我终于回到学校开始了我的 gap year（其实就是呆在学校搞搞毕业相关的事情的比较不那么忙的一年吧），正好想着可以顺便糊弄毕业设计，就想把我之前的一些灵机一动实现一下。
+由于众所周知的原因，现有的 Android 调试器全都是基于 ptrace 方案的，针对 ptrace 方案的检测非常非常多，每次调试都需要做很多麻烦的绕过（当然大部分时间都是在定位不到或者绕不过去？），用 hook 框架也总是会引入很多不友善的特征，用模拟器的“降维调试”也会直接因为没有合适的传感器数据或者特征文件被识别为风险环境——毕竟在大数据时代，一点风吹草动都会被识别为“离群值”被击毙。
+在这个环境下，比较好用的方案就是我最爱用的 stackplz，这是一个使用 eBPF 来监视程序的辅助工具，由于在一般场景下，被调试的 APP 一般都不会拥有 ROOT 权限，因此针对 eBPF 技术的检测手段极少极少，因此这个工具非常好用。但是美中不足的是，作为一个记录式的辅助工具，和直接进行自由的调试相比，能提供的信息还是有上限的。
+这时，比较流行的解决方案是使用 stackplz 注册 uprobe，然后发送信号挂起程序，再用调试器附加进行调试。
+">
+  <meta itemprop="name" content="eDBG 开发笔记：从0开始用 eBPF 构建“隐身”的调试器">
+  <meta itemprop="description" content="前言本文主要介绍 eDBG 从 0 到 1（也许只是 0.5）的心路历程和设计过程，也许可能可以给大家一点点启发？
+碎碎念结束了总计时长将近一年的实习，经历了两次互联网大厂的拷打，从 Android 游戏安全做到风险环境和风控，在随手搞定秋招之后，我终于回到学校开始了我的 gap year（其实就是呆在学校搞搞毕业相关的事情的比较不那么忙的一年吧），正好想着可以顺便糊弄毕业设计，就想把我之前的一些灵机一动实现一下。
+由于众所周知的原因，现有的 Android 调试器全都是基于 ptrace 方案的，针对 ptrace 方案的检测非常非常多，每次调试都需要做很多麻烦的绕过（当然大部分时间都是在定位不到或者绕不过去？），用 hook 框架也总是会引入很多不友善的特征，用模拟器的“降维调试”也会直接因为没有合适的传感器数据或者特征文件被识别为风险环境——毕竟在大数据时代，一点风吹草动都会被识别为“离群值”被击毙。
+在这个环境下，比较好用的方案就是我最爱用的 stackplz，这是一个使用 eBPF 来监视程序的辅助工具，由于在一般场景下，被调试的 APP 一般都不会拥有 ROOT 权限，因此针对 eBPF 技术的检测手段极少极少，因此这个工具非常好用。但是美中不足的是，作为一个记录式的辅助工具，和直接进行自由的调试相比，能提供的信息还是有上限的。
+这时，比较流行的解决方案是使用 stackplz 注册 uprobe，然后发送信号挂起程序，再用调试器附加进行调试。">
+  <meta itemprop="datePublished" content="2025-03-23T14:21:58+08:00">
+  <meta itemprop="dateModified" content="2025-03-23T14:21:58+08:00">
+  <meta itemprop="wordCount" content="134">
+  <meta itemprop="image" content="https://www.sh1no.icu/avr.png"><meta property="og:url" content="https://www.sh1no.icu/posts/aebec83/">
+  <meta property="og:site_name" content="Shino Channel">
+  <meta property="og:title" content="eDBG 开发笔记：从0开始用 eBPF 构建“隐身”的调试器">
+  <meta property="og:description" content="前言本文主要介绍 eDBG 从 0 到 1（也许只是 0.5）的心路历程和设计过程，也许可能可以给大家一点点启发？
+碎碎念结束了总计时长将近一年的实习，经历了两次互联网大厂的拷打，从 Android 游戏安全做到风险环境和风控，在随手搞定秋招之后，我终于回到学校开始了我的 gap year（其实就是呆在学校搞搞毕业相关的事情的比较不那么忙的一年吧），正好想着可以顺便糊弄毕业设计，就想把我之前的一些灵机一动实现一下。
+由于众所周知的原因，现有的 Android 调试器全都是基于 ptrace 方案的，针对 ptrace 方案的检测非常非常多，每次调试都需要做很多麻烦的绕过（当然大部分时间都是在定位不到或者绕不过去？），用 hook 框架也总是会引入很多不友善的特征，用模拟器的“降维调试”也会直接因为没有合适的传感器数据或者特征文件被识别为风险环境——毕竟在大数据时代，一点风吹草动都会被识别为“离群值”被击毙。
+在这个环境下，比较好用的方案就是我最爱用的 stackplz，这是一个使用 eBPF 来监视程序的辅助工具，由于在一般场景下，被调试的 APP 一般都不会拥有 ROOT 权限，因此针对 eBPF 技术的检测手段极少极少，因此这个工具非常好用。但是美中不足的是，作为一个记录式的辅助工具，和直接进行自由的调试相比，能提供的信息还是有上限的。
+这时，比较流行的解决方案是使用 stackplz 注册 uprobe，然后发送信号挂起程序，再用调试器附加进行调试。">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2025-03-23T14:21:58+08:00">
+    <meta property="article:modified_time" content="2025-03-23T14:21:58+08:00">
+    <meta property="og:image" content="https://www.sh1no.icu/avr.png">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://www.sh1no.icu/avr.png">
+  <meta name="twitter:title" content="eDBG 开发笔记：从0开始用 eBPF 构建“隐身”的调试器">
+  <meta name="twitter:description" content="前言本文主要介绍 eDBG 从 0 到 1（也许只是 0.5）的心路历程和设计过程，也许可能可以给大家一点点启发？
+碎碎念结束了总计时长将近一年的实习，经历了两次互联网大厂的拷打，从 Android 游戏安全做到风险环境和风控，在随手搞定秋招之后，我终于回到学校开始了我的 gap year（其实就是呆在学校搞搞毕业相关的事情的比较不那么忙的一年吧），正好想着可以顺便糊弄毕业设计，就想把我之前的一些灵机一动实现一下。
+由于众所周知的原因，现有的 Android 调试器全都是基于 ptrace 方案的，针对 ptrace 方案的检测非常非常多，每次调试都需要做很多麻烦的绕过（当然大部分时间都是在定位不到或者绕不过去？），用 hook 框架也总是会引入很多不友善的特征，用模拟器的“降维调试”也会直接因为没有合适的传感器数据或者特征文件被识别为风险环境——毕竟在大数据时代，一点风吹草动都会被识别为“离群值”被击毙。
+在这个环境下，比较好用的方案就是我最爱用的 stackplz，这是一个使用 eBPF 来监视程序的辅助工具，由于在一般场景下，被调试的 APP 一般都不会拥有 ROOT 权限，因此针对 eBPF 技术的检测手段极少极少，因此这个工具非常好用。但是美中不足的是，作为一个记录式的辅助工具，和直接进行自由的调试相比，能提供的信息还是有上限的。
+这时，比较流行的解决方案是使用 stackplz 注册 uprobe，然后发送信号挂起程序，再用调试器附加进行调试。">
+      <meta name="twitter:site" content="@ShinoLeah">
+<meta name="twitter:creator" content="@ShinoLeah" /><meta name="application-name" content="Shino Channel">
+<meta name="apple-mobile-web-app-title" content="Shino Channel"><meta name="theme-color" data-light="#f8f8f8" data-dark="#252627" content="#f8f8f8"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" type="text/html" href="https://www.sh1no.icu/posts/aebec83/" title="eDBG 开发笔记：从0开始用 eBPF 构建“隐身”的调试器 - Shino Channel" /><link rel="prev" type="text/html" href="https://www.sh1no.icu/posts/28348c4/" title="eDBG 使用进阶：避免 uprobes 产生可被察觉或检测的特征" /><link rel="alternate" type="text/markdown" href="https://www.sh1no.icu/posts/aebec83/index.md" title="eDBG 开发笔记：从0开始用 eBPF 构建“隐身”的调试器 - Shino Channel"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="/lib/fontawesome-free/all.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" href="/lib/animate/animate.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
+  {
+    "@context": "http://schema.org",
+    "@type": "BlogPosting",
+    "headline": "eDBG 开发笔记：从0开始用 eBPF 构建“隐身”的调试器",
+    "inLanguage": "zh-CN",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https:\/\/www.sh1no.icu\/posts\/aebec83\/"
+    },"genre": "posts","wordcount":  134 ,
+    "url": "https:\/\/www.sh1no.icu\/posts\/aebec83\/","datePublished": "2025-03-23T14:21:58+08:00","dateModified": "2025-03-23T14:21:58+08:00","publisher": {
+      "@type": "Organization",
+      "name": ""},"author": {
+        "@type": "Person",
+        "name": "Shino"
+      },"description": ""
+  }
+  </script><script src="/js/head/color-scheme.min.js"></script></head>
+  <body data-header-desktop="sticky" data-header-mobile="auto"><div class="wrapper" data-page-style="normal"><header class="desktop animate__faster" id="header-desktop">
+  <div class="header-wrapper">
+    <div class="header-title">
+      <a href="/" title="Shino Channel"><span class="header-title-text">Shino</span></a><span class="header-subtitle"></span></div>
+    <nav>
+      <ul class="menu"><li class="menu-item">
+              <a class="menu-link" href="https://www.youtube.com/@anoofficialchannel" rel="noopener noreferrer" target="_blank"></a></li><li class="menu-item">
+              <a class="menu-link" href="https://www.nu1l.com/" title="Nu1L" rel="noopener noreferrer" target="_blank"><i class="fa-solid fa-paperclip fa-fw fa-sm" aria-hidden="true"></i> Nu1L</a></li><li class="menu-item">
+              <a class="menu-link" href="https://cnss.io/" title="CNSS" rel="noopener noreferrer" target="_blank"><i class="fa-solid fa-paperclip fa-fw fa-sm" aria-hidden="true"></i> CNSS</a></li><li class="menu-item">
+              <a class="menu-link" href="/posts/abooout/" title="About"><i class="fa-solid fa-user fa-fw fa-sm" aria-hidden="true"></i> About</a></li><li class="menu-item">
+              <a class="menu-link" href="/posts/friends/" title="Friends"><i class="fa-solid fa-user-group fa-fw fa-sm" aria-hidden="true"></i> Friends</a></li><li class="menu-item delimiter"></li><li class="menu-item search" id="search-desktop">
+            <input type="text" placeholder="Search..." id="search-input-desktop">
+            <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+              <i class="fa-solid fa-search fa-fw" aria-hidden="true"></i>
+            </a>
+            <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+              <i class="fa-solid fa-times-circle fa-fw" aria-hidden="true"></i>
+            </a>
+            <span class="search-button search-loading" id="search-loading-desktop">
+              <i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+            </span>
+          </li><li class="menu-item theme-switch" title="Switch Theme">
+          <i class="fa-solid fa-adjust fa-fw" aria-hidden="true"></i>
+        </li></ul>
+    </nav>
+  </div>
+</header><header class="mobile animate__faster" id="header-mobile">
+  <div class="header-container">
+    <div class="header-wrapper">
+      <div class="header-title">
+        <a href="/" title="Shino Channel"><span class="header-title-text">Shino</span></a><span class="header-subtitle"></span></div>
+      <div class="menu-toggle" id="menu-toggle-mobile">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+    <nav>
+      <ul class="menu" id="menu-mobile"><li class="search-wrapper">
+            <div class="search mobile" id="search-mobile">
+              <input type="text" placeholder="Search..." id="search-input-mobile">
+              <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                <i class="fa-solid fa-search fa-fw" aria-hidden="true"></i>
+              </a>
+              <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                <i class="fa-solid fa-times-circle fa-fw" aria-hidden="true"></i>
+              </a>
+              <span class="search-button search-loading" id="search-loading-mobile">
+                <i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+              </span>
+            </div>
+            <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+              Cancel
+            </a>
+          </li><li class="menu-item"><a class="menu-link" href="https://www.youtube.com/@anoofficialchannel" rel="noopener noreferrer" target="_blank"></a></li><li class="menu-item"><a class="menu-link" href="https://www.nu1l.com/" title="Nu1L" rel="noopener noreferrer" target="_blank"><i class="fa-solid fa-paperclip fa-fw fa-sm" aria-hidden="true"></i> Nu1L</a></li><li class="menu-item"><a class="menu-link" href="https://cnss.io/" title="CNSS" rel="noopener noreferrer" target="_blank"><i class="fa-solid fa-paperclip fa-fw fa-sm" aria-hidden="true"></i> CNSS</a></li><li class="menu-item"><a class="menu-link" href="/posts/abooout/" title="About"><i class="fa-solid fa-user fa-fw fa-sm" aria-hidden="true"></i> About</a></li><li class="menu-item"><a class="menu-link" href="/posts/friends/" title="Friends"><i class="fa-solid fa-user-group fa-fw fa-sm" aria-hidden="true"></i> Friends</a></li><li class="menu-item menu-system">
+          <span class="menu-system-item theme-switch" title="Switch Theme"><i class="fa-solid fa-adjust fa-fw" aria-hidden="true"></i></span></li>
+      </ul>
+    </nav>
+  </div>
+</header><div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+  </div>
+  <div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+  </div><main class="container"><aside class="aside-collection animate__animated animate__fadeIn animate__faster" aria-label="Collections"></aside>
+
+  <article class="page single">
+    <div class="header"><h1 class="single-title animate__animated animate__flipInX"><span>EDBG 开发笔记：从0开始用 EBPF 构建“隐身”的调试器</span>
+      </h1></div><div class="post-meta">
+      <div class="post-meta-line"><span class="post-author"><span class="author"><img loading="lazy" src="/avr.png" alt="Shino" data-title="Shino" width="20" height="20" class="avatar" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>&nbsp;Shino</span></span></div><div class="post-meta-line"><span title="published on 2025-03-23 14:21:58"><i class="fa-solid fa-calendar-days fa-fw me-1" aria-hidden="true"></i><time datetime="2025-03-23">2025-03-23</time></span>&nbsp;<span title="134 words"><i class="fa-solid fa-pencil-alt fa-fw me-1" aria-hidden="true"></i>About 200 words</span>&nbsp;<span><i class="fa-regular fa-clock fa-fw me-1" aria-hidden="true"></i>One minute</span>&nbsp;</div>
+    </div><div class="details toc" id="toc-static" data-kept="false">
+        <div class="details-summary toc-title">
+          <span>Contents</span>
+          <span><i class="details-icon fa-solid fa-angle-right" aria-hidden="true"></i></span>
+        </div>
+        <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#前言">前言</a></li>
+    <li><a href="#碎碎念">碎碎念</a></li>
+    <li><a href="#雏形">雏形</a></li>
+    <li><a href="#执念">执念</a></li>
+    <li><a href="#突破">突破</a></li>
+    <li><a href="#总结">总结</a></li>
+  </ul>
+</nav></div>
+      </div><div class="content" id="content"><h2 id="前言" class="heading-element"><span>前言</span>
+  <a href="#%e5%89%8d%e8%a8%80" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>本文主要介绍 <a href="https://github.com/ShinoLeah/eDBG"target="_blank" rel="external nofollow noopener noreferrer">eDBG</a> 从 0 到 1（也许只是 0.5）的心路历程和设计过程，也许可能可以给大家一点点启发？</p>
+<h2 id="碎碎念" class="heading-element"><span>碎碎念</span>
+  <a href="#%e7%a2%8e%e7%a2%8e%e5%bf%b5" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>结束了总计时长将近一年的实习，经历了两次互联网大厂的拷打，从 Android 游戏安全做到风险环境和风控，在随手搞定秋招之后，我终于回到学校开始了我的 gap year（其实就是呆在学校搞搞毕业相关的事情的比较不那么忙的一年吧），正好想着可以顺便糊弄毕业设计，就想把我之前的一些灵机一动实现一下。</p>
+<p>由于众所周知的原因，现有的 Android 调试器全都是基于 ptrace 方案的，针对 ptrace 方案的检测非常非常多，每次调试都需要做很多麻烦的绕过（当然大部分时间都是在定位不到或者绕不过去？），用 hook 框架也总是会引入很多不友善的特征，用模拟器的“降维调试”也会直接因为没有合适的传感器数据或者特征文件被识别为风险环境——毕竟在大数据时代，一点风吹草动都会被识别为“离群值”被击毙。</p>
+<p>在这个环境下，比较好用的方案就是我最爱用的 <a href="https://github.com/SeeFlowerX/stackplz"target="_blank" rel="external nofollow noopener noreferrer">stackplz</a>，这是一个使用 eBPF 来监视程序的辅助工具，由于在一般场景下，被调试的 APP 一般都不会拥有 ROOT 权限，因此针对 eBPF 技术的检测手段极少极少，因此这个工具非常好用。但是美中不足的是，作为一个记录式的辅助工具，和直接进行自由的调试相比，能提供的信息还是有上限的。</p>
+<p>这时，比较流行的解决方案是使用 stackplz 注册 uprobe，然后发送信号挂起程序，再用调试器附加进行调试。</p>
+<h2 id="雏形" class="heading-element"><span>雏形</span>
+  <a href="#%e9%9b%8f%e5%bd%a2" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>我想，既然我们有可以发送信号的 eBPF 模块，可以暂停和继续程序，<strong>那么我们能不能用这个技术直接做出一个调试器呢？</strong></p>
+<p>众所周知（也许），Android 里加载 eBPF 的大概框架就是有一个 Application，它向内核注册 eBPF 模块，这个模块监听目标程序，然后 Application 和这个模块进行交互来达到监听的目的，具体原理我就不展开赘述了。</p>
+<p>eBPF 模块有读取目标程序寄存器的功能，有向目标程序发送信号的接口 <code>bpf_send_signal</code>，那么我们可以简单设计出最基本的断点：</p>
+<ul>
+<li>注册 uprobe 断点</li>
+<li>断点触发，唤醒 eBPF 程序，eBPF 程序发送 SIGSTOP 暂停程序</li>
+<li>我们的 Application 收到通知，做一些想做的事情</li>
+<li>Application 向目标程序发送 SIGCONT，程序继续运行。</li>
+</ul>
+<p>有了断点的注册和取消，加上亿点点的反汇编和跳转分支预测，我们就能实现单步调试等简单的功能了。</p>
+<p>接下来的问题是，我们希望在目标程序被暂停的时候干些什么？</p>
+<ul>
+<li>读取寄存器：这个很简单，可以直接让 eBPF 程序传回</li>
+<li>读内存：虽然 eBPF 提供了 <code>bpf_probe_read_user</code> 接口，但在用户指定需要读的内存之前，我们永远不知道想要读什么内存。eBPF 程序不像普通的程序那样可以随时被调用，因此我们需要别的方法。</li>
+</ul>
+<p><strong>有没有不引入特征、不侵入程序的方法读写目标程序的内存？</strong></p>
+<p>经常开挂的朋友都知道，有个玩具叫 Cheat Engine，他可以很快地扫描目标程序的内存并且修改，并且只在你需要断点和调试的时候才会使用 ptrace 对目标程序进行附加。</p>
+<p>那么，他是怎么做到的呢？实际上，Linux 提供了一个系统调用 <code>process_vm_readv</code>，可以远程读取目标内存，并且不会引入特征。相同的，还有<code>process_vm_writev</code>，这两个系统调用给了我们远程读写目标内存的能力。</p>
+<p>现在我们有控制目标程序运行的方案，也有读取目标程序上下文的方案，到这里我们已经完全可以做出来一个功能完备的调试器了，它甚至可以提供内存写功能来帮你过反调试。</p>
+<h2 id="执念" class="heading-element"><span>执念</span>
+  <a href="#%e6%89%a7%e5%bf%b5" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>虽然只是对现有技术的拼凑组装（Ctrl+C/Ctrl+V），但是现在我们有一个功能完备的调试器了，他引入的特征很少，糊弄我的毕设也完全足够了——毕竟本科生毕业设计的要求总是很低。</p>
+<p>但是我总觉得这个调试器有一点不完美的地方——uprobes 会在 <code>/proc/xxxx/maps</code> 中引入特征。作为一款为了 ”无痕“”隐身“ 而打造的调试器，这个特征就像一颗老鼠屎一样被放在那里。我觉得，特征只有没有和有的区别，只要能被用户态探测到，我总会觉得我的项目因为这一点特征变得没有意义。</p>
+<p>虽然说正经的调试器不干隐藏的活，而且给我的毕设打分的老师们肯定也不会知道我的调试器会引入特征，但是当我把项目 push 到 github 上之后，短短 5 天就收到了 200 星，这大大地激励了我，让我下定决心把这个产品继续打磨完整。</p>
+<p>最简单的做法当然是使用 eBPF hook 系统调用，不让目标程序读到这段 maps。但我总觉得这样做不对，我认为调试器本身不应该干扰或者影响程序的运行，即使这样可以藏起这个特征。因此，我开始在内核中寻找一种不修改目标程序的隐藏方法。</p>
+<h2 id="突破" class="heading-element"><span>突破</span>
+  <a href="#%e7%aa%81%e7%a0%b4" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>一个简单的方案是使用基于 perf_event 的硬件断点，但是硬件断点有数量限制（其实这部分我没有仔细研究，但是我觉得硬件断点总是只能设置四五个的样子？），全部改用硬件断点显然不是一个好主意。但是我们有只需要使用一个断点的功能——单步调试。单步调试总是只需要一个断点，因此完全可以使用硬件断点来做这部分功能，那么剩下的问题就是用户设置的断点。</p>
+<p>经过研究我取得了一点突破：<a href="https://www.sh1no.icu/posts/28348c4/"target="_blank" rel="external nofollow noopener noreferrer">eDBG 使用进阶：避免 uprobes 产生可被察觉的特征</a></p>
+<p>简单来说，<strong>并不是所有指令在被 uprobe 附加的时候都会在 maps 中产生特征，而且这种指令还非常常见——所有跳转指令</strong>。</p>
+<p>那么我们就有了新的可能：在跳转指令处使用 uprobe 设置断点，然后使用单步调试功能（或者更快的 <code>until</code> 功能）调试到想要的位置，只要这样我们就可以实现完全无法被用户态察觉地调试任何我们想要的位置。</p>
+<h2 id="总结" class="heading-element"><span>总结</span>
+  <a href="#%e6%80%bb%e7%bb%93" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>至此，一个我认为”完美“的调试器已经完成了。可能我有些代码写得不对引入了一些 bug 或者一些问题，但是至少在理论上，这是一个可以完全”隐身“的调试器。</p>
+<p>当然也有可能因为我的见识不足知道的反调试手段不够多导致别的问题，但是至少退一步说，我应该可以拿到毕业证了大概。</p></div><div class="post-footer" id="post-footer">
+  <div class="post-info">
+    <div class="post-info-line">
+      <div class="post-info-mod">
+        <span title="Updated on 2025-03-23 14:21:58">Updated on 2025-03-23&nbsp;</span>
+      </div><div class="post-info-license">
+            <span><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a></span>
+          </div></div><div class="post-info-line">
+        <div class="post-info-md"><span><a href="/posts/aebec83/index.md" title="Read Markdown" class="link-to-markdown">Read Markdown</a></span></div>
+        <div class="post-info-share">
+          <span><a href="javascript:void(0);" title="Share on X" data-sharer="twitter" data-url="https://www.sh1no.icu/posts/aebec83/" data-title="EDBG 开发笔记：从0开始用 EBPF 构建“隐身”的调试器" data-via="ShinoLeah"><i class="fa-brands fa-x-twitter fa-fw" aria-hidden="true"></i></a>
+  <a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="https://www.sh1no.icu/posts/aebec83/"><i class="fa-brands fa-facebook-square fa-fw" aria-hidden="true"></i></a>
+  <a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.sh1no.icu/posts/aebec83/" data-title="EDBG 开发笔记：从0开始用 EBPF 构建“隐身”的调试器"><i class="fa-brands fa-weibo fa-fw" aria-hidden="true"></i></a>
+  </span>
+        </div>
+      </div></div>
+
+  <div class="post-info-more">
+    <section class="post-tags"></section>
+    <section>
+      <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+    </section>
+  </div><div class="post-nav"><a href="/posts/28348c4/" class="post-nav-item" rel="prev" title="EDBG 使用进阶：避免 Uprobes 产生可被察觉或检测的特征"><i class="fa-solid fa-angle-left fa-fw" aria-hidden="true"></i>EDBG 使用进阶：避免 Uprobes 产生可被察觉或检测的特征</a></div>
+</div>
+</article>
+
+  <aside class="toc" id="toc-auto" aria-label="Contents"><h2 class="toc-title">Contents&nbsp;<i class="toc-icon fa-solid fa-angle-down fa-fw" aria-hidden="true"></i></h2>
+      <div class="toc-content" id="toc-content-auto"></div></aside></main><footer class="footer">
+    <div class="footer-container"><div class="footer-line powered">Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow noopener noreferrer" title="Hugo 0.144.2"><img class="hugo-icon" src="/images/hugo.min.svg" alt="Hugo logo" /> Hugo</a> | Theme - <a href="https://github.com/hugo-fixit/FixIt" target="_blank" rel="external" title="FixIt v0.3.17-8b402129"><img class="fixit-icon" src="/images/fixit.min.svg" alt="FixIt logo" /> FixIt</a>
+        </div><div class="footer-line copyright" itemscope itemtype="http://schema.org/CreativeWork"><i class="fa-regular fa-copyright fa-fw" aria-hidden="true"></i>
+            <span itemprop="copyrightYear">2020 - 2025</span><span class="author" itemprop="copyrightHolder">
+              <a href="/">Shino</a></span></div></div>
+  </footer></div><div class="widgets"><div class="fixed-buttons animate__faster d-none"><div class="fixed-button back-to-top" role="button" aria-label="Back to Top"><i class="fa-solid fa-arrow-up fa-fw" aria-hidden="true"></i><span class="variant-numeric d-none">0%</span>
+        </div></div><div id="mask"></div><div class="reading-progress-bar" style="left: 0;top: 0;"></div><noscript>
+    <div class="noscript-warning">This website works best with JavaScript enabled.</div>
+  </noscript>
+</div><link rel="preload" href="/lib/katex/katex.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/katex/katex.min.css"></noscript><script src="/lib/autocomplete/autocomplete.min.js" defer></script><script src="/lib/fuse/fuse.min.js" defer></script><script src="/lib/sharer/sharer.min.js" async defer></script><script src="/lib/katex/katex.min.js" defer></script><script src="/lib/katex/auto-render.min.js" defer></script><script src="/lib/katex/copy-tex.min.js" defer></script><script src="/lib/katex/mhchem.min.js" defer></script><script>var postChatConfig={"addButton":true,"backgroundColor":"","blackDom":[".expiration-reminder","meting-js",".lnt"],"bottom":"","defaultChatQuestions":["Shino 是谁？","本站有什么内容？","随便推荐一篇文章"],"defaultInput":false,"defaultSearchQuestions":[],"fill":"","frameHeight":"","frameWidth":"","height":"","left":"","showInviteLink":true,"upLoadWeb":true,"userDesc":"","userIcon":"","userMode":"magic","userTitle":"","width":""}</script><script src="https://ai.tianli0.top/static/public/postChatUser.min.js" defer data-postChat_key="94e33c8ca2fc6b925063d733c79bb98c27972f8f"></script><script>window.config={"code":{"copyTitle":"Copy to clipboard","editLockTitle":"Lock editable code block","editUnLockTitle":"Unlock editable code block","editable":true,"maxShownLines":50},"comment":{"enable":false},"enablePWA":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"distance":100,"findAllMatches":false,"fuseIndexURL":"/search.json","highlightTag":"em","ignoreFieldNorm":false,"ignoreLocation":false,"isCaseSensitive":false,"location":0,"maxResultLength":10,"minMatchCharLength":2,"noResultsFound":"No results found","snippetLength":30,"threshold":0.3,"type":"fuse","useExtendedSearch":false},"version":"v0.3.17-8b402129"};</script><script src="/js/theme.min.js" defer></script></body>
+</html>

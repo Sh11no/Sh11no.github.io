@@ -11,8 +11,8 @@
     <title>Shino Channel</title><meta name="author" content="Shino">
 <meta name="description" content="">
   <meta itemprop="name" content="Shino Channel">
-  <meta itemprop="datePublished" content="2025-03-21T14:55:17+08:00">
-  <meta itemprop="dateModified" content="2025-03-21T14:55:17+08:00">
+  <meta itemprop="datePublished" content="2025-03-23T14:21:58+08:00">
+  <meta itemprop="dateModified" content="2025-03-23T14:21:58+08:00">
   <meta itemprop="image" content="https://www.sh1no.icu/avr.png"><meta property="og:url" content="https://www.sh1no.icu/">
   <meta property="og:site_name" content="Shino Channel">
   <meta property="og:title" content="Shino Channel">
@@ -107,7 +107,15 @@
     </a><a href="https://space.bilibili.com/96243678" title="bilibili"target="_blank" rel="external nofollow noopener noreferrer me"><i class="fa-brands fa-bilibili" aria-hidden="true"></i>
     </a><a href="mailto:akalineblog@163.com" title="Email"target="_blank" rel="external nofollow noopener noreferrer me"><i class="fa-regular fa-envelope fa-fw" aria-hidden="true"></i>
     </a></div></div>
-<article class="single summary" itemscope itemtype="http://schema.org/Article"><h2 class="single-title" itemprop="name headline"><a href="/posts/28348c4/">EDBG 使用进阶：避免 Uprobes 产生可被察觉或检测的特征</a>
+<article class="single summary" itemscope itemtype="http://schema.org/Article"><h2 class="single-title" itemprop="name headline"><a href="/posts/aebec83/">EDBG 开发笔记：从0开始用 EBPF 构建“隐身”的调试器</a>
+  </h2><div class="post-meta"><span class="post-author"><span class="author"><img loading="lazy" src="/avr.png" alt="Shino" data-title="Shino" width="20" height="20" class="avatar" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>&nbsp;Shino</span></span>&nbsp;<span class="post-publish" title='2025-03-23 14:21:58'>published on <time datetime="2025-03-23">2025-03-23</time></span></div><div class="content">前言本文主要介绍 eDBG 从 0 到 1（也许只是 0.5）的心路历程和设计过程，也许可能可以给大家一点点启发？
+碎碎念结束了总计时长将近一年的实习，经历了两次互联网大厂的拷打，从 Android 游戏安全做到风险环境和风控，在随手搞定秋招之后，我终于回到学校开始了我的 gap year（其实就是呆在学校搞搞毕业相关的事情的比较不那么忙的一年吧），正好想着可以顺便糊弄毕业设计，就想把我之前的一些灵机一动实现一下。
+由于众所周知的原因，现有的 Android 调试器全都是基于 ptrace 方案的，针对 ptrace 方案的检测非常非常多，每次调试都需要做很多麻烦的绕过（当然大部分时间都是在定位不到或者绕不过去？），用 hook 框架也总是会引入很多不友善的特征，用模拟器的“降维调试”也会直接因为没有合适的传感器数据或者特征文件被识别为风险环境——毕竟在大数据时代，一点风吹草动都会被识别为“离群值”被击毙。
+在这个环境下，比较好用的方案就是我最爱用的 stackplz，这是一个使用 eBPF 来监视程序的辅助工具，由于在一般场景下，被调试的 APP 一般都不会拥有 ROOT 权限，因此针对 eBPF 技术的检测手段极少极少，因此这个工具非常好用。但是美中不足的是，作为一个记录式的辅助工具，和直接进行自由的调试相比，能提供的信息还是有上限的。
+这时，比较流行的解决方案是使用 stackplz 注册 uprobe，然后发送信号挂起程序，再用调试器附加进行调试。
+</div><div class="post-footer">
+    <a href="/posts/aebec83/">Read More</a></div>
+</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h2 class="single-title" itemprop="name headline"><a href="/posts/28348c4/">EDBG 使用进阶：避免 Uprobes 产生可被察觉或检测的特征</a>
   </h2><div class="post-meta"><span class="post-author"><span class="author"><img loading="lazy" src="/avr.png" alt="Shino" data-title="Shino" width="20" height="20" class="avatar" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>&nbsp;Shino</span></span>&nbsp;<span class="post-publish" title='2025-03-21 14:55:17'>published on <time datetime="2025-03-21">2025-03-21</time></span></div><div class="content">uprobes 特征目前我接触过的针对 uprobes 的检测手段无非两种：
 扫描 BRK 指令 检查 /proc/pid/maps中是否含有[uprobes]特征 其中第一种检测方案在实际 APP 中几乎不可行——运行时的完整性校验会带来巨大的时间开销，正常的 APP 基本无法容忍这种开销， 而对于 app 运行前的整体完整性校验，只需要稍晚附加 uprobes 便能直接绕过，因此本文不讨论这种探测方式。
 主要令人担心的是第二种：在使用 uprobes 时，会在/proc/pid/maps中产生类似 7ffffff000-80000000000 --xp 00000000 00:00 0 [uprobes]的字样，如果你有针对这部分检测的魔改 ROM 或者你会使用 eBPF 对 open 和 read 系统调用进行修改，那你可以直接跳过本文内容。
@@ -135,10 +143,6 @@ eDBG 的使用方式与 gdb 的使用方式几乎相同，无需学习便可直�
   </h2><div class="post-meta"><span class="post-author"><span class="author"><img loading="lazy" src="/avr.png" alt="Shino" data-title="Shino" width="20" height="20" class="avatar" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>&nbsp;Shino</span></span>&nbsp;<span class="post-publish" title='2023-12-13 20:24:36'>published on <time datetime="2023-12-13">2023-12-13</time></span></div><div class="content">碎碎念本文也可以改名《Shino 为什么是一个啥比》，一个首波逆向题坐牢两天没做出来（还是我太菜了）
 </div><div class="post-footer">
     <a href="/posts/0gn/">Read More</a></div>
-</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h2 class="single-title" itemprop="name headline"><a href="/posts/hitcon2023/">Hitcon2023 Reverse Wps | AK With StrawHat</a>
-  </h2><div class="post-meta"><span class="post-author"><span class="author"><img loading="lazy" src="/avr.png" alt="Shino" data-title="Shino" width="20" height="20" class="avatar" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>&nbsp;Shino</span></span>&nbsp;<span class="post-publish" title='2023-09-09 23:23:25'>published on <time datetime="2023-09-09">2023-09-09</time></span></div><div class="content">碎碎念应该是在 Straw Hat 队认真打的第一场国际赛事吧，可惜半天左右就把逆向全打完了（驾驶员技能发动 我一个人就够了.jpg），有些失望（但是很爽）。
-</div><div class="post-footer">
-    <a href="/posts/hitcon2023/">Read More</a></div>
 </article><ul class="pagination"><li class="page-item active">
           <span class="page-link">
             <a href="/">1</a>
